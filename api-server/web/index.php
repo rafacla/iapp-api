@@ -4,7 +4,7 @@
 require_once __DIR__.'/../vendor/autoload.php';
 
 //Oauth2 library
-require_once('/../oauth2/src/OAuth2/Autoloader.php');
+require_once(__DIR__.'/../oauth2/src/OAuth2/Autoloader.php');
 OAuth2\Autoloader::register();
 
 //Database library and credentials
