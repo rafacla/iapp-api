@@ -70,7 +70,7 @@ $app->post('/auth', function (Request $request) use ($app, $db, $storage, $serve
 	return($output);
 });
 
-$app->get('/users', function (Request $request) use ($app, $db, $user) {
+$app->get('/usersxd', function (Request $request) use ($app, $db, $user) {
 	global $user;
 	if ($user['adm']) {
 		$sql = 'SELECT * from `register_users`';
