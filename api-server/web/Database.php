@@ -2,9 +2,9 @@
 class Database
 {
 	protected static $servername = "localhost";
-	protected static $username = "root";
-	protected static $password = "";
-	protected static $database = "iapp_r0";
+	protected static $username = "rafacla";
+	protected static $password = "testuser";
+	protected static $database = "iapp";
 	
 	protected static $connection;
 
