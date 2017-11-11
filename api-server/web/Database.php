@@ -1,11 +1,9 @@
 <?php
 class Database
 {
-	if ($_SERVER['HTTP_HOST'] == "api.localhost") {
-		protected static $servername = "localhost";
-	} else {
-		protected static $servername = "mysql762.umbler.com";
-	}
+	protected static $servername = "localhost";
+	protected static $local_servername = "localhost";
+	protected static $remote_servername = "mysql762.umbler.com";
 	protected static $username = "rafacla";
 	protected static $password = "testuser";
 	protected static $database = "iapp";
@@ -13,7 +11,12 @@ class Database
 	protected static $connection;
 
 	public function dsn() {
-		$dsn      = 'mysql:dbname='.self::$database.';host='.self::$servername;
+		if ($_SERVER['HTTP_HOST'] == "api.localhost") {
+			$servername = self::$local_servername;
+		} else {
+			$servername = self::$remote_servername;
+		}
+		$dsn      = 'mysql:dbname='.self::$database.';host='.$servername;
 		return ($dsn);
 	}
 	
