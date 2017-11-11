@@ -33,7 +33,7 @@ $app->before(function(Request $request, Application $app) use ($app, $db, $stora
 	global $user;
     $route = $request->get('_route');
 	
-	$all = apache_request_headers();
+	$all = $request->headers->all();
 	
 	die($all);
 	
