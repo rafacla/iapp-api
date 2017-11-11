@@ -27,6 +27,12 @@ $server->addGrantType(new OAuth2\GrantType\ClientCredentials($storage));
 $server->addGrantType(new OAuth2\GrantType\UserCredentials($storage));
 
 
+//Aqui adicionandos headers para tornar a API compliant com o CORs
+$app->after(function (Request $request, Response $response) {
+	$response->headers->set('Access-Control-Allow-Origin', '*');
+	$response->headers->set('Access-Control-Allow-Headers', 'Authorization');
+});
+
 // verificar autenticacao
 $app->before(function(Request $request, Application $app) use ($app, $db, $storage, $server) {
 	global $user;
@@ -61,11 +67,12 @@ $app->before(function(Request $request, Application $app) use ($app, $db, $stora
     }
 });
 
-// Autenticacao
+//Aqui estamos preparando o 'pré-voo' adicionando uma resposta válida para o method 'options'
 $app->options("{anything}", function () {
         return new \Symfony\Component\HttpFoundation\JsonResponse(null, 204);
 })->assert("anything", ".*");
 
+// Autenticacao
 $app->post('/auth', function (Request $request) use ($app, $db, $storage, $server) {
 	ob_start(); //Start output buffer
 	$server->handleTokenRequest(OAuth2\Request::createFromGlobals())->send();
