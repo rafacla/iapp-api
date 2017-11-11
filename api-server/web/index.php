@@ -33,10 +33,6 @@ $app->before(function(Request $request, Application $app) use ($app, $db, $stora
 	global $user;
     $route = $request->get('_route');
 	
-	$all = $request->headers->all();
-	var_dump($all);
-	die();
-	
     if($route != 'POST_auth' && $request->getMethod() != 'OPTIONS') {
 		$authorization = $request->headers->get("Authorization");
 		list($jwt) = sscanf($authorization, 'Bearer %s');
