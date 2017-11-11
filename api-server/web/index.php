@@ -31,6 +31,7 @@ $server->addGrantType(new OAuth2\GrantType\UserCredentials($storage));
 $app->after(function (Request $request, Response $response) {
 	$response->headers->set('Access-Control-Allow-Origin', '*');
 	$response->headers->set('Access-Control-Allow-Headers', 'Authorization');
+	$response->headers->set('Access-Control-Allow-Credentials', 'true');
 });
 
 // verificar autenticacao
