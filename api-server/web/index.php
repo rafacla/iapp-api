@@ -27,23 +27,12 @@ $server->addGrantType(new OAuth2\GrantType\ClientCredentials($storage));
 $server->addGrantType(new OAuth2\GrantType\UserCredentials($storage));
 
 
-//Aqui adicionandos headers para tornar a API compliant com o CORs
-$app->after(function (Request $request, Response $response) {
-	$response->headers->set('Access-Control-Allow-Origin', '*');
-	$response->headers->set('Access-Control-Allow-Headers', 'Authorization');
-	$response->headers->set('Access-Control-Allow-Credentials', 'true');
-});
 
 // verificar autenticacao
 $app->before(function(Request $request, Application $app) use ($app, $db, $storage, $server) {
 	global $user;
     $route = $request->get('_route');
-	if (!$request->headers->has('authorization') && function_exists('apache_request_headers')) {
-        $all = apache_request_headers();
-        if (isset($all['authorization'])) {
-            $request->headers->set('authorization', $all['authorization']);
-        }
-    }
+
 	
     if($route != 'POST_auth' && $request->getMethod() != 'OPTIONS') {
 		$authorization = $request->headers->get("Authorization");
