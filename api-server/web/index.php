@@ -51,7 +51,7 @@ $app->before(function(Request $request, Application $app) use ($app, $db, $stora
 		}
 		else {
             // nao foi possivel extrair token do header Authorization
-            return new Response('Token nao informado', 401);
+            return new Response('Token nao informado', 200);
         } 
     }
 });
@@ -70,7 +70,7 @@ $app->post('/auth', function (Request $request) use ($app, $db, $storage, $serve
 	return($output);
 });
 
-$app->get('/usersxd', function (Request $request) use ($app, $db, $user) {
+$app->get('/users', function (Request $request) use ($app, $db, $user) {
 	global $user;
 	if ($user['adm']) {
 		$sql = 'SELECT * from `register_users`';
