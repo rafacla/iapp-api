@@ -33,7 +33,12 @@ class Database
 
 		
 		if(!isset($connection)) {
-			self::$connection = new mysqli(self::$servername,self::$username,self::$password,self::$database);
+			if ($_SERVER['HTTP_HOST'] == "api.localhost") {
+			$servername = self::$local_servername;
+		} else {
+			$servername = self::$remote_servername;
+		}
+			self::$connection = new mysqli($servername,self::$username,self::$password,self::$database);
 		}
 		
 		// If connection was not successful, handle the error
