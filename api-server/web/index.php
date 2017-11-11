@@ -32,7 +32,10 @@ $server->addGrantType(new OAuth2\GrantType\UserCredentials($storage));
 $app->before(function(Request $request, Application $app) use ($app, $db, $storage, $server) {
 	global $user;
     $route = $request->get('_route');
-
+	
+	$all = apache_request_headers();
+	
+	die($all);
 	
     if($route != 'POST_auth' && $request->getMethod() != 'OPTIONS') {
 		$authorization = $request->headers->get("Authorization");
