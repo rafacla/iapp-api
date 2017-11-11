@@ -17,4 +17,4 @@ RewriteCond $1 !^(index\.php|resources|robots\.txt)
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule .* api-server/ [L]
 
-ErrorDocument 403 
+ErrorDocument 403 "teste"
