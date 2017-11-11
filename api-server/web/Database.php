@@ -1,7 +1,11 @@
 <?php
 class Database
 {
-	protected static $servername = "localhost";
+	if ($_SERVER['HTTP_HOST'] == "api.localhost") {
+		protected static $servername = "localhost";
+	} else {
+		protected static $servername = "mysql762.umbler.com";
+	}
 	protected static $username = "rafacla";
 	protected static $password = "testuser";
 	protected static $database = "iapp";
