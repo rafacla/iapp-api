@@ -42,7 +42,7 @@ $app->before(function(Request $request, Application $app) use ($app, $db, $stora
 			$request = OAuth2\Request::createFromGlobals();
 			$response = new OAuth2\Response();
 			if (!$server->verifyResourceRequest($request,$response)) {
-				return new Response($response."..", 403);
+				return new Response($response."..", 200);
 			}
 			$tData = $server->getAccessTokenData(OAuth2\Request::createFromGlobals());
 			
@@ -51,7 +51,7 @@ $app->before(function(Request $request, Application $app) use ($app, $db, $stora
 		}
 		else {
             // nao foi possivel extrair token do header Authorization
-            return new Response('Token nao informado', 200);
+            return new Response('Token nao informado', 403);
         } 
     }
 });
