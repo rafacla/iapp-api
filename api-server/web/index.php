@@ -64,10 +64,13 @@ $app->options("{anything}", function () {
 // Autenticacao
 $app->post('/auth', function (Request $request) use ($app, $db, $storage, $server) {
 	ob_start(); //Start output buffer
-	$server->handleTokenRequest(OAuth2\Request::createFromGlobals())->send();
-	$output = ob_get_contents(); //Grab output
-	ob_end_clean(); //Discard output buffer
-	return($output);
+	$resposta = $server->handleTokenRequest(OAuth2\Request::createFromGlobals());
+	if ($resposta->isSuccessful()) {
+		$status = 200;
+	} else {
+		$status = 401;
+	}
+	return new Response (print_r($resposta),$status);
 });
 
 $app->get('/users', function (Request $request) use ($app, $db, $user) {
