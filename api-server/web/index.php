@@ -65,12 +65,12 @@ $app->options("{anything}", function () {
 $app->post('/auth', function (Request $request) use ($app, $db, $storage, $server) {
 	ob_start(); //Start output buffer
 	$resposta = $server->handleTokenRequest(OAuth2\Request::createFromGlobals());
-	if ($resposta->isSuccessful()) {
-		$status = 200;
-	} else {
-		$status = 401;
-	}
-	return new Response (print_r($resposta),$status);
+	$status = $resposta["statusCode"];
+	$respStr["error"] = $resposta["statusText"];
+	$respStr["error_description"] = $resposta["statusText"];
+	
+	
+	return new Response (json_encode($respStr),$status);
 });
 
 $app->get('/users', function (Request $request) use ($app, $db, $user) {
