@@ -33,7 +33,7 @@ $app->before(function(Request $request, Application $app) use ($app, $db, $stora
 	global $user;
     $route = $request->get('_route');
 	
-    if($route != 'POST_auth' && $request->getMethod() != 'OPTIONS') {
+    if($route != 'POST_auth' && $route != 'POST_users' && $request->getMethod() != 'OPTIONS') {
 		$authorization = $request->headers->get("Authorization");
 		list($jwt) = sscanf($authorization, 'Bearer %s');
 		
@@ -68,6 +68,12 @@ $app->post('/auth', function (Request $request) use ($app, $db, $storage, $serve
 	$status = $resposta->getStatusCode();
 	$respStr = $resposta->getResponseBody();
 	return new Response($respStr,$status);
+});
+
+$app->post('/users', function (Request $request) use ($app, $db) {
+	$ip = $request->getClientIp();
+	$teste = print_r($request->request->all());
+	return new Response ($teste, 200);	
 });
 
 $app->get('/users', function (Request $request) use ($app, $db, $user) {
