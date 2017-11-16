@@ -1,0 +1,5 @@
+mysql_user = user
+mysql_password = example
+smtp_host = smtp.example.com
+smtp_user = user
+smpt_password = example

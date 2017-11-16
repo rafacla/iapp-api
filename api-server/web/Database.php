@@ -4,11 +4,17 @@ class Database
 	protected static $servername = "localhost";
 	protected static $local_servername = "localhost";
 	protected static $remote_servername = "mysql762.umbler.com";
-	protected static $username = "rafacla";
-	protected static $password = "testuser";
+	protected static $username;
+	protected static $password;
 	protected static $database = "iapp";
 	
 	protected static $connection;
+	
+	public function __construct() {
+		$ini_array = parse_ini_file("config.ini", true);
+		self::$username = $ini_array['mysql_user'];
+		self::$password = $ini_array['mysql_password'];
+	}
 
 	public function dsn() {
 		if ($_SERVER['HTTP_HOST'] == "api.localhost") {
@@ -58,7 +64,7 @@ class Database
 	public function query($query) {
 		// Connect to the database
 		$connection = $this -> connect();
-
+		$connection->set_charset("utf8");
 		$result = false;
 		
 		if ($connection!=false) {
@@ -72,6 +78,33 @@ class Database
 					$sql .= $linha;
 				}
 				$connection->multi_query($sql);
+			}
+		}		
+		return $result;
+	}
+	
+	public function insert($query) {
+		// Connect to the database
+		$connection = $this -> connect();
+		$connection->set_charset("utf8");
+		$result = false;
+		$i=0;
+		if ($connection!=false) {
+			// Query the database
+			$sql = '';
+			if (is_string($query)) {
+				$query = $connection->query($query);
+				if ($query)
+					$result = $connection->insert_id;
+				else 
+					$result = false;
+			} else {
+				foreach ($query as $linha) {
+					$sql .= $linha;
+				}
+				$connection->multi_query($sql);
+				$result[$i] = $connection->insert_id;
+				$i++;
 			}
 		}		
 		return $result;
