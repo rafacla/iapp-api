@@ -6,7 +6,7 @@ class enviarEmail
 	protected static $smtp_port = "587";
 	protected static $user;
 	protected static $pass;
-	protected static $remetente_email = "nao-responda@rafacla.com";
+	protected static $remetente_email;
 	protected static $remetente_nome = "Rafael APP";
 
 	protected static $mail;
@@ -18,6 +18,7 @@ class enviarEmail
 		
 		self::$smtp_host = $ini_array['smtp_host'];
 		self::$user = $ini_array['smtp_user'];
+		self::$remetente_email = $ini_array['smtp_user'];
 		self::$pass = $ini_array['smtp_password'];
 	
 		// Setup PHPMailer
