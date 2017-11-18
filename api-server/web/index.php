@@ -20,6 +20,7 @@ use Silex\Application;
 $db = new Database();
 
 $app = new Silex\Application();
+
 $app['debug'] = true;
 $user["id"] = null;
 $user["adm"] = false;
@@ -65,7 +66,7 @@ $app->before(function(Request $request, Application $app) use ($app, $db, $stora
     }
 });
 
-$app->get("/", function () {
+$app->get("/", function (Request $request) {
 	return new Response("method not allowed",400);
 });
 
@@ -156,7 +157,7 @@ $app->post('/users', function (Request $request) use ($app, $db) {
 		$destinatario = $userEmail;
 		$assunto = "Bem vindo ao Meus Investimentos";
 		$template="new_user";
-		$variaveis['actCode'] = $request->getBaseUrl().'activate/'.$actCode;
+		$variaveis['actCode'] = $request->getSchemeAndHttpHost().'/activate/'.$actCode;
 		$variaveis['firstName'] = $userFirstName;
 		
 		
