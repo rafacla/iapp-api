@@ -14,6 +14,8 @@ class enviarEmail
 	public function __construct($destinatario,$assunto,$template,$variaveis) {
 		// Include the PHPMailer class
 		include('phpmailer/class.phpmailer.php');
+		if (!file_exists("config.ini"))
+			die("Não encontrei o arquivo config.ini dentro da pasta \"web\" ou você arruma ou eu paro por aqui.<br>Verifique o arquivo de exemplo chamado \"config.ini.sample\"");
 		$ini_array = parse_ini_file("config.ini", true);
 		
 		self::$smtp_host = $ini_array['smtp_host'];

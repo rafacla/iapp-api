@@ -36,7 +36,13 @@ $app->before(function(Request $request, Application $app) use ($app, $db, $stora
 	global $user;
     $route = $request->get('_route');
 	
-    if($route != 'POST_auth' && $route != 'POST_users' && $route !='GET_' && $request->getMethod() != 'OPTIONS') {
+	//Aqui definimos quais rotas dispensam autenticação:
+	$rotaslivres[0] = "POST_auth"; //rota para autenticar, obviamente nao exige que o usuario esteja autenticado
+	$rotaslivres[1] = "POST_users"; //rota para criar um novo usuário
+	$rotaslivres[2] = "GET_"; //esta é a rota padrão e exibe uma mensagem de erro amigável, dispensa autenticação por isso
+	$rotaslivres[3] = "GET_activate_actcode"; //esta rota serve para ativar um usuário recem registrado que recebeu o link por email
+	
+    if(!in_array($route,$rotaslivres) && $request->getMethod() != 'OPTIONS') {
 		$authorization = $request->headers->get("Authorization");
 		list($jwt) = sscanf($authorization, 'Bearer %s');
 		
@@ -60,16 +66,7 @@ $app->before(function(Request $request, Application $app) use ($app, $db, $stora
 });
 
 $app->get("/", function () {
-	$destinatario = "rafaacla@gmail.com";
-	$assunto="Teste!";
-	$template="new_user";
-	$variaveis['actCode'] = "kkk";
-	$variaveis['firstName'] = "Rafael";
-	
-	$mail = new enviarEmail($destinatario,$assunto,$template,$variaveis);
-	
-	$envio = $mail->enviar();
-	return new Response(var_dump($envio).".",200);
+	return new Response("method not allowed",400);
 });
 
 //Aqui estamos preparando o 'pré-voo' adicionando uma resposta válida para o method 'options'
@@ -86,6 +83,23 @@ $app->post('/auth', function (Request $request) use ($app, $db, $storage, $serve
 	return new Response($respStr,$status);
 });
 
+//Rota para ativar o novo usuário
+$app->get('/activate/{actcode}', function (Request $request, $actcode) use ($app, $db) {
+	$sql = "SELECT userID FROM register_users WHERE userActivationCode = '".$actcode."'";
+	$rows = $db ->select($sql);
+	if ($rows) {
+		$sql_u = "UPDATE register_users SET userActive='1',userNotActiveReason=NULL,userActivationCode=NULL WHERE userID='".$rows[0]['userID']."'";
+		$ativo = $db->query($sql_u);
+		if ($ativo)
+			Return new Response('OK! Usuário ativado!', 201);
+		else 
+			Return new Response('Usuário não autorizado ou código inválido', 401);
+	} else {
+		Return new Response('Usuário não autorizado ou código inválido', 401);
+	}
+});
+
+//Rota para criar um novo usuário
 $app->post('/users', function (Request $request) use ($app, $db) {
 	$ip = $request->getClientIp();
 	$data = json_decode($request->getContent(), true);
@@ -137,10 +151,23 @@ $app->post('/users', function (Request $request) use ($app, $db) {
 		$id = $resultado;
 		$resposta['status'] = true;
 		$resposta['id'] = $id;
+		
+		//prepara envio do e-mail:
+		$destinatario = $userEmail;
+		$assunto = "Bem vindo ao Meus Investimentos";
+		$template="new_user";
+		$variaveis['actCode'] = $request->getBaseUrl().'activate/'$actCode;
+		$variaveis['firstName'] = $userFirstName;
+		
+		$mail = new enviarEmail($destinatario,$assunto,$template,$variaveis);
+	
+		$envio = $mail->enviar();
+		
 		return new Response (json_encode($resposta), 201);
 	}
 });
 
+//Rota para listar todos os usuarios do sistema (apenas ADM)
 $app->get('/users', function (Request $request) use ($app, $db, $user) {
 	global $user;
 	if ($user['adm']) {
@@ -152,6 +179,7 @@ $app->get('/users', function (Request $request) use ($app, $db, $user) {
 	}
 });
 
+//Rota para pegar detalhes de um usuário específico (apenas ADM ou informações do próprio usuário)
 $app->get('/users/{id}', function (Request $request, $id) use ($app, $db, $user) {
 	global $user;
 	

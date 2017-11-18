@@ -11,6 +11,8 @@ class Database
 	protected static $connection;
 	
 	public function __construct() {
+		if (!file_exists("config.ini"))
+			die("Não encontrei o arquivo config.ini dentro da pasta \"web\" ou você arruma ou eu paro por aqui.<br>Verifique o arquivo de exemplo chamado \"config.ini.sample\"");
 		$ini_array = parse_ini_file("config.ini", true);
 		self::$username = $ini_array['mysql_user'];
 		self::$password = $ini_array['mysql_password'];
