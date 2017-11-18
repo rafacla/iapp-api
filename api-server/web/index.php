@@ -103,11 +103,11 @@ $app->get('/activate/{actcode}', function (Request $request, $actcode) use ($app
 $app->post('/users', function (Request $request) use ($app, $db) {
 	$ip = $request->getClientIp();
 	$data = json_decode($request->getContent(), true);
-	$userEmail = mysql_real_escape_string($data['userEmail']);
+	$userEmail = $db->escape_string($data['userEmail']);
 	$userPassword = password_hash($data['userPassword'], PASSWORD_DEFAULT);
-	$userFirstName = mysql_real_escape_string($data['userFirstName']);
-	$userLastName = mysql_real_escape_string($data['userLastName']);
-	$userPhoneNumber = mysql_real_escape_string($data['userPhoneNumber']);
+	$userFirstName = $db->escape_string ($data['userFirstName']);
+	$userLastName = $db->escape_string ($data['userLastName']);
+	$userPhoneNumber = $db->escape_string ($data['userPhoneNumber']);
 	
 	if (strlen($userEmail)==0 || strlen($userPassword)==0 || strlen($userFirstName)==0 || strlen($userLastName)==0) {
 		$resposta['status'] = false;
@@ -115,7 +115,7 @@ $app->post('/users', function (Request $request) use ($app, $db) {
 		return new Response (json_encode($resposta), 400);
 	}
 	
-	$actCode = mysql_real_escape_string(sha1(mt_rand(10000,99999).time().$userEmail));
+	$actCode = $db->escape_string (sha1(mt_rand(10000,99999).time().$userEmail));
 	$reason = ("Usuário não verificou e-mail ainda.");
 	$table = "`register_users`";
 	$sql_insert = "INSERT INTO $table ".

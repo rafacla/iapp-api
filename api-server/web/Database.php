@@ -7,15 +7,17 @@ class Database
 	protected static $username;
 	protected static $password;
 	protected static $database = "iapp";
-	
 	protected static $connection;
 	
+
 	public function __construct() {
 		if (!file_exists("config.ini"))
 			die("Não encontrei o arquivo config.ini dentro da pasta \"web\" ou você arruma ou eu paro por aqui.<br>Verifique o arquivo de exemplo chamado \"config.ini.sample\"");
 		$ini_array = parse_ini_file("config.ini", true);
 		self::$username = $ini_array['mysql_user'];
 		self::$password = $ini_array['mysql_password'];
+		self::$connection = $this -> connect();
+		self::$connection->set_charset("utf8");
 	}
 
 	public function dsn() {
@@ -38,8 +40,6 @@ class Database
 	
 	
 	public function connect() {
-
-		
 		if(!isset($connection)) {
 			if ($_SERVER['HTTP_HOST'] == "api.localhost") {
 			$servername = self::$local_servername;
@@ -65,21 +65,19 @@ class Database
 	 */
 	public function query($query) {
 		// Connect to the database
-		$connection = $this -> connect();
-		$connection->set_charset("utf8");
 		$result = false;
 		
-		if ($connection!=false) {
+		if (self::$connection!=false) {
 			// Query the database
 			$sql = '';
 			if (is_string($query)) {
-				$result = $connection->query($query);
+				$result = self::$connection->query($query);
 				
 			} else {
 				foreach ($query as $linha) {
 					$sql .= $linha;
 				}
-				$connection->multi_query($sql);
+				self::$connection->multi_query($sql);
 			}
 		}		
 		return $result;
@@ -87,25 +85,23 @@ class Database
 	
 	public function insert($query) {
 		// Connect to the database
-		$connection = $this -> connect();
-		$connection->set_charset("utf8");
 		$result = false;
 		$i=0;
-		if ($connection!=false) {
+		if (self::$connection!=false) {
 			// Query the database
 			$sql = '';
 			if (is_string($query)) {
-				$query = $connection->query($query);
+				$query = self::$connection->query($query);
 				if ($query)
-					$result = $connection->insert_id;
+					$result = self::$connection->insert_id;
 				else 
 					$result = false;
 			} else {
 				foreach ($query as $linha) {
 					$sql .= $linha;
 				}
-				$connection->multi_query($sql);
-				$result[$i] = $connection->insert_id;
+				self::$connection->multi_query($sql);
+				$result[$i] = self::$connection->insert_id;
 				$i++;
 			}
 		}		
@@ -120,8 +116,7 @@ class Database
 	 */
 	public function select($query) {
 		$rows = array();
-		
-		$result = $this -> query($query);
+		$result = $this->query($query);
 		
 		if($result === false) {
 			return false;
@@ -138,8 +133,7 @@ class Database
      * @return string Database error message
      */
     public function error() {
-        $connection = $this -> connect();
-        return $connection -> error;
+        return self::$connection -> error;
     }
 
     /**
@@ -148,8 +142,7 @@ class Database
      * @param string $value The value to be quoted and escaped
      * @return string The quoted and escaped string
      */
-    public function quote($value) {
-        $connection = $this -> connect();
-        return "'" . $connection -> real_escape_string($value) . "'";
+    public function escape_string($value) {
+        return  self::$connection -> real_escape_string($value);
     }
 }
