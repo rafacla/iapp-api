@@ -159,9 +159,11 @@ $app->post('/users', function (Request $request) use ($app, $db) {
 		$variaveis['actCode'] = $request->getBaseUrl().'activate/'.$actCode;
 		$variaveis['firstName'] = $userFirstName;
 		
+		
+		ob_start();
 		$mail = new enviarEmail($destinatario,$assunto,$template,$variaveis);
-	
 		$envio = $mail->enviar();
+		ob_clean();
 		
 		return new Response (json_encode($resposta), 201);
 	}

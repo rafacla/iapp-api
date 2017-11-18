@@ -26,7 +26,8 @@ class enviarEmail
 		// Setup PHPMailer
 		self::$mail = new PHPMailer();
 		self::$mail->IsSMTP();
-		self::$mail->SMTPDebug = 2;
+		self::$mail->SMTPDebug = false;
+		self::$mail->Debug = false;
 		// This is the SMTP mail server
 		self::$mail->Host = self::$smtp_host;
 		self::$mail->Port = self::$smtp_port;
