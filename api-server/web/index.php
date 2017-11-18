@@ -156,7 +156,7 @@ $app->post('/users', function (Request $request) use ($app, $db) {
 		$destinatario = $userEmail;
 		$assunto = "Bem vindo ao Meus Investimentos";
 		$template="new_user";
-		$variaveis['actCode'] = $request->getBaseUrl().'activate/'$actCode;
+		$variaveis['actCode'] = $request->getBaseUrl().'activate/'.$actCode;
 		$variaveis['firstName'] = $userFirstName;
 		
 		$mail = new enviarEmail($destinatario,$assunto,$template,$variaveis);
