@@ -78,8 +78,6 @@ $app->before(function(Request $request, Application $app) use ($app, $db, $stora
 				}
 			} 
 			
-			var_dump($tData);
-			die();
 			$user['adm'] = (strpos($tData['scope'], 'adm') !== false);
 		}
 		else {
