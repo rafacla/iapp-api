@@ -56,6 +56,28 @@ $app->before(function(Request $request, Application $app) use ($app, $db, $stora
 			$tData = $server->getAccessTokenData(OAuth2\Request::createFromGlobals());
 			
 			$user['id'] = $tData['user_id'];
+			
+			$sql_s_u = "SELECT userActive, FROM register_users WHERE userID = '".$user['id']."';";
+			$sql_s_c = "SELECT ativo FROM oauth_clients WHERE client_id = '".$tData['client_id']."';";
+			
+			$rows = $db ->select($sql_s_u);
+			if ($rows) {
+				if ($rows[0]['userActive']==0) {
+					$resposta['error']="usuario_inativo";
+					$resposta['error_description']=$rows[0]['userNotActiveReason'];
+					return new Response(json_encode($resposta), 403);
+				}
+			} 
+			$rows = null;
+			$rows = $db ->select($sql_s_c);
+			if ($rows) {
+				if ($rows[0]['ativo']==0) {
+					$resposta['error']="cliente_bloqueado";
+					$resposta['error_description']="cliente foi bloqueado";
+					return new Response(json_encode($resposta), 403);
+				}
+			} 
+			
 			var_dump($tData);
 			die();
 			$user['adm'] = (strpos($tData['scope'], 'adm') !== false);
