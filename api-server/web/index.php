@@ -103,11 +103,18 @@ $app->post('/auth', function (Request $request) use ($app, $db, $storage, $serve
 	ob_start(); //Start output buffer
 	$resposta = $server->handleTokenRequest(OAuth2\Request::createFromGlobals());
 	$data = json_decode($request->getContent(), true);
-	$headers = $request->headers->all();
-	var_dump($_SERVER['PHP_AUTH_USER']);
+	$authorization = $request->headers->get("Authorization");
+	$client_credentials = explode(":",base64_decode(sscanf($authorization, 'Basic %s')));
+	$grant_type = $request->get("grant_type");
+	$client_id = $request->get("client_id");
+	$client_secret = $request->get("client_secret");
+	$username = $request->get("username");
+	$password = $request->get("password");
 	
-	var_dump($data);
-	var_dump($headers);
+	var_dump($client_id);
+	var_dump($grant_type);
+	var_dump($username);
+	var_dump($client_credentials);
 	
 	die();
 	$status = $resposta->getStatusCode();
