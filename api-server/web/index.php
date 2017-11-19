@@ -61,8 +61,7 @@ $app->before(function(Request $request, Application $app) use ($app, $db, $stora
 			$sql_s_c = "SELECT ativo FROM oauth_clients WHERE client_id = '".$tData['client_id']."';";
 			
 			$rows = $db ->select($sql_s_u);
-			var_dump($rows);
-			die();
+
 			if ($rows) {
 				if ($rows[0]['userActive']==0) {
 					$resposta['error']="usuario_inativo";
@@ -103,6 +102,8 @@ $app->options("{anything}", function () {
 $app->post('/auth', function (Request $request) use ($app, $db, $storage, $server) {
 	ob_start(); //Start output buffer
 	$resposta = $server->handleTokenRequest(OAuth2\Request::createFromGlobals());
+	var_dump($resposta);
+	die();
 	$status = $resposta->getStatusCode();
 	$respStr = $resposta->getResponseBody();
 	return new Response($respStr,$status);
