@@ -102,7 +102,7 @@ $app->options("{anything}", function () {
 $app->post('/auth', function (Request $request) use ($app, $db, $storage, $server) {
 	ob_start(); //Start output buffer
 	$resposta = $server->handleTokenRequest(OAuth2\Request::createFromGlobals());
-	var_dump($resposta);
+	var_dump($request);
 	die();
 	$status = $resposta->getStatusCode();
 	$respStr = $resposta->getResponseBody();
