@@ -57,7 +57,7 @@ $app->before(function(Request $request, Application $app) use ($app, $db, $stora
 			
 			$user['id'] = $tData['user_id'];
 			
-			$sql_s_u = "SELECT userActive, FROM register_users WHERE userID = '".$user['id']."';";
+			$sql_s_u = "SELECT userActive, userNotActiveReason FROM register_users WHERE userID = '".$user['id']."';";
 			$sql_s_c = "SELECT ativo FROM oauth_clients WHERE client_id = '".$tData['client_id']."';";
 			
 			$rows = $db ->select($sql_s_u);
@@ -104,19 +104,42 @@ $app->post('/auth', function (Request $request) use ($app, $db, $storage, $serve
 	$resposta = $server->handleTokenRequest(OAuth2\Request::createFromGlobals());
 	$data = json_decode($request->getContent(), true);
 	$authorization = $request->headers->get("Authorization");
-	$client_credentials = explode(":",base64_decode(sscanf($authorization, 'Basic %s')));
+	
+	if ($authorization!=null) {
+		sscanf($authorization, 'Basic %s',$basic)
+		$client_credentials = explode(":",base64_decode($basic));
+		$client_id = $client_credentials[0];
+		$client_secret = $client_credentials[1];
+	} else {
+		$client_id = $request->get("client_id");
+		$client_secret = $request->get("client_secret");
+	}
 	$grant_type = $request->get("grant_type");
-	$client_id = $request->get("client_id");
-	$client_secret = $request->get("client_secret");
 	$username = $request->get("username");
 	$password = $request->get("password");
 	
-	var_dump($client_id);
-	var_dump($grant_type);
-	var_dump($username);
-	var_dump($client_credentials);
-	
-	die();
+	if ($grant_type == "password") {
+		$sql_s_u = "SELECT userActive, userNotActiveReason FROM register_users WHERE  userEmail= '".$username."';";
+		$rows = $db ->select($sql_s_u);
+		if ($rows) {
+			if ($rows[0]['userActive']==0) {
+				$resposta['error']="usuario_inativo";
+				$resposta['error_description']=$rows[0]['userNotActiveReason'];
+				return new Response(json_encode($resposta), 403);
+			}
+		}
+	} elseif ($grant_type == "client_credentials") {
+		$sql_s_c = "SELECT ativo FROM oauth_clients WHERE client_id = '".$client_id."';";			 
+		$rows = null;
+		$rows = $db ->select($sql_s_c);
+		if ($rows) {
+			if ($rows[0]['ativo']==0) {
+				$resposta['error']="cliente_bloqueado";
+				$resposta['error_description']="cliente foi bloqueado";
+				return new Response(json_encode($resposta), 403);
+			}
+		}	
+	} 
 	$status = $resposta->getStatusCode();
 	$respStr = $resposta->getResponseBody();
 	return new Response($respStr,$status);
