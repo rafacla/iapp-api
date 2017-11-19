@@ -61,6 +61,8 @@ $app->before(function(Request $request, Application $app) use ($app, $db, $stora
 			$sql_s_c = "SELECT ativo FROM oauth_clients WHERE client_id = '".$tData['client_id']."';";
 			
 			$rows = $db ->select($sql_s_u);
+			var_dump($rows);
+			die();
 			if ($rows) {
 				if ($rows[0]['userActive']==0) {
 					$resposta['error']="usuario_inativo";
