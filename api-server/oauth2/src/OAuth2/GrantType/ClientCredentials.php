@@ -22,7 +22,7 @@ class ClientCredentials extends HttpBasic implements GrantTypeInterface
          *
          * @see http://tools.ietf.org/html/rfc6749#section-4.4
          */
-        $config['allow_public_clients'] = true;
+        $config['allow_public_clients'] = false;
 
         parent::__construct($storage, $config);
     }

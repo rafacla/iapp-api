@@ -63,7 +63,7 @@ class HttpBasic implements ClientAssertionTypeInterface
             $response->setError(400, 'invalid_client', 'The client credentials are invalid');
 
             return false;
-        }
+        } 
 
         $this->clientData = $clientData;
 

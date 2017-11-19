@@ -31,7 +31,6 @@ $server->addGrantType(new OAuth2\GrantType\ClientCredentials($storage));
 $server->addGrantType(new OAuth2\GrantType\UserCredentials($storage));
 
 
-
 // verificar autenticacao
 $app->before(function(Request $request, Application $app) use ($app, $db, $storage, $server) {
 	global $user;
@@ -53,10 +52,12 @@ $app->before(function(Request $request, Application $app) use ($app, $db, $stora
 			$response = new OAuth2\Response();
 			if (!$server->verifyResourceRequest($request,$response)) {
 				return new Response($response."...", 403);
-			}
+			} 
 			$tData = $server->getAccessTokenData(OAuth2\Request::createFromGlobals());
 			
 			$user['id'] = $tData['user_id'];
+			var_dump($tData);
+			die();
 			$user['adm'] = (strpos($tData['scope'], 'adm') !== false);
 		}
 		else {
@@ -64,10 +65,11 @@ $app->before(function(Request $request, Application $app) use ($app, $db, $stora
             return new Response('Token não informado', 403);
         } 
     }
+
 });
 
 $app->get("/", function (Request $request) {
-	return new Response("method not allowed",400);
+	return new Response("method not allowed",485);
 });
 
 //Aqui estamos preparando o 'pré-voo' adicionando uma resposta válida para o method 'options'
@@ -199,4 +201,24 @@ $app->get('/users/{id}', function (Request $request, $id) use ($app, $db, $user)
 	}
 });
 
+//Rota para verificar se um cliente existe
+$app->get('/cliente', function (Request $request) use ($app, $db, $user) {
+	$data = json_decode($request->getContent(), true);
+	$client_id = $db->escape_string($data['client_id']);
+	$client_secret = $db->escape_string($data['client_secret']);
+	if (is_set($data['client_id'] && is_set($data['client_secret']))) {
+		$sql_s = "SELECT user_id, ativo FROM oauth_clients WHERE client_id = '".$client_id."' AND client_secret='".$client_secret."';";
+		$rows = $db ->select($sql_s);
+		if ($rows) {
+			if ($rows[0]['ativo'] == 1) //eba existe e tá ativo, vamos retornar um ok!
+				return new Response("ok",200);
+			else //vixe, o cliente até existe, mas está bloqueado, vamos informar ao cliente:
+				return new Response("cliente_bloqueado",403);
+		} else {
+			return new Response("credenciais_invalidas", 401);
+		}
+	} else {
+		return new Response('credenciais_invalidas',401);
+	}
+});
 $app->run();

@@ -81,6 +81,16 @@ class Pdo implements
         // make this extensible
         return $result && $result['client_secret'] == $client_secret;
     }
+	
+	//personalizada:
+	public function checkClientActive($client_id)
+	{
+		$stmt = $this->db->prepare(sprintf('SELECT * FROM %s WHERE client_id = :client_id', $this->config['client_table']));
+        $stmt->execute(compact('client_id'));
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+		
+		return $result['ativo'] == 1;
+	}
 
     public function isPublicClient($client_id)
     {
