@@ -106,7 +106,7 @@ $app->post('/auth', function (Request $request) use ($app, $db, $storage, $serve
 	$authorization = $request->headers->get("Authorization");
 	
 	if ($authorization!=null) {
-		sscanf($authorization, 'Basic %s',$basic)
+		sscanf($authorization, 'Basic %s',$basic);
 		$client_credentials = explode(":",base64_decode($basic));
 		$client_id = $client_credentials[0];
 		$client_secret = $client_credentials[1];
