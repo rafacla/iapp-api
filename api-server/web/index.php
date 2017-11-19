@@ -104,8 +104,11 @@ $app->post('/auth', function (Request $request) use ($app, $db, $storage, $serve
 	$resposta = $server->handleTokenRequest(OAuth2\Request::createFromGlobals());
 	$data = json_decode($request->getContent(), true);
 	$headers = $request->headers->all();
+	var_dump($_SERVER['PHP_AUTH_USER']);
+	
 	var_dump($data);
 	var_dump($headers);
+	
 	die();
 	$status = $resposta->getStatusCode();
 	$respStr = $resposta->getResponseBody();
