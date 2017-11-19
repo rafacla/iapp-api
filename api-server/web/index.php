@@ -187,7 +187,6 @@ $app->post('/users', function (Request $request) use ($app, $db) {
 	
 	$sql_select = "SELECT * FROM ".$table." WHERE `userEmail` = '".$userEmail."';";
 	
-
 	$result = $db->select($sql_select);
 	//Se o usuario ja existe, retorna erro
 	if ($result) {
@@ -211,6 +210,13 @@ $app->post('/users', function (Request $request) use ($app, $db) {
 		return new Response (json_encode($resposta), 400);	
 	} else {
 		$id = $resultado;
+		$sql_grupo = "SELECT groupID from register_groups WHERE scope = 'user';";
+		$grupo = $db->select($sql_grupo);
+		if ($grupo) {
+			$sql_insertGrupo = "INSERT INTO register_users_groups (userID,groupID,CreatedIP,CreatedDate) VALUE ".
+			"('$id','".$grupo[0]['groupID']."','$ip',CURDATE());";
+			$resultado = $db->insert($sql_insertGrupo);
+		}
 		$resposta['status'] = true;
 		$resposta['id'] = $id;
 		
