@@ -123,9 +123,9 @@ $app->post('/auth', function (Request $request) use ($app, $db, $storage, $serve
 		$rows = $db ->select($sql_s_u);
 		if ($rows) {
 			if ($rows[0]['userActive']==0) {
-				$resposta['error']="usuario_inativo";
-				$resposta['error_description']=$rows[0]['userNotActiveReason'];
-				return new Response(json_encode($resposta), 403);
+				$resp['error']="usuario_inativo";
+				$resp['error_description']=$rows[0]['userNotActiveReason'];
+				return new Response(json_encode($resp), 403);
 			}
 		}
 	} elseif ($grant_type == "client_credentials") {
@@ -134,9 +134,9 @@ $app->post('/auth', function (Request $request) use ($app, $db, $storage, $serve
 		$rows = $db ->select($sql_s_c);
 		if ($rows) {
 			if ($rows[0]['ativo']==0) {
-				$resposta['error']="cliente_bloqueado";
-				$resposta['error_description']="cliente foi bloqueado";
-				return new Response(json_encode($resposta), 403);
+				$resp['error']="cliente_bloqueado";
+				$resp['error_description']="cliente foi bloqueado";
+				return new Response(json_encode($resp), 403);
 			}
 		}	
 	} 
