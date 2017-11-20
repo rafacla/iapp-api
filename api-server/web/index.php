@@ -54,7 +54,8 @@ $app->before(function(Request $request, Application $app) use ($app, $db, $stora
 				return new Response($response."...", 403);
 			} 
 			$tData = $server->getAccessTokenData(OAuth2\Request::createFromGlobals());
-			
+			var_dump($tData);
+			die();
 			$user['id'] = $tData['user_id'];
 			
 			$sql_s_u = "SELECT userActive, userNotActiveReason FROM register_users WHERE userID = '".$user['id']."';";
