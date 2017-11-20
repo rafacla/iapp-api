@@ -54,8 +54,7 @@ $app->before(function(Request $request, Application $app) use ($app, $db, $stora
 				return new Response($response."...", 403);
 			} 
 			$tData = $server->getAccessTokenData(OAuth2\Request::createFromGlobals());
-			var_dump($tData);
-			die();
+			
 			$user['id'] = $tData['user_id'];
 			
 			$sql_s_u = "SELECT userActive, userNotActiveReason FROM register_users WHERE userID = '".$user['id']."';";
@@ -239,7 +238,7 @@ $app->post('/users', function (Request $request) use ($app, $db) {
 });
 
 //Rota para listar todos os usuarios do sistema (apenas ADM)
-$app->get('/users', function (Request $request) use ($app, $db, $user) {
+$app->get('/users', function (Request $request) use ($app, $db) {
 	global $user;
 	if ($user['adm']) {
 		$sql = 'SELECT * from `register_users`';
@@ -251,7 +250,7 @@ $app->get('/users', function (Request $request) use ($app, $db, $user) {
 });
 
 //Rota para pegar detalhes de um usuário específico (apenas ADM ou informações do próprio usuário)
-$app->get('/users/{id}', function (Request $request, $id) use ($app, $db, $user) {
+$app->get('/users/{id}', function (Request $request, $id) use ($app, $db) {
 	global $user;
 	
 	if ($user['adm'] || $user['id']==$id) {
@@ -268,7 +267,7 @@ $app->get('/users/{id}', function (Request $request, $id) use ($app, $db, $user)
 });
 
 //Rota para verificar se um cliente existe
-$app->get('/cliente', function (Request $request) use ($app, $db, $user) {
+$app->get('/cliente', function (Request $request) use ($app, $db) {
 	$client_id = $db->escape_string($request->headers->get("clientid"));
 	$client_secret = $db->escape_string($request->headers->get("clientsecret"));
 	if ($request->headers->get("clientid")!=null && $request->headers->get("clientsecret")!=null) {
@@ -288,7 +287,8 @@ $app->get('/cliente', function (Request $request) use ($app, $db, $user) {
 });
 
 //rota para criar um novo cliente
-$app->post('/cliente', function (Request $request) use ($app, $db, $user) {
+$app->post('/cliente', function (Request $request) use ($app, $db) {
+	global $user;
 	$data = json_decode($request->getContent(), true);
 	$client_id = $db->escape_string($data['client_id']);
 	$client_secret = $db->escape_string($data['client_secret']);
@@ -308,7 +308,7 @@ $app->post('/cliente', function (Request $request) use ($app, $db, $user) {
 		if ($resultado)
 			return new Response('ok',201);
 		else
-			return new Response($sql_i.var_dump($user),400);
+			return new Response('falha_ao_criar_cliente',400);
 	}
 });
 
