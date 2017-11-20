@@ -268,10 +268,9 @@ $app->get('/users/{id}', function (Request $request, $id) use ($app, $db, $user)
 
 //Rota para verificar se um cliente existe
 $app->get('/cliente', function (Request $request) use ($app, $db, $user) {
-	$data = json_decode($request->getContent(), true);
-	$client_id = $db->escape_string($data['client_id']);
-	$client_secret = $db->escape_string($data['client_secret']);
-	if (is_set($data['client_id'] && is_set($data['client_secret']))) {
+	$client_id = $db->escape_string($request->headers->get("client_id"));
+	$client_secret = $db->escape_string($request->headers->get("client_secret"));
+	if (is_set($request->headers->get("client_id")) && is_set($request->headers->get("client_secret"))) {
 		$sql_s = "SELECT user_id, ativo FROM oauth_clients WHERE client_id = '".$client_id."' AND client_secret='".$client_secret."';";
 		$rows = $db ->select($sql_s);
 		if ($rows) {
