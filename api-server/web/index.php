@@ -282,7 +282,7 @@ $app->get('/cliente', function (Request $request) use ($app, $db, $user) {
 			return new Response("credenciais_invalidas", 401);
 		}
 	} else {
-		return new Response('credenciais_nao_enviadas'.$client_id.$client_secret,401);
+		return new Response('credenciais_nao_enviadas'.$request->headers->all(),401);
 	}
 });
 
