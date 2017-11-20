@@ -286,4 +286,29 @@ $app->get('/cliente', function (Request $request) use ($app, $db, $user) {
 	}
 });
 
+//rota para criar um novo cliente
+$app->post('/cliente', function (Request $request) use ($app, $db, $user) {
+	$data = json_decode($request->getContent(), true);
+	$client_id = $db->escape_string($data['client_id']);
+	$client_secret = $db->escape_string($data['client_secret']);
+	$description = $db->escape_string($data['description']);
+	if ($user['adm'])
+		$user_id = $db->escape_string($data['user_id']);
+	else
+		$user_id = $user['id'];
+	$sql_s = "SELECT user_id, ativo FROM oauth_clients WHERE client_id = '".$client_id."';";
+	$rows = $db ->select($sql_s);
+	if ($rows) {
+		return new Response("cliente_existente",409);
+	} else {
+		$sql_i = "INSERT INTO oauth_clients (client_id,client_secret,grant_type,scope,user_id,description,ativo) ".
+		"VALUES ('$client_id','$client_secret','client_credentials','user','$user_id','$description',1)";
+		$resultado = $db->insert($sql_i);
+		if ($resultado)
+			return new Response('ok',201);
+		else
+			return new Response('falha',400);
+	}
+});
+
 $app->run();
