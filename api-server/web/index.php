@@ -307,7 +307,7 @@ $app->post('/cliente', function (Request $request) use ($app, $db, $user) {
 		if ($resultado)
 			return new Response('ok',201);
 		else
-			return new Response('falha',400);
+			return new Response($sql_i,400);
 	}
 });
 
