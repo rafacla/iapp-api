@@ -302,13 +302,13 @@ $app->post('/cliente', function (Request $request) use ($app, $db) {
 	if ($rows) {
 		return new Response("cliente_existente",409);
 	} else {
-		$sql_i = "INSERT INTO oauth_clients (client_id,client_secret,grant_type,scope,user_id,description,ativo) ".
+		$sql_i = "INSERT INTO oauth_clients (client_id,client_secret,grant_types,scope,user_id,description,ativo) ".
 		"VALUES ('$client_id','$client_secret','client_credentials','user','$user_id','$description',1)";
 		$resultado = $db->insert($sql_i);
 		if ($resultado)
 			return new Response('ok',201);
 		else
-			return new Response('falha_ao_criar_cliente'.$sql_i,400);
+			return new Response('falha_ao_criar_cliente',400);
 	}
 });
 
