@@ -300,7 +300,12 @@ $app->post('/cliente', function (Request $request) use ($app, $db) {
 	$sql_s = "SELECT user_id, ativo FROM oauth_clients WHERE client_id = '".$client_id."';";
 	$rows = $db ->select($sql_s);
 	if ($rows) {
-		return new Response("cliente_existente",409);
+		$sql_s1 = "SELECT user_id, ativo FROM oauth_clients WHERE client_id = '".$client_id."' AND client_secret='".$client_secret."';";
+		$rows1 = $db ->select($sql_s1);
+		if ($rows1)
+			return new Response('ok',200);
+		else
+			return new Response('cliente_existente',409);
 	} else {
 		$sql_i = "INSERT INTO oauth_clients (client_id,client_secret,grant_types,scope,user_id,description,ativo) ".
 		"VALUES ('$client_id','$client_secret','client_credentials','user','$user_id','$description',1)";
