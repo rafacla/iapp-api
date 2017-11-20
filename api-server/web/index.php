@@ -303,7 +303,10 @@ $app->post('/cliente', function (Request $request) use ($app, $db) {
 		$sql_s1 = "SELECT user_id, ativo FROM oauth_clients WHERE client_id = '".$client_id."' AND client_secret='".$client_secret."';";
 		$rows1 = $db ->select($sql_s1);
 		if ($rows1)
-			return new Response('ok',200);
+			if ($rows1[0]['ativo']==1)
+				return new Response('ok',200);
+			else
+				return new Response('cliente_bloqueado',403);
 		else
 			return new Response('cliente_existente',409);
 	} else {
