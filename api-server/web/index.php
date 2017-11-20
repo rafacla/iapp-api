@@ -270,7 +270,7 @@ $app->get('/users/{id}', function (Request $request, $id) use ($app, $db, $user)
 $app->get('/cliente', function (Request $request) use ($app, $db, $user) {
 	$client_id = $db->escape_string($request->headers->get("client_id"));
 	$client_secret = $db->escape_string($request->headers->get("client_secret"));
-	if (isset($request->headers->get("client_id")) && isset($request->headers->get("client_secret"))) {
+	if ($request->headers->get("client_id")!==null && $request->headers->get("client_secret")!==null) {
 		$sql_s = "SELECT user_id, ativo FROM oauth_clients WHERE client_id = '".$client_id."' AND client_secret='".$client_secret."';";
 		$rows = $db ->select($sql_s);
 		if ($rows) {
