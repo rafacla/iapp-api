@@ -270,7 +270,7 @@ $app->get('/users/{id}', function (Request $request, $id) use ($app, $db, $user)
 $app->get('/cliente', function (Request $request) use ($app, $db, $user) {
 	$client_id = $db->escape_string($request->headers->get("client_id"));
 	$client_secret = $db->escape_string($request->headers->get("client_secret"));
-	if ($request->headers->get("client_id")!==null && $request->headers->get("client_secret")!==null) {
+	if ($request->headers->get("client_id")!=null && $request->headers->get("client_secret")!=null) {
 		$sql_s = "SELECT user_id, ativo FROM oauth_clients WHERE client_id = '".$client_id."' AND client_secret='".$client_secret."';";
 		$rows = $db ->select($sql_s);
 		if ($rows) {
@@ -282,7 +282,7 @@ $app->get('/cliente', function (Request $request) use ($app, $db, $user) {
 			return new Response("credenciais_invalidas", 401);
 		}
 	} else {
-		return new Response('credenciais_invalidas',401);
+		return new Response('credenciais_nao_enviadas',401);
 	}
 });
 
