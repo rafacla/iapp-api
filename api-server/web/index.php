@@ -308,7 +308,7 @@ $app->post('/cliente', function (Request $request) use ($app, $db) {
 		if ($resultado)
 			return new Response('ok',201);
 		else
-			return new Response('falha_ao_criar_cliente',400);
+			return new Response('falha_ao_criar_cliente'.$sql_i,400);
 	}
 });
 
