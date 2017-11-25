@@ -307,7 +307,7 @@ $app->post('/cliente', function (Request $request) use ($app, $db) {
 				$sql_user = "SELECT userFirstName, userLastName FROM register_users WHERE userID='".$rows[0]['user_id']."';";
 				$rows2 = $db ->select($sql_user);
 				$resposta['nome'] = $rows2[0]['userFirstName']." ".$rows2[0]['userLastName'];
-				return new Response($resposta,200);
+				return new Response(json_encode($resposta),200);
 			}
 			else
 				return new Response('cliente_bloqueado',403);
@@ -321,7 +321,7 @@ $app->post('/cliente', function (Request $request) use ($app, $db) {
 			$sql_user = "SELECT userFirstName, userLastName FROM register_users WHERE userID='".$user_id."';";
 			$rows2 = $db ->select($sql_user);
 			$resposta['nome'] = $rows2[0]['userFirstName']." ".$rows2[0]['userLastName'];
-			return new Response($resposta,201);
+			return new Response(json_encode($resposta),201);
 		}
 		else
 			return new Response('falha_ao_criar_cliente',400);
