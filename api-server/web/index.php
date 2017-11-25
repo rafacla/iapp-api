@@ -303,8 +303,12 @@ $app->post('/cliente', function (Request $request) use ($app, $db) {
 		$sql_s1 = "SELECT user_id, ativo FROM oauth_clients WHERE client_id = '".$client_id."' AND client_secret='".$client_secret."';";
 		$rows1 = $db ->select($sql_s1);
 		if ($rows1)
-			if ($rows1[0]['ativo']==1)
-				return new Response('ok',200);
+			if ($rows1[0]['ativo']==1) {
+				$sql_user = "SELECT userFirstName, userLastName FROM register_users WHERE userID='".$rows[0]['user_id']."';";
+				$rows2 = $db ->select($sql_user);
+				$resposta['nome'] = $rows2[0]['userFirstName']." ".$rows2[0]['userLastName'];
+				return new Response($resposta,200);
+			}
 			else
 				return new Response('cliente_bloqueado',403);
 		else
@@ -313,8 +317,12 @@ $app->post('/cliente', function (Request $request) use ($app, $db) {
 		$sql_i = "INSERT INTO oauth_clients (client_id,client_secret,grant_types,scope,user_id,description,ativo) ".
 		"VALUES ('$client_id','$client_secret','client_credentials','user','$user_id','$description',1)";
 		$resultado = $db->insert($sql_i);
-		if ($resultado)
-			return new Response('ok',201);
+		if ($resultado) {
+			$sql_user = "SELECT userFirstName, userLastName FROM register_users WHERE userID='".$user_id."';";
+			$rows2 = $db ->select($sql_user);
+			$resposta['nome'] = $rows2[0]['userFirstName']." ".$rows2[0]['userLastName'];
+			return new Response($resposta,201);
+		}
 		else
 			return new Response('falha_ao_criar_cliente',400);
 	}
