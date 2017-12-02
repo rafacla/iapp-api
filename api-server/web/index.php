@@ -339,7 +339,10 @@ $app->get('/diario', function (Request $request) use ($app, $user, $db) {
 		$user_id = $db->escape_string($request->headers->get("userid"));
 		$sql = "SELECT id,uid,nome,description,default FROM register_diarios WHERE user_id = '$user_id';";
 		$rows = $db ->select($sql);
-		return new Response(json_encode($rows),200);
+		if ($rows)
+			return new Response(json_encode($rows),200);
+		else
+			return new Response("{}",200);
 	}
 });
 
