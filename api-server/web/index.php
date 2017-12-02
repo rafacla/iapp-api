@@ -389,11 +389,10 @@ $app->post('/diario/put', function (Request $request) use ($app, $user, $db) {
 			$uniqueid 		= $db->escape_string($data['uniqueid']);
 			$nome 			= $db->escape_string($data['nome']);
 			$description	= $db->escape_string($data['description']);
-			$uuid 			= md5(uniqid(""));
 			$sql_u = "UPDATE register_diarios SET nome='$nome',description='$description' WHERE uid='$uniqueid';";
 			$resultado = $db->query($sql_u);
 			if ($resultado)
-				return new Response($uuid,201);
+				return new Response("ok",200);
 			else
 				return new Response("Sintaxe de entrada inválida",400);
 		}
