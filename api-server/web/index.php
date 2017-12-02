@@ -93,6 +93,14 @@ $app->get("/", function (Request $request) {
 	return new Response("method not allowed",485);
 });
 
+$app->put("/", function (Request $request) {
+	return new Response("method not allowed",485);
+});
+
+$app->delete("/", function (Request $request) {
+	return new Response("method not allowed",485);
+});
+
 //Aqui estamos preparando o 'pré-voo' adicionando uma resposta válida para o method 'options'
 $app->options("{anything}", function () {
         return new \Symfony\Component\HttpFoundation\JsonResponse(null, 204);
