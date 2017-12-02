@@ -328,4 +328,61 @@ $app->post('/cliente', function (Request $request) use ($app, $db) {
 	}
 });
 
+//rota para listar todos os diários de um usuário
+$app->get('/diario', function (Request $request) use ($app, $user, $db) {
+	if ($request->headers->get("userid")==null) {
+		return new Response("Faltando userid",400);
+	} elseif ($user['id']<>$request->headers->get("userid") && $user['adm']!=true) {
+		return new Response("Não autorizado",403);
+	} else {
+		$user_id = $db->escape_string($request->headers->get("userid"));
+		$sql = "SELECT id,uid,nome,description,default FROM register_diarios WHERE user_id = '$user_id';";
+		$rows = $db ->select($sql);
+		return new Response(json_encode($rows),200);
+	}
+});
+
+//rota para criar um novo diário
+$app->post('/diario', function (Request $request) use ($app, $user, $db) {
+	$data = json_decode($request->getContent(), true);
+	if (isset($data['nome'][2]) && isset($data['description'][2]) && isset($data['userid'])) {
+		if ($data['userid']<>$request->headers->get("userid") && $user['adm']!=true)
+			return new Response("Não autorizado",403);		
+		$nome 			= $db->escape_string($data['nome']);
+		$description	= $db->escape_string($data['description']);
+		$userid			= $db->escape_string($data['userid']);
+		$uuid 			= md5(uniqid(""));
+		$sql_i = "INSERT INTO 'register_diarios' (uid,nome,description,user_id,default) VALUES ('$uuid','$nome','$description','$userid',1);";
+		$resultado = $db->insert($sql_i);
+		if ($resultado)
+			return new Response($uuid,201);
+		else
+			return new Response("Sintaxe de entrada inválida",400);
+	} else {
+		return new Response("Sintaxe de entrada inválida",400);
+	}
+});
+
+//rota para atualizar um novo diario
+$app->put('/diario', function (Request $request) use ($app, $user, $db) {
+	$data = json_decode($request->getContent(), true);
+	if (isset($data['nome'][2]) && isset($data['description'][2]) && isset($data['uniqueid'][2])) {
+		if ($data['userid']<>$request->headers->get("userid") && $user['adm']!=true)
+			return new Response("Não autorizado",403);	
+		$uniqueid 		= $db->escape_string($data['uniqueid']);
+		$nome 			= $db->escape_string($data['nome']);
+		$description	= $db->escape_string($data['description']);
+		$userid			= $db->escape_string($data['userid']);
+		$uuid 			= md5(uniqid(""));
+		$sql_u = "UPDATE 'register_diarios' SET nome='$nome',description='$description' WHERE $uid='$uniqueid';";
+		$resultado = $db->query($sql_u);
+		if ($resultado)
+			return new Response($uuid,201);
+		else
+			return new Response("Sintaxe de entrada inválida",400);
+	} else {
+		return new Response("Sintaxe de entrada inválida",400);
+	}
+});
+
 $app->run();
