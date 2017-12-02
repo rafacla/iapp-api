@@ -357,9 +357,13 @@ $app->post('/diario', function (Request $request) use ($app, $user, $db) {
 		$description	= $db->escape_string($data['description']);
 		$userid			= $db->escape_string($data['userid']);
 		$uuid 			= md5(uniqid(""));
-		$sql_i = "INSERT INTO 'register_diarios' (uid,nome,description,user_id,default) VALUES ('$uuid','$nome','$description','$userid',1);";
+		$sql_i = "INSERT INTO register_diarios (uid,nome,description,user_id,default) VALUES ('$uuid','$nome','$description','$userid',1);";
 		$resultado = $db->insert($sql_i);
+		//Inserimos um novo diário e definimos o mesmo como default, mas já devia ter um default, precisamos setar ele como não default
+		//ou seja, todos os demais são false agora.
+		$sql_u = "UPDATE register_diarios default=0 WHERE $id<>'$resultado' AND $user_id='$userid';";
 		if ($resultado)
+			$res = $db->query($sql_u);
 			return new Response($uuid,201);
 		else
 			return new Response("Sintaxe de entrada inválida",400);
@@ -380,7 +384,7 @@ $app->put('/diario', function (Request $request) use ($app, $user, $db) {
 		$description	= $db->escape_string($data['description']);
 		$userid			= $db->escape_string($data['userid']);
 		$uuid 			= md5(uniqid(""));
-		$sql_u = "UPDATE 'register_diarios' SET nome='$nome',description='$description' WHERE $uid='$uniqueid';";
+		$sql_u = "UPDATE register_diarios SET nome='$nome',description='$description' WHERE $uid='$uniqueid';";
 		$resultado = $db->query($sql_u);
 		if ($resultado)
 			return new Response($uuid,201);
