@@ -378,19 +378,25 @@ $app->put('/diario', function (Request $request) use ($app, $user, $db) {
 	global $user;
 	$data = json_decode($request->getContent(), true);
 	if (isset($data['nome'][2]) && isset($data['description'][2]) && isset($data['uniqueid'][2])) {
-		if ($data['userid']<>$user['id'] && $user['adm']!=true)
+		$sql_s = "SELECT user_id from register_diarios WHERE uid='$uniqueid';";
+		$resultado = $db->select($sql_s);
+		if ($resultado == false) {
+			return new Response("não encontrado para deletar", 404);
+		} elseif ($resultado[0]['user_id']<>$user['id'] && $user['adm']!=true) {
 			return new Response("Não autorizado",403);	
-		$uniqueid 		= $db->escape_string($data['uniqueid']);
-		$nome 			= $db->escape_string($data['nome']);
-		$description	= $db->escape_string($data['description']);
-		$userid			= $db->escape_string($data['userid']);
-		$uuid 			= md5(uniqid(""));
-		$sql_u = "UPDATE register_diarios SET nome='$nome',description='$description' WHERE $uid='$uniqueid';";
-		$resultado = $db->query($sql_u);
-		if ($resultado)
-			return new Response($uuid,201);
-		else
-			return new Response("Sintaxe de entrada inválida",400);
+		} else {
+			$uniqueid 		= $db->escape_string($data['uniqueid']);
+			$nome 			= $db->escape_string($data['nome']);
+			$description	= $db->escape_string($data['description']);
+			$userid			= $db->escape_string($data['userid']);
+			$uuid 			= md5(uniqid(""));
+			$sql_u = "UPDATE register_diarios SET nome='$nome',description='$description' WHERE $uid='$uniqueid';";
+			$resultado = $db->query($sql_u);
+			if ($resultado)
+				return new Response($uuid,201);
+			else
+				return new Response("Sintaxe de entrada inválida",400);
+		}
 	} else {
 		return new Response("Sintaxe de entrada inválida",400);
 	}
