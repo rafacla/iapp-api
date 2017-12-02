@@ -93,14 +93,6 @@ $app->get("/", function (Request $request) {
 	return new Response("method not allowed",485);
 });
 
-$app->put("/", function (Request $request) {
-	return new Response("method not allowed",485);
-});
-
-$app->delete("/", function (Request $request) {
-	return new Response("method not allowed",485);
-});
-
 //Aqui estamos preparando o 'pré-voo' adicionando uma resposta válida para o method 'options'
 $app->options("{anything}", function () {
         return new \Symfony\Component\HttpFoundation\JsonResponse(null, 204);
@@ -382,7 +374,7 @@ $app->post('/diario', function (Request $request) use ($app, $user, $db) {
 });
 
 //rota para atualizar um novo diario
-$app->put('/diario', function (Request $request) use ($app, $user, $db) {
+$app->post('/diario/put', function (Request $request) use ($app, $user, $db) {
 	global $user;
 	$data = json_decode($request->getContent(), true);
 	if (isset($data['nome'][2]) && isset($data['description'][2]) && isset($data['uniqueid'][2])) {
@@ -411,7 +403,7 @@ $app->put('/diario', function (Request $request) use ($app, $user, $db) {
 });
 
 //rota para listar todos os diários de um usuário
-$app->delete('/diario', function (Request $request) use ($app, $user, $db) {
+$app->post('/diario/delete', function (Request $request) use ($app, $user, $db) {
 	global $user;
 	$data = json_decode($request->getContent(), true);
 	if (isset($data['uniqueid'][2])) {
