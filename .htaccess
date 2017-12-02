@@ -1,6 +1,10 @@
 RewriteEngine on
 CGIPassAuth on
-Allow from all
+
+<Limit GET POST PUT DELETE>
+order deny,allow
+allow from all
+</Limit>
 
 <IfModule mod_headers.c>
   Header set Access-Control-Allow-Origin: *  
