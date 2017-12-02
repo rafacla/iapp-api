@@ -378,10 +378,11 @@ $app->post('/diario/put', function (Request $request) use ($app, $user, $db) {
 	global $user;
 	$data = json_decode($request->getContent(), true);
 	if (isset($data['nome'][2]) && isset($data['description'][2]) && isset($data['uniqueid'][2])) {
+		$uniqueid 		= $db->escape_string($data['uniqueid']);
 		$sql_s = "SELECT user_id from register_diarios WHERE uid='$uniqueid';";
 		$resultado = $db->select($sql_s);
 		if ($resultado == false) {
-			return new Response("não encontrado para deletar", 404);
+			return new Response("não encontrado para atualizar", 404);
 		} elseif ($resultado[0]['user_id']<>$user['id'] && $user['adm']!=true) {
 			return new Response("Não autorizado",403);	
 		} else {
