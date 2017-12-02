@@ -351,7 +351,7 @@ $app->post('/diario', function (Request $request) use ($app, $user, $db) {
 	global $user;
 	$data = json_decode($request->getContent(), true);
 	if (isset($data['nome'][2]) && isset($data['description'][2]) && isset($data['userid'])) {
-		if ($data['userid']<>$request->headers->get("userid") && $user['adm']!=true)
+		if ($data['userid']<>$user['id'] && $user['adm']!=true)
 			return new Response("Não autorizado",403);		
 		$nome 			= $db->escape_string($data['nome']);
 		$description	= $db->escape_string($data['description']);
@@ -373,7 +373,7 @@ $app->put('/diario', function (Request $request) use ($app, $user, $db) {
 	global $user;
 	$data = json_decode($request->getContent(), true);
 	if (isset($data['nome'][2]) && isset($data['description'][2]) && isset($data['uniqueid'][2])) {
-		if ($data['userid']<>$request->headers->get("userid") && $user['adm']!=true)
+		if ($data['userid']<>$user['id'] && $user['adm']!=true)
 			return new Response("Não autorizado",403);	
 		$uniqueid 		= $db->escape_string($data['uniqueid']);
 		$nome 			= $db->escape_string($data['nome']);
