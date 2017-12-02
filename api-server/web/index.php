@@ -396,4 +396,30 @@ $app->put('/diario', function (Request $request) use ($app, $user, $db) {
 	}
 });
 
+//rota para listar todos os diários de um usuário
+$app->delete('/diario', function (Request $request) use ($app, $user, $db) {
+	global $user;
+	$data = json_decode($request->getContent(), true);
+	if (isset($data['uniqueid'][2])) {
+		$uniqueid 		= $db->escape_string($data['uniqueid']);
+		$sql_s = "SELECT user_id from register_diarios WHERE uid='$uniqueid';";
+		$resultado = $db->select($sql_s);
+		if ($resultado == false) {
+			return new Response("não encontrado para deletar", 404);
+		} elseif ($resultado[0]['user_id']<>$user['id'] && $user['adm']!=true) {
+			return new Response("Não autorizado",403);	
+		} else {
+			$sql_u = "DELETE FROM register_diarios WHERE uid='$uniqueid';";
+			$resultado = $db->query($sql_u);
+			if ($resultado)
+				return new Response("deletado",200);
+			else
+				return new Response("Sintaxe de entrada inválida",400);
+		}
+	} else {
+		return new Response("Sintaxe de entrada inválida",400);
+	}
+	
+});
+
 $app->run();
