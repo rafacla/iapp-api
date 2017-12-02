@@ -362,9 +362,10 @@ $app->post('/diario', function (Request $request) use ($app, $user, $db) {
 		//Inserimos um novo diário e definimos o mesmo como default, mas já devia ter um default, precisamos setar ele como não default
 		//ou seja, todos os demais são false agora.
 		$sql_u = "UPDATE register_diarios default=0 WHERE $id<>'$resultado' AND $user_id='$userid';";
-		if ($resultado)
+		if ($resultado) {
 			$res = $db->query($sql_u);
 			return new Response($uuid,201);
+		}
 		else
 			return new Response("Sintaxe de entrada inválida",400);
 	} else {
