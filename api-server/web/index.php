@@ -330,6 +330,7 @@ $app->post('/cliente', function (Request $request) use ($app, $db) {
 
 //rota para listar todos os diários de um usuário
 $app->get('/diario', function (Request $request) use ($app, $user, $db) {
+	global $user;
 	if ($request->headers->get("userid")==null) {
 		return new Response("Faltando userid",400);
 	} elseif ($user['id']<>$request->headers->get("userid") && $user['adm']!=true) {
@@ -344,6 +345,7 @@ $app->get('/diario', function (Request $request) use ($app, $user, $db) {
 
 //rota para criar um novo diário
 $app->post('/diario', function (Request $request) use ($app, $user, $db) {
+	global $user;
 	$data = json_decode($request->getContent(), true);
 	if (isset($data['nome'][2]) && isset($data['description'][2]) && isset($data['userid'])) {
 		if ($data['userid']<>$request->headers->get("userid") && $user['adm']!=true)
@@ -365,6 +367,7 @@ $app->post('/diario', function (Request $request) use ($app, $user, $db) {
 
 //rota para atualizar um novo diario
 $app->put('/diario', function (Request $request) use ($app, $user, $db) {
+	global $user;
 	$data = json_decode($request->getContent(), true);
 	if (isset($data['nome'][2]) && isset($data['description'][2]) && isset($data['uniqueid'][2])) {
 		if ($data['userid']<>$request->headers->get("userid") && $user['adm']!=true)
