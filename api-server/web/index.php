@@ -290,9 +290,12 @@ $app->get('/cliente', function (Request $request) use ($app, $db) {
 $app->post('/cliente', function (Request $request) use ($app, $db) {
 	global $user;
 	$data = json_decode($request->getContent(), true);
+	if (!isset($data['client_id']) || !isset($data['client_secret']))
+			return new Response('falha_ao_criar_cliente',400);
 	$client_id = $db->escape_string($data['client_id']);
 	$client_secret = $db->escape_string($data['client_secret']);
-	$description = $db->escape_string($data['description']);
+	if (isset($data['description']))
+		$description = $db->escape_string($data['description']);
 	if ($user['adm'])
 		$user_id = $db->escape_string($data['user_id']);
 	else
@@ -307,6 +310,7 @@ $app->post('/cliente', function (Request $request) use ($app, $db) {
 				$sql_user = "SELECT userFirstName, userLastName FROM register_users WHERE userID='".$rows[0]['user_id']."';";
 				$rows2 = $db ->select($sql_user);
 				$resposta['nome'] = $rows2[0]['userFirstName']." ".$rows2[0]['userLastName'];
+				$resposta['id'] = $rows[0]['user_id'];
 				return new Response(json_encode($resposta),200);
 			}
 			else
@@ -314,6 +318,8 @@ $app->post('/cliente', function (Request $request) use ($app, $db) {
 		else
 			return new Response('cliente_existente',409);
 	} else {
+		if (!isset($description))
+			return new Response('falha_ao_criar_cliente',400);
 		$sql_i = "INSERT INTO oauth_clients (client_id,client_secret,grant_types,scope,user_id,description,ativo) ".
 		"VALUES ('$client_id','$client_secret','client_credentials','user','$user_id','$description',1)";
 		$resultado = $db->insert($sql_i);
