@@ -51,9 +51,8 @@ $app->before(function(Request $request, Application $app) use ($app, $db, $stora
 			$request = OAuth2\Request::createFromGlobals();
 			$response = new OAuth2\Response();
 			if (!$server->verifyResourceRequest($request,$response)) {
-				var_dump($response);
-				die();
-				//return new Response($response."...", 403);
+				$resposta = $response->getParameters()
+				return new Response(json_encode($resposta), 401);
 			} 
 			$tData = $server->getAccessTokenData(OAuth2\Request::createFromGlobals());
 			
