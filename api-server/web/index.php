@@ -292,7 +292,6 @@ $app->post('/cliente', function (Request $request) use ($app, $db) {
 	global $user;
 	$data = json_decode($request->getContent(), true);
 	if (!isset($data['client_id']) || !isset($data['client_secret'])) {
-		var_dump($request->getContent());
 		return new Response('falha_ao_criar_cliente',400);
 	}
 	$client_id = $db->escape_string($data['client_id']);
@@ -321,8 +320,9 @@ $app->post('/cliente', function (Request $request) use ($app, $db) {
 		else
 			return new Response('cliente_existente',409);
 	} else {
-		if (!isset($description))
-			return new Response('falha_ao_criar_cliente',400);
+		if (!isset($description)) {
+			return new Response('falha_ao_criar_cliente: no description found',400);
+		}
 		$sql_i = "INSERT INTO oauth_clients (client_id,client_secret,grant_types,scope,user_id,description,ativo) ".
 		"VALUES ('$client_id','$client_secret','client_credentials','user','$user_id','$description',1)";
 		$resultado = $db->insert($sql_i);
