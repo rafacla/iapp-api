@@ -291,8 +291,9 @@ $app->get('/cliente', function (Request $request) use ($app, $db) {
 $app->post('/cliente', function (Request $request) use ($app, $db) {
 	global $user;
 	$data = json_decode($request->getContent(), true);
-	if (!isset($data['client_id']) || !isset($data['client_secret']))
-			return new Response('falha_ao_criar_cliente',400);
+	if (!isset($data['client_id']) || !isset($data['client_secret'])) {
+		return new Response('falha_ao_criar_cliente '.print_r($data),400);
+	}
 	$client_id = $db->escape_string($data['client_id']);
 	$client_secret = $db->escape_string($data['client_secret']);
 	if (isset($data['description']))
