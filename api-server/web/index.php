@@ -292,7 +292,7 @@ $app->post('/cliente', function (Request $request) use ($app, $db) {
 	global $user;
 	$data = json_decode($request->getContent(), true);
 	if (!isset($data['client_id']) || !isset($data['client_secret'])) {
-		return new Response('falha_ao_criar_cliente',400);
+		return new Response('falha_ao_criar_cliente: empty body',400);
 	}
 	$client_id = $db->escape_string($data['client_id']);
 	$client_secret = $db->escape_string($data['client_secret']);
