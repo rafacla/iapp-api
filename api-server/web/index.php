@@ -347,7 +347,7 @@ $app->get('/diario', function (Request $request) use ($app, $user, $db) {
 		return new Response("Não autorizado",403);
 	} else {
 		$user_id = $db->escape_string($request->headers->get("userid"));
-		$sql = "SELECT id,uid,nome,description,`default`, `user_id` AS `userid` FROM register_diarios WHERE user_id = '$user_id';";
+		$sql = "SELECT id,uid AS diarioUID, nome as diarioNome, description AS diarioDescription, `default` AS isDefault, `user_id` AS `userid` FROM register_diarios WHERE user_id = '$user_id';";
 		$rows = $db ->select($sql);
 		if ($rows)
 			return new Response(json_encode($rows),200);
