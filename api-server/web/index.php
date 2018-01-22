@@ -374,7 +374,8 @@ $app->post('/diario', function (Request $request) use ($app, $user, $db) {
 		$sql_u = "UPDATE register_diarios `default`='0' WHERE id<>'$resultado' AND user_id='$userid';";
 		if ($resultado) {
 			$res = $db->query($sql_u);
-			return new Response($uuid,201);
+			$resposta['uid'] = $uuid;
+			return new Response(json_encode($resposta),201);
 		}
 		else
 			return new Response("Sintaxe de entrada inválida",400);
@@ -411,7 +412,7 @@ $app->post('/diario/put', function (Request $request) use ($app, $user, $db) {
 	}
 });
 
-//rota para listar todos os diários de um usuário
+//rota para deletar um diario
 $app->post('/diario/delete', function (Request $request) use ($app, $user, $db) {
 	global $user;
 	$data = json_decode($request->getContent(), true);
@@ -434,7 +435,31 @@ $app->post('/diario/delete', function (Request $request) use ($app, $user, $db) 
 	} else {
 		return new Response("Sintaxe de entrada inválida",400);
 	}
-	
+});
+
+//rota para selecionar e tornar o diario escolhido o padrão
+$app->post('/diario/select', function (Request $request) use ($app, $user, $db) {
+	global $user;
+	$data = json_decode($request->getContent(), true);
+	if (isset($data['uniqueid'][2])) {
+		$uniqueid	= $db->escape_string($data['uniqueid']);
+		$sql_s 		= "SELECT user_id from register_diarios WHERE uid='$uniqueid';";
+		$resultado 	= $db->select($sql_s);
+		if ($resultado == false) {
+			return new Response("não encontrado para selecionar", 404);
+		} elseif ($resultado[0]['user_id']<>$user['id'] && $user['adm']!=true) {
+			return new Response("Não autorizado",403);	
+		} else {
+			$sql_u		= "UPDATE `register_diarios` SET `default`=(`uid`='$uniqueid');";
+			$resultado = $db->query($sql_u);
+			if ($resultado)
+				return new Response("selecionado",200);
+			else
+				return new Response("Sintaxe de entrada inválida",400);
+		}
+	} else {
+		return new Response("Sintaxe de entrada inválida",400);
+	}
 });
 
 $app->run();
