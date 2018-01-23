@@ -355,7 +355,7 @@ $app->get('/diario', function (Request $request) use ($app, $user, $db) {
 		if ($rows)
 			return new Response(json_encode($rows),200);
 		else
-			return new Response("{}",200);
+			return new Response("[]",200);
 	}
 });
 
