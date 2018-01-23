@@ -1,4 +1,4 @@
-<?php 
+13<?php 
 
 // web/index.php
 require_once __DIR__.'/../vendor/autoload.php';
@@ -110,7 +110,10 @@ $app->post('/auth', function (Request $request) use ($app, $db, $storage, $serve
 		sscanf($authorization, 'Basic %s',$basic);
 		$client_credentials = explode(":",base64_decode($basic));
 		$client_id = $client_credentials[0];
-		$client_secret = $client_credentials[1];
+		if (isset($client_credentials[1]))
+			$client_secret = $client_credentials[1];
+		else
+			$client_secret = "";
 	} else {
 		$client_id = $request->get("client_id");
 		$client_secret = $request->get("client_secret");
