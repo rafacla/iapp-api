@@ -421,7 +421,7 @@ $app->post('/diario/delete', function (Request $request) use ($app, $user, $db) 
 	$data = json_decode($request->getContent(), true);
 	if (isset($data['uniqueid'][2])) {
 		$uniqueid 		= $db->escape_string($data['uniqueid']);
-		$sql_s = "SELECT user_id,default from register_diarios WHERE uid='$uniqueid';";
+		$sql_s = "SELECT `user_id`, `default` from `register_diarios` WHERE `uid`='$uniqueid';";
 		$resultado = $db->select($sql_s);
 		$isDefault = $resultado[0]['default'];
 		if ($resultado == false) {
