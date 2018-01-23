@@ -437,9 +437,9 @@ $app->post('/diario/delete', function (Request $request) use ($app, $user, $db) 
 				$sql_default = "";
 				if ($isDefault == 1) {
 					$sql_default = "UPDATE `register_diarios` SET `default` = 1 WHERE user_id = '".$user['id']."' LIMIT 1";
-					$resultado = $db->query($sql_u);
+					$resultado = $db->query($sql_default);
 				}
-				return new Response("deletado ".$sql_default,200);
+				return new Response("deletado",200);
 			}
 			else
 				return new Response("Sintaxe de entrada inválida",400);
