@@ -435,10 +435,10 @@ $app->post('/diario/delete', function (Request $request) use ($app, $user, $db) 
 				//ok, apagamos o diario, mas e se ele fosse o padrão, como faremos agora?
 				//vamos definir o primeiro que tiver como default e estamos satisfeitos:
 				if ($isDefault == 1) {
-					$sql_default = "UPDATE `register_diarios` SET `default`=1 WHERE user_id = '".$user['id']."' LIMIT 1";
+					$sql_default = "UPDATE `register_diarios` SET `default` = 1 WHERE user_id = '".$user['id']."' LIMIT 1";
 					$resultado = $db->query($sql_u);
 				}
-				return new Response("deletado",200);
+				return new Response("deletado".$isDefault,200);
 			}
 			else
 				return new Response("Sintaxe de entrada inválida",400);
