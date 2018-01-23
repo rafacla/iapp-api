@@ -421,8 +421,9 @@ $app->post('/diario/delete', function (Request $request) use ($app, $user, $db) 
 	$data = json_decode($request->getContent(), true);
 	if (isset($data['uniqueid'][2])) {
 		$uniqueid 		= $db->escape_string($data['uniqueid']);
-		$sql_s = "SELECT user_id from register_diarios WHERE uid='$uniqueid';";
+		$sql_s = "SELECT user_id,default from register_diarios WHERE uid='$uniqueid';";
 		$resultado = $db->select($sql_s);
+		$isDefault = $resultado[0]['default'];
 		if ($resultado == false) {
 			return new Response("não encontrado para deletar", 404);
 		} elseif ($resultado[0]['user_id']<>$user['id'] && $user['adm']!=true) {
@@ -430,8 +431,15 @@ $app->post('/diario/delete', function (Request $request) use ($app, $user, $db) 
 		} else {
 			$sql_u = "DELETE FROM register_diarios WHERE uid='$uniqueid';";
 			$resultado = $db->query($sql_u);
-			if ($resultado)
+			if ($resultado) {
+				//ok, apagamos o diario, mas e se ele fosse o padrão, como faremos agora?
+				//vamos definir o primeiro que tiver como default e estamos satisfeitos:
+				if ($isDefault == 1) {
+					$sql_default = "UPDATE `register_diarios` SET `default`=1 WHERE user_id = '".$user['id']."' LIMIT 1";
+					$resultado = $db->query($sql_u);
+				}
 				return new Response("deletado",200);
+			}
 			else
 				return new Response("Sintaxe de entrada inválida",400);
 		}
