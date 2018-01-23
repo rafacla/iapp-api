@@ -381,7 +381,7 @@ $app->post('/diario', function (Request $request) use ($app, $user, $db) {
 			return new Response(json_encode($resposta),201);
 		}
 		else
-			return new Response("Erro ao atualizar banco de dados ".$sql_i,400);
+			return new Response("Erro ao atualizar banco de dados ",400);
 	} else {
 		return new Response("Sintaxe de entrada inválida",400);
 	}
