@@ -520,7 +520,7 @@ $app->get('/categoria/{diariouid}', function (Request $request, $diariouid) use 
 	if ($diario) {
 		if ($user['adm'] || $user['id']==$diario['user_id']) {
 			$diarioID = $diario['diario_id'];
-			$sql = sprintf("SELECT `categoria_id`, `categoria_nome`, `categoria_description` from `register_categorias` WHERE `diario_id` = '%s'",$diarioID);
+			$sql = sprintf("SELECT `categoria_id`, `categoria_nome`, `categoria_description`, `diario_id` from `register_categorias` WHERE `diario_id` = '%s'",$diarioID);
 			$rows = $db ->select($sql);
 			if ($rows) {
 				$i = 0;
