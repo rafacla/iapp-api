@@ -30,6 +30,16 @@ $server = new OAuth2\Server($storage);
 $server->addGrantType(new OAuth2\GrantType\ClientCredentials($storage));
 $server->addGrantType(new OAuth2\GrantType\UserCredentials($storage));
 
+function getDiarioID($diariouid) use ($db) {
+	$duid = $db->escape_string($diariouid);
+	$sql_diario = "SELECT `id` FROM `register_diarios` WHERE `uid` = '$duid'";
+	$rows = $db->select($sql_diario);
+	if ($rows)
+		return $rows[0]['id'];
+	else
+		return 0;
+}
+
 
 // verificar autenticacao
 $app->before(function(Request $request, Application $app) use ($app, $db, $storage, $server) {
@@ -91,7 +101,7 @@ $app->before(function(Request $request, Application $app) use ($app, $db, $stora
 });
 
 $app->get("/", function (Request $request) {
-	return new Response("method not allowed",485);
+	return new Response("method not allowed".getDiarioID('604ed45b037263ceb5027c017719f3e2'),485);
 });
 
 //Aqui estamos preparando o 'pré-voo' adicionando uma resposta válida para o method 'options'
@@ -498,6 +508,24 @@ $app->post('/diario/select', function (Request $request) use ($app, $user, $db) 
 		}
 	} else {
 		return new Response("Sintaxe de entrada inválida",400);
+	}
+});
+
+$app->get('/categoria/{diariouid}', function (Request $request, $diariouid) use ($app, $db) {
+	global $user;
+	
+	$sql_diario = "SELECT id FROM ``";
+	
+	if ($user['adm'] || $user['id']==$id) {
+		$sql = sprintf("SELECT * from `register_users` WHERE `userID` = '%s'",$id);
+		$rows = $db ->select($sql);
+		if ($rows) {
+			return $app->json($rows[0]);
+		} else {
+			return new Response("Este usuáro não existe.", 404);
+		}
+	} else {
+		return new Response('Você não tem privilégios para isso.', 403);
 	}
 });
 
