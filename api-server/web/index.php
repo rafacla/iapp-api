@@ -526,9 +526,9 @@ $app->get('/categoria/{diariouid}', function (Request $request, $diariouid) use 
 				$i = 0;
 				foreach ($rows as $row) {
 					$categorias[$i] = $row;
-					$cat_id = $row;
+					$cat_id = $row['categoria_id'];
 					$sql_subc = "SELECT `subcategoria_id`,`subcategoria_nome`,`subcategoria_description`,`subcategoria_carry` FROM `register_subcategorias` 
-					WHERE `categoria_id` = '$diarioID';";
+					WHERE `categoria_id` = '$cat_id';";
 					$subcategorias = $db->select($sql_subc);
 					$categorias[$i]['subcategorias'] = $subcategorias;
 					$i++;
