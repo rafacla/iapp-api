@@ -93,7 +93,7 @@ $app->before(function(Request $request, Application $app) use ($app, $db, $stora
 $app->get("/", function (Request $request) {
 	$str = file_get_contents('categorias_default.json');
 	$json = json_decode($str, true); // decode the JSON into an associative array
-	echo '<pre>' . print_r($str, true) . '</pre>';
+	echo '<pre>' . print_r($json, true) . '</pre>';
 	return new Response("method not allowed",485);
 });
 
