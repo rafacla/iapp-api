@@ -30,12 +30,12 @@ $server = new OAuth2\Server($storage);
 $server->addGrantType(new OAuth2\GrantType\ClientCredentials($storage));
 $server->addGrantType(new OAuth2\GrantType\UserCredentials($storage));
 
-function getDiarioID($diariouid) use ($db) {
+function getDiarioID($diariouid) {
 	$duid = $db->escape_string($diariouid);
 	$sql_diario = "SELECT `id` FROM `register_diarios` WHERE `uid` = '$duid'";
 	$rows = $db->select($sql_diario);
 	if ($rows)
-		return $rows[0]['id'];
+		return $rows[0];
 	else
 		return 0;
 }
@@ -101,7 +101,7 @@ $app->before(function(Request $request, Application $app) use ($app, $db, $stora
 });
 
 $app->get("/", function (Request $request) {
-	return new Response("method not allowed".getDiarioID('604ed45b037263ceb5027c017719f3e2'),485);
+	return new Response("method not allowed_".print_r(getDiarioID('604ed45b037263ceb5027c017719f3e2'),485));
 });
 
 //Aqui estamos preparando o 'pré-voo' adicionando uma resposta válida para o method 'options'
