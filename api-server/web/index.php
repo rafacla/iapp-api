@@ -95,7 +95,7 @@ $app->get("/", function (Request $request) {
 	$json = json_decode($str, true); // decode the JSON into an associative array
 	echo '<pre>';
 	foreach ($json as $categoria) {
-		echo $categoria->categoria_nome;
+		echo $categoria['categoria_nome'];
 	}
 	echo '</pre>';
 	return new Response("method not allowed",485);
