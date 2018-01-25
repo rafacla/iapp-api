@@ -95,13 +95,13 @@ $app->get("/", function (Request $request) {
 	$json = json_decode($str, true); // decode the JSON into an associative array
 	echo '<pre>';
 	foreach ($json as $categoria) {
-		echo '\n';
-		echo $categoria['categoria_nome'].'\n';
-		echo $categoria['categoria_description'].'\n';
-		$subcategorias = $categoria["subcategorias"].'\n';
+		echo "<br>";
+		echo $categoria['categoria_nome']."<br>";
+		echo $categoria['categoria_description']."<br>";
+		$subcategorias = $categoria["subcategorias"];
 		foreach ($subcategorias as $subcategoria) {
-			echo "  ".$subcategoria['subcategoria_nome'].'\n';
-			echo "  ".$subcategoria['subcategoria_description'].'\n';
+			echo "  ".$subcategoria['subcategoria_nome']."<br>";
+			echo "  ".$subcategoria['subcategoria_description']."<br>";
 		}
 	}
 	echo '</pre>';
