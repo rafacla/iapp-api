@@ -1,0 +1,88 @@
+[
+  {
+    "categoria_nome": "Despesas mensais",
+    "categoria_description": "Categoria para as despesas fixas e recorrentes do mês (aluguel, água, eletricidade)",
+    "subcategorias": [
+      {
+        "subcategoria_nome": "Água",
+        "subcategoria_description": "Categoria para a conta de água"
+      },
+      {
+        "subcategoria_nome": "Aluguel",
+        "subcategoria_description": "Categoria para o aluguel"
+      },
+      {
+        "subcategoria_nome": "Eletricidade / Luz",
+        "subcategoria_description": "Categoria para a conta de luz"
+      },
+      {
+        "subcategoria_nome": "Internet / TV a cabo",
+        "subcategoria_description": "Categoria para a conta da internet e tv a cabo"
+      },
+      {
+        "subcategoria_nome": "Telefone",
+        "subcategoria_description": "Categoria para a conta do celular"
+      },
+      {
+        "subcategoria_nome": "Outras mensalidades",
+        "subcategoria_description": "Categoria para mensalidades diversas como Netflix, Clube, Spotify, etc..."
+      }
+    ]
+  },
+  {
+    "categoria_nome": "Despesas do dia-a-dia",
+    "categoria_description": "Categoria para as despesas rotineiras do dia-a-dia (variáveis), tais como gastos em restaurantes, mercado, passeios, vesturário, etc...",
+    "subcategorias": [
+      {
+        "subcategoria_nome": "Mercado",
+        "subcategoria_description": "Categoria para as compras no mercado"
+      },
+      {
+        "subcategoria_nome": "Restaurantes",
+        "subcategoria_description": "Categoria para os gastos com alimentação"
+      },
+      {
+        "subcategoria_nome": "Passeios",
+        "subcategoria_description": "Categoria para os gastos em passeios"
+      },
+      {
+        "subcategoria_nome": "Transporte",
+        "subcategoria_description": "Gastos para se locomover, tais como gastos com o carro, Uber"
+      },
+      {
+        "subcategoria_nome": "Vestuário",
+        "subcategoria_description": "Categoria para gastos com roupas e similares"
+      },
+      {
+        "subcategoria_nome": "Saúde / Farmácia",
+        "subcategoria_description": "Categoria para gastos com remédios, consultas médicas, etc..."
+      },
+      {
+        "subcategoria_nome": "Casa e mobília",
+        "subcategoria_description": "Categoria para gastos com a manutenção da casa e mobília"
+      },
+      {
+        "subcategoria_nome": "Outros gastos eventuais",
+        "subcategoria_description": "Categoria para gastos eventuais que não se enquadram em outras categorias, serve também para aquela compra que você não se lembra - procure mminimizar os gatos nesta categoria para maior controle."
+      }
+    ]
+  },
+  {
+    "categoria_nome": "Reservas financeiras",
+    "categoria_description": "Categoria para o dinheiro que você DEVE economizar todo mês para objetivos específicos",
+    "subcategorias": [
+      {
+        "subcategoria_nome": "Futuro",
+        "subcategoria_description": "Chame esta categoria como quiser: um imóvel, sua aposentadoria, seu futuro!"
+      },
+      {
+        "subcategoria_nome": "Férias",
+        "subcategoria_description": "Poupe todo mês um pouquinho para viajar sem culpa nas férias"
+      },
+      {
+        "subcategoria_nome": "Emergências",
+        "subcategoria_description": "Dinheiro para as ocasiões não desejas e não esperadas, poupe agora para não se preocupar no futuro."
+      }
+    ]
+  }
+]

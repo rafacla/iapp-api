@@ -91,6 +91,9 @@ $app->before(function(Request $request, Application $app) use ($app, $db, $stora
 });
 
 $app->get("/", function (Request $request) {
+	$str = file_get_contents('categorias_default.json');
+	$json = json_decode($str, true); // decode the JSON into an associative array
+	echo '<pre>' . print_r($json, true) . '</pre>';
 	return new Response("method not allowed",485);
 });
 
@@ -378,6 +381,9 @@ $app->post('/diario', function (Request $request) use ($app, $user, $db) {
 		if ($resultado) {
 			$res = $db->query($sql_u);
 			$resposta['uid'] = $uuid;
+			//Inserimos um novo diario, vamos agora criar as categorias e subcategorias:
+			
+			
 			return new Response(json_encode($resposta),201);
 		}
 		else
