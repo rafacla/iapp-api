@@ -400,6 +400,7 @@ $app->post('/diario', function (Request $request) use ($app, $user, $db) {
 						
 						$sql_i_subc = "INSERT INTO `register_subcategorias` (`subcategoria_nome`,`subcategoria_description`,`subcategoria_carry`,
 						`categoria_id`) VALUES ('$subc_nome','$subc_desc',0,'$cat_id')";
+						$res_s = $db->insert($sql_i_subc);
 					}
 				}
 			}
