@@ -95,7 +95,14 @@ $app->get("/", function (Request $request) {
 	$json = json_decode($str, true); // decode the JSON into an associative array
 	echo '<pre>';
 	foreach ($json as $categoria) {
-		echo $categoria['categoria_nome'];
+		echo '\n';
+		echo $categoria['categoria_nome'].'\n';
+		echo $categoria['categoria_description'].'\n';
+		$subcategorias = $categoria["subcategorias"].'\n';
+		foreach ($subcategorias as $subcategoria) {
+			echo "  ".$subcategoria['subcategoria_nome'].'\n';
+			echo "  ".$subcategoria['subcategoria_description'].'\n';
+		}
 	}
 	echo '</pre>';
 	return new Response("method not allowed",485);
