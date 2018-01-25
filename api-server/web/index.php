@@ -102,7 +102,7 @@ $app->before(function(Request $request, Application $app) use ($app, $db, $stora
 });
 
 $app->get("/", function (Request $request) {
-	return new Response("method not allowed",485));
+	return new Response("method not allowed",485);
 });
 
 //Aqui estamos preparando o 'pré-voo' adicionando uma resposta válida para o method 'options'
