@@ -31,8 +31,9 @@ $server->addGrantType(new OAuth2\GrantType\ClientCredentials($storage));
 $server->addGrantType(new OAuth2\GrantType\UserCredentials($storage));
 
 function getDiarioID($diariouid) {
+	global $db;
 	$duid = $db->escape_string($diariouid);
-	$sql_diario = "SELECT `id` FROM `register_diarios` WHERE `uid` = '$duid'";
+	$sql_diario = "SELECT `id` AS `diario_id`, `user_id` FROM `register_diarios` WHERE `uid` = '$duid'";
 	$rows = $db->select($sql_diario);
 	if ($rows)
 		return $rows[0];
