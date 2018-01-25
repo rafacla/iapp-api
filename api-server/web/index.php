@@ -519,12 +519,23 @@ $app->get('/categoria/{diariouid}', function (Request $request, $diariouid) use 
 	
 	if ($diario) {
 		if ($user['adm'] || $user['id']==$diario['user_id']) {
-			$sql = sprintf("SELECT `categoria_id`, `categoria_nome`, `categoria_description` from `register_categorias` WHERE `diario_id` = '%s'",$diario['diario_id']);
+			$diarioID = $diario['diario_id'];
+			$sql = sprintf("SELECT `categoria_id`, `categoria_nome`, `categoria_description` from `register_categorias` WHERE `diario_id` = '%s'",$diarioID);
 			$rows = $db ->select($sql);
 			if ($rows) {
-				return $app->json($rows[0]);
+				$i = 0;
+				foreach ($row as $rows) {
+					$categorias[$i] = $row;
+					$cat_id = $row
+					$sql_subc = "SELECT `subcategoria_id`,`subcategoria_nome`,`subcategoria_description`,`subcategoria_carry` FROM `register_subcategorias` 
+					WHERE `categoria_id` = '$diarioID';";
+					$subcategorias = $db->select($sql_subc);
+					$categorias[$i]['subcategorias'] = $subcategorias;
+					$i++;
+				}
+				return new Response(json_encode($categorias),200);
 			} else {
-				return new Response("Este usuáro não existe.", 404);
+				return new Response("Este diário não existe.", 404);
 			}
 		} else {
 			return new Response('Você não tem privilégios para isso.', 403);
