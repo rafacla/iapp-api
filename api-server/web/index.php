@@ -393,25 +393,28 @@ $app->post('/diario', function (Request $request) use ($app, $user, $db) {
 			//Lemos de um arquivo de configuração as categorias padrão (edite o arquivo abaixo caso queira alterar as categorias padrão):
 			$str = file_get_contents('categorias_default.json');
 			$json = json_decode($str, true); // decode the JSON into an associative array
+			$i=0;
 			foreach ($json as $categoria) {
 				$diario_id = $resultado;
 				$categoria_nome = $categoria['categoria_nome'];
 				$categoria_desc = $categoria['categoria_description'];
-				$sql_i_categoria = "INSERT INTO `register_categorias` (`categoria_nome`,`categoria_description`,`diario_id`) VALUES
-				 ('$categoria_nome','$categoria_desc','$diario_id');";
+				$sql_i_categoria = "INSERT INTO `register_categorias` (`categoria_nome`,`categoria_description`,`diario_id`,`categoria_ordem`) VALUES
+				 ('$categoria_nome','$categoria_desc','$diario_id','$i');";
 				
 				$res = $db->insert($sql_i_categoria);
-				
+				$i++;
 				if ($res) {
 					$subcategorias = $categoria["subcategorias"];
+					$j=0;
 					foreach ($subcategorias as $subcategoria) {
 						$cat_id = $res;
 						$subc_nome = $subcategoria['subcategoria_nome'];
 						$subc_desc = $subcategoria['subcategoria_description'];
 						
 						$sql_i_subc = "INSERT INTO `register_subcategorias` (`subcategoria_nome`,`subcategoria_description`,`subcategoria_carry`,
-						`categoria_id`) VALUES ('$subc_nome','$subc_desc',0,'$cat_id')";
+						`categoria_id`,`subcategoria_ordem`) VALUES ('$subc_nome','$subc_desc',0,'$cat_id','$j')";
 						$res_s = $db->insert($sql_i_subc);
+						$j++;
 					}
 				}
 			}
