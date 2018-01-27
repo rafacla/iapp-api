@@ -585,9 +585,9 @@ $app->post('/categoria/move', function (Request $request) use ($app, $db) {
 										WHERE categoria_id = '".$categorias[$i]['categoria_id']."';";
 							$reordem = $db->query($sql_u);							
 						}
-						return new Response("Reordenado",200);
+						return new Response("Reordenado para baixo",200);
 					}					
-				} elseif ($move_to > $move_from) {
+				} elseif ($move_from > $move_to) {
 					if ($move_to >= $countCategorias || $move_to < 0) {
 						return new Response("Sintaxe inválida", 400);
 					} else {
@@ -600,7 +600,7 @@ $app->post('/categoria/move', function (Request $request) use ($app, $db) {
 										WHERE categoria_id = '".$categorias[$i]['categoria_id']."';";
 							$reordem = $db->query($sql_u);
 						}
-						return new Response("Reordenado ".$sql_u,200);
+						return new Response("Reordenado para cima",200);
 					}
 				} else {
 					return new Response("Reordenado",200);
