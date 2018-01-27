@@ -666,7 +666,7 @@ $app->post('/subcategoria/move', function (Request $request) use ($app, $db) {
 							else
 								$subcategorias[$i]['subcategoria_ordem']+=1;
 							$sql_u = "UPDATE register_subcategorias SET subcategoria_ordem='".$subcategorias[$i]['subcategoria_ordem']."'
-										WHERE subcategoria_id = '".$categorias[$i]['subcategoria_id']."';";
+										WHERE subcategoria_id = '".$subcategorias[$i]['subcategoria_id']."';";
 							$reordem = $db->query($sql_u);
 						}
 						return new Response("Reordenado para cima",200);
