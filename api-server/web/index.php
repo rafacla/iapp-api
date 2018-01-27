@@ -548,4 +548,83 @@ $app->get('/categoria/{diariouid}', function (Request $request, $diariouid) use 
 	}
 });
 
+$app->post('/categoria/move', function (Request $request) use ($app, $db) {
+	global $user;
+	
+	$data = json_decode($request->getContent(), true);
+	if (isset($data['categoria_id']) && isset($data['move_to'])) {
+		$categoria_id = $db->escape_string($data['categoria_id']);
+		$move_to = $data['move_to'];
+	
+		$sql = "SELECT `register_users`.`userID`,`register_categorias`.`categoria_ordem`,`register_categorias`.`categoria_id` FROM `register_categorias` 
+		JOIN `register_diarios` on `register_categorias`.`diario_id` = `register_diarios`.`id` 
+		JOIN `register_users` ON `register_diarios`.`user_id` = `register_users`.`userID`
+		WHERE `register_categorias`.`categoria_id` = '$categoria_id';";
+		
+		$rows = $db->select($sql);
+		if ($rows) {
+			$user_id = $rows[0]['userID'];
+			$move_from = $rows[0]['categoria_ordem'];
+			$diario_id = $rows[0]['diario_id'];
+			
+			if ($user['adm'] || $user['id']==$user_id) {
+				//estamos descendo
+				$sql = "SELECT `categoria_id`,`categoria_ordem` FROM `register_categorias` WHERE `diario_id` = '$diario_id';";
+				$categorias = $db->select($sql);
+				$countCategorias = count($categorias);
+				$sucesso = true;
+				if ($move_from < $move_to) {
+					if ($move_to >= $countCategorias || $move_to < 0) {
+						return new Response("Sintaxe inválida", 400);
+					} else {
+						for ($i=$move_from;$i<=$move_to;$i++) {
+							if ($i==$move_from)
+								$categorias[$i]['categoria_ordem']=$move_to;
+							else
+								$categorias[$i]['categoria_ordem']-=1;
+							$sql_u = "UPDATE register_categorias SET categoria_ordem='".$categorias[$i]['categoria_ordem']."'
+										WHERE categoria_id = '".$categorias[$i]['categoria_id']."';";
+							$reordem = $db->query($sql_u);
+							if (!$reordem)
+								$sucesso = false;
+						}
+						if ($sucesso)
+							return new Response("Falha",400);
+						else
+							return new Response("Reordenado",200);
+					}					
+				} elseif ($move_to > $move_from) {
+					if ($move_to >= $countCategorias || $move_to < 0) {
+						return new Response("Sintaxe inválida", 400);
+					} else {
+						for ($i=$move_from;$i<=$move_to;$i++) {
+							if ($i==$move_from)
+								$categorias[$i]['categoria_ordem']=$move_to;
+							else
+								$categorias[$i]['categoria_ordem']+=1;
+							$sql_u = "UPDATE register_categorias SET categoria_ordem='".$categorias[$i]['categoria_ordem']."'
+										WHERE categoria_id = '".$categorias[$i]['categoria_id']."';";
+							$reordem = $db->query($sql_u);
+							if (!$reordem)
+								$sucesso = false;
+						}
+						if ($sucesso)
+							return new Response("Falha",400);
+						else
+							return new Response("Reordenado",200);
+					}
+				} else {
+					return new Response("Reordenado",200);
+				}
+			} else {
+				return new Response("Não autorizado", 403);
+			}
+		} else {
+			return new Response("Não encontrado", 404);
+		}
+	} else {
+		return new Response("Sintaxe de entrada inválida",400);
+	}
+});
+
 $app->run();
