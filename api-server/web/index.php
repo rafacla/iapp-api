@@ -568,7 +568,6 @@ $app->post('/categoria/move', function (Request $request) use ($app, $db) {
 			$diario_id = $rows[0]['diario_id'];
 			
 			if ($user['adm'] || $user['id']==$user_id) {
-				//estamos descendo
 				$sql = "SELECT `categoria_id`,`categoria_ordem` FROM `register_categorias` WHERE `diario_id` = '$diario_id' ORDER BY `categoria_ordem`;";
 				$categorias = $db->select($sql);
 				$countCategorias = count($categorias);
@@ -637,42 +636,43 @@ $app->post('/subcategoria/move', function (Request $request) use ($app, $db) {
 			$categoria_id = $rows[0]['categoria_id'];
 			
 			if ($user['adm'] || $user['id']==$user_id) {
-				//estamos descendo
-				$sql = "SELECT `subcategoria_id`,`subcategoria_ordem` FROM `register_subcategorias` WHERE `categoria_id` = '$categoria_id' ORDER BY `subcategoria_ordem`;";
-				$subcategorias = $db->select($sql);
-				$countSubcategorias = count($subcategorias);
-				if ($move_from < $move_to) {
-					if ($move_to >= $countSubcategorias || $move_to < 0) {
-						return new Response("Sintaxe inválida", 400);
-					} else {
-						for ($i=$move_from;$i<=$move_to;$i++) {
-							if ($i==$move_from)
-								$subcategorias[$i]['subcategoria_ordem']=$move_to;
-							else
-								$subcategorias[$i]['subcategoria_ordem']-=1;
-							$sql_u = "UPDATE register_subcategorias SET subcategoria_ordem='".$subcategorias[$i]['subcategoria_ordem']."'
-										WHERE subcategoria_id = '".$subcategorias[$i]['subcategoria_id']."';";
-							$reordem = $db->query($sql_u);							
+				if (!isset($data['move_to_categoria_id']) || $data['move_to_categoria_id']==$categoria_id) {
+					$sql = "SELECT `subcategoria_id`,`subcategoria_ordem` FROM `register_subcategorias` WHERE `categoria_id` = '$categoria_id' ORDER BY `subcategoria_ordem`;";
+					$subcategorias = $db->select($sql);
+					$countSubcategorias = count($subcategorias);
+					if ($move_from < $move_to) {
+						if ($move_to >= $countSubcategorias || $move_to < 0) {
+							return new Response("Sintaxe inválida", 400);
+						} else {
+							for ($i=$move_from;$i<=$move_to;$i++) {
+								if ($i==$move_from)
+									$subcategorias[$i]['subcategoria_ordem']=$move_to;
+								else
+									$subcategorias[$i]['subcategoria_ordem']-=1;
+								$sql_u = "UPDATE register_subcategorias SET subcategoria_ordem='".$subcategorias[$i]['subcategoria_ordem']."'
+											WHERE subcategoria_id = '".$subcategorias[$i]['subcategoria_id']."';";
+								$reordem = $db->query($sql_u);							
+							}
+							return new Response("Reordenado para baixo",200);
+						}					
+					} elseif ($move_from > $move_to) {
+						if ($move_to >= $countSubcategorias || $move_to < 0) {
+							return new Response("Sintaxe inválida", 400);
+						} else {
+							for ($i=$move_to;$i<=$move_from;$i++) {
+								if ($i==$move_from)
+									$subcategorias[$i]['subcategoria_ordem']=$move_to;
+								else
+									$subcategorias[$i]['subcategoria_ordem']+=1;
+								$sql_u = "UPDATE register_subcategorias SET subcategoria_ordem='".$subcategorias[$i]['subcategoria_ordem']."'
+											WHERE subcategoria_id = '".$subcategorias[$i]['subcategoria_id']."';";
+								$reordem = $db->query($sql_u);
+							}
+							return new Response("Reordenado para cima",200);
 						}
-						return new Response("Reordenado para baixo",200);
-					}					
-				} elseif ($move_from > $move_to) {
-					if ($move_to >= $countSubcategorias || $move_to < 0) {
-						return new Response("Sintaxe inválida", 400);
 					} else {
-						for ($i=$move_to;$i<=$move_from;$i++) {
-							if ($i==$move_from)
-								$subcategorias[$i]['subcategoria_ordem']=$move_to;
-							else
-								$subcategorias[$i]['subcategoria_ordem']+=1;
-							$sql_u = "UPDATE register_subcategorias SET subcategoria_ordem='".$subcategorias[$i]['subcategoria_ordem']."'
-										WHERE subcategoria_id = '".$subcategorias[$i]['subcategoria_id']."';";
-							$reordem = $db->query($sql_u);
-						}
-						return new Response("Reordenado para cima",200);
+						return new Response("Reordenado",200);
 					}
-				} else {
-					return new Response("Reordenado",200);
 				}
 			} else {
 				return new Response("Não autorizado", 403);
