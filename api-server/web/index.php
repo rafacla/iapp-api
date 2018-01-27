@@ -600,7 +600,7 @@ $app->post('/categoria/move', function (Request $request) use ($app, $db) {
 										WHERE categoria_id = '".$categorias[$i]['categoria_id']."';";
 							$reordem = $db->query($sql_u);
 						}
-						return new Response("Reordenado",200);
+						return new Response("Reordenado ".$sql_u,200);
 					}
 				} else {
 					return new Response("Reordenado",200);
