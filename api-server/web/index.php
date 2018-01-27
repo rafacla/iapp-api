@@ -41,6 +41,46 @@ function getDiarioID($diariouid) {
 		return 0;
 }
 
+function MoveSubcategoria($move_from, $move_to, $categoria_id) {
+	global $db;
+	$sql = "SELECT `subcategoria_id`,`subcategoria_ordem` FROM `register_subcategorias` WHERE `categoria_id` = '$categoria_id' ORDER BY `subcategoria_ordem`;";
+	$subcategorias = $db->select($sql);
+	$countSubcategorias = count($subcategorias);
+	if ($move_from < $move_to) {
+		if ($move_to >= $countSubcategorias || $move_to < 0) {
+			return new Response("Sintaxe inválida", 400);
+		} else {
+			for ($i=$move_from;$i<=$move_to;$i++) {
+				if ($i==$move_from)
+					$subcategorias[$i]['subcategoria_ordem']=$move_to;
+				else
+					$subcategorias[$i]['subcategoria_ordem']-=1;
+				$sql_u = "UPDATE register_subcategorias SET subcategoria_ordem='".$subcategorias[$i]['subcategoria_ordem']."'
+							WHERE subcategoria_id = '".$subcategorias[$i]['subcategoria_id']."';";
+				$reordem = $db->query($sql_u);							
+			}
+			return new Response("Reordenado para baixo",200);
+		}					
+	} elseif ($move_from > $move_to) {
+		if ($move_to >= $countSubcategorias || $move_to < 0) {
+			return new Response("Sintaxe inválida", 400);
+		} else {
+			for ($i=$move_to;$i<=$move_from;$i++) {
+				if ($i==$move_from)
+					$subcategorias[$i]['subcategoria_ordem']=$move_to;
+				else
+					$subcategorias[$i]['subcategoria_ordem']+=1;
+				$sql_u = "UPDATE register_subcategorias SET subcategoria_ordem='".$subcategorias[$i]['subcategoria_ordem']."'
+							WHERE subcategoria_id = '".$subcategorias[$i]['subcategoria_id']."';";
+				$reordem = $db->query($sql_u);
+			}
+			return new Response("Reordenado para cima",200);
+		}
+	} else {
+		return new Response("Reordenado",200);
+	}
+}
+
 
 // verificar autenticacao
 $app->before(function(Request $request, Application $app) use ($app, $db, $storage, $server) {
@@ -637,42 +677,9 @@ $app->post('/subcategoria/move', function (Request $request) use ($app, $db) {
 			
 			if ($user['adm'] || $user['id']==$user_id) {
 				if (!isset($data['move_to_categoria_id']) || $data['move_to_categoria_id']==$categoria_id) {
-					$sql = "SELECT `subcategoria_id`,`subcategoria_ordem` FROM `register_subcategorias` WHERE `categoria_id` = '$categoria_id' ORDER BY `subcategoria_ordem`;";
-					$subcategorias = $db->select($sql);
-					$countSubcategorias = count($subcategorias);
-					if ($move_from < $move_to) {
-						if ($move_to >= $countSubcategorias || $move_to < 0) {
-							return new Response("Sintaxe inválida", 400);
-						} else {
-							for ($i=$move_from;$i<=$move_to;$i++) {
-								if ($i==$move_from)
-									$subcategorias[$i]['subcategoria_ordem']=$move_to;
-								else
-									$subcategorias[$i]['subcategoria_ordem']-=1;
-								$sql_u = "UPDATE register_subcategorias SET subcategoria_ordem='".$subcategorias[$i]['subcategoria_ordem']."'
-											WHERE subcategoria_id = '".$subcategorias[$i]['subcategoria_id']."';";
-								$reordem = $db->query($sql_u);							
-							}
-							return new Response("Reordenado para baixo",200);
-						}					
-					} elseif ($move_from > $move_to) {
-						if ($move_to >= $countSubcategorias || $move_to < 0) {
-							return new Response("Sintaxe inválida", 400);
-						} else {
-							for ($i=$move_to;$i<=$move_from;$i++) {
-								if ($i==$move_from)
-									$subcategorias[$i]['subcategoria_ordem']=$move_to;
-								else
-									$subcategorias[$i]['subcategoria_ordem']+=1;
-								$sql_u = "UPDATE register_subcategorias SET subcategoria_ordem='".$subcategorias[$i]['subcategoria_ordem']."'
-											WHERE subcategoria_id = '".$subcategorias[$i]['subcategoria_id']."';";
-								$reordem = $db->query($sql_u);
-							}
-							return new Response("Reordenado para cima",200);
-						}
-					} else {
-						return new Response("Reordenado",200);
-					}
+					MoveSubcategoria($move_from,$move_to,$categoria_id);
+				} else {
+					return new Response("Não implementado",501);
 				}
 			} else {
 				return new Response("Não autorizado", 403);
