@@ -569,7 +569,7 @@ $app->post('/categoria/move', function (Request $request) use ($app, $db) {
 			
 			if ($user['adm'] || $user['id']==$user_id) {
 				//estamos descendo
-				$sql = "SELECT `categoria_id`,`categoria_ordem` FROM `register_categorias` WHERE `diario_id` = '$diario_id';";
+				$sql = "SELECT `categoria_id`,`categoria_ordem` FROM `register_categorias` WHERE `diario_id` = '$diario_id' ORDER BY `categoria_ordem`;";
 				$categorias = $db->select($sql);
 				$countCategorias = count($categorias);
 				if ($move_from < $move_to) {
