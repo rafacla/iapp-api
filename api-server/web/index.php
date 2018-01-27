@@ -48,7 +48,7 @@ function MoveSubcategoria($move_from, $move_to, $categoria_id) {
 	$countSubcategorias = count($subcategorias);
 	if ($move_from < $move_to) {
 		if ($move_to >= $countSubcategorias || $move_to < 0) {
-			return new Response("Sintaxe inválida", 400);
+			return false;
 		} else {
 			for ($i=$move_from;$i<=$move_to;$i++) {
 				if ($i==$move_from)
@@ -59,11 +59,11 @@ function MoveSubcategoria($move_from, $move_to, $categoria_id) {
 							WHERE subcategoria_id = '".$subcategorias[$i]['subcategoria_id']."';";
 				$reordem = $db->query($sql_u);							
 			}
-			return new Response("Reordenado para baixo",200);
+			return true;
 		}					
 	} elseif ($move_from > $move_to) {
 		if ($move_to >= $countSubcategorias || $move_to < 0) {
-			return new Response("Sintaxe inválida", 400);
+			return false;
 		} else {
 			for ($i=$move_to;$i<=$move_from;$i++) {
 				if ($i==$move_from)
@@ -74,10 +74,10 @@ function MoveSubcategoria($move_from, $move_to, $categoria_id) {
 							WHERE subcategoria_id = '".$subcategorias[$i]['subcategoria_id']."';";
 				$reordem = $db->query($sql_u);
 			}
-			return new Response("Reordenado para cima",200);
+			return true;
 		}
 	} else {
-		return new Response("Reordenado",200);
+		return true;
 	}
 }
 
@@ -677,7 +677,10 @@ $app->post('/subcategoria/move', function (Request $request) use ($app, $db) {
 			
 			if ($user['adm'] || $user['id']==$user_id) {
 				if (!isset($data['move_to_categoria_id']) || $data['move_to_categoria_id']==$categoria_id) {
-					MoveSubcategoria($move_from,$move_to,$categoria_id);
+					if (MoveSubcategoria($move_from,$move_to,$categoria_id))
+						return new Response("Reordenado",200);
+					else
+						return new Response("Sintaxe inválida",400);
 				} else {
 					return new Response("Não implementado",501);
 				}
