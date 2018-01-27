@@ -556,7 +556,7 @@ $app->post('/categoria/move', function (Request $request) use ($app, $db) {
 		$categoria_id = $db->escape_string($data['categoria_id']);
 		$move_to = $data['move_to'];
 	
-		$sql = "SELECT `register_users`.`userID`,`register_categorias`.`categoria_ordem`,`register_categorias`.`categoria_id` FROM `register_categorias` 
+		$sql = "SELECT `register_users`.`userID`,`register_categorias`.`categoria_ordem`,`register_categorias`.`diario_id` FROM `register_categorias` 
 		JOIN `register_diarios` on `register_categorias`.`diario_id` = `register_diarios`.`id` 
 		JOIN `register_users` ON `register_diarios`.`user_id` = `register_users`.`userID`
 		WHERE `register_categorias`.`categoria_id` = '$categoria_id';";
