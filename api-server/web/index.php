@@ -682,7 +682,36 @@ $app->post('/subcategoria/move', function (Request $request) use ($app, $db) {
 					else
 						return new Response("Sintaxe inválida",400);
 				} else {
-					return new Response("Não implementado",501);
+					//antes de reordenar, precisamos transferir nossa subcategoria:
+					//então, na nova categoria, vamos descobrir a ultima posicao
+					$nova_categoria_id = $db->escape_string($data['move_to_categoria_id']);
+					$sql = "SELECT MAX(`subcategoria_ordem`) AS `max_posicao` FROM `register_subcategorias` WHERE `categoria_id` = '$nova_categoria_id';";
+					$query = $db->select($sql);
+					if ($query) {
+						$max_pos = $query[0]['max_posicao']+1;
+						$sql = "UPDATE `register_subcategorias` SET `categoria_id` = '$nova_categoria_id', `subcategoria_ordem` = '$max_pos' 
+								WHERE `subcategoria_id` = '$subcategoria_id';";
+						$res = $db->query($sql);
+						if ($res) {
+							//agora que transferimos, vamos reordenar:
+							$move = MoveSubcategoria($max_pos,$move_to,$nova_categoria_id);
+							// e temos que tapar o buraco que deixamos na ordem ao transferir:
+							$sql = "SELECT `subcategoria_id`,`subcategoria_ordem` FROM `register_subcategorias` WHERE `categoria_id` = '$categoria_id' ORDER BY `subcategoria_ordem`;";
+							$subcategorias_antigas = $db->select($sql);
+							for ($i=0;$i<count($subcategorias_antigas);$i++) {
+								$sql_u = "UPDATE `register_subcategorias` SET `subcategoria_ordem` = '$i' WHERE `subcategoria_id` = '".$subcategorias_antigas[$i]['subcategoria_id']."';";
+								$db->query($sql_u);
+							}
+							if ($move)
+								return new Response("Transferido e Reordenado",200);
+							else
+								return new Response("Falhou ao reordernar, mas transferimos",400);
+						} else {
+							return new Response("Falha ao transferir subcategoria",500);
+						}
+					} else {
+						return new Response("Nova categoria não encontrada",404);
+					}
 				}
 			} else {
 				return new Response("Não autorizado", 403);
