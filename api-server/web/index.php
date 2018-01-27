@@ -572,7 +572,6 @@ $app->post('/categoria/move', function (Request $request) use ($app, $db) {
 				$sql = "SELECT `categoria_id`,`categoria_ordem` FROM `register_categorias` WHERE `diario_id` = '$diario_id';";
 				$categorias = $db->select($sql);
 				$countCategorias = count($categorias);
-				$sucesso = true;
 				if ($move_from < $move_to) {
 					if ($move_to >= $countCategorias || $move_to < 0) {
 						return new Response("Sintaxe inválida", 400);
@@ -584,14 +583,9 @@ $app->post('/categoria/move', function (Request $request) use ($app, $db) {
 								$categorias[$i]['categoria_ordem']-=1;
 							$sql_u = "UPDATE register_categorias SET categoria_ordem='".$categorias[$i]['categoria_ordem']."'
 										WHERE categoria_id = '".$categorias[$i]['categoria_id']."';";
-							$reordem = $db->query($sql_u);
-							if (!$reordem)
-								$sucesso = false;
+							$reordem = $db->query($sql_u);							
 						}
-						if ($sucesso)
-							return new Response("Falha",400);
-						else
-							return new Response("Reordenado",200);
+						return new Response("Reordenado",200);
 					}					
 				} elseif ($move_to > $move_from) {
 					if ($move_to >= $countCategorias || $move_to < 0) {
@@ -605,13 +599,8 @@ $app->post('/categoria/move', function (Request $request) use ($app, $db) {
 							$sql_u = "UPDATE register_categorias SET categoria_ordem='".$categorias[$i]['categoria_ordem']."'
 										WHERE categoria_id = '".$categorias[$i]['categoria_id']."';";
 							$reordem = $db->query($sql_u);
-							if (!$reordem)
-								$sucesso = false;
 						}
-						if ($sucesso)
-							return new Response("Falha",400);
-						else
-							return new Response("Reordenado",200);
+						return new Response("Reordenado",200);
 					}
 				} else {
 					return new Response("Reordenado",200);
