@@ -563,15 +563,15 @@ $app->get('/categoria/{diariouid}', function (Request $request, $diariouid) use 
 	if ($diario) {
 		if ($user['adm'] || $user['id']==$diario['user_id']) {
 			$diarioID = $diario['diario_id'];
-			$sql = sprintf("SELECT `categoria_id`, `categoria_nome`, `categoria_description`, `diario_id` from `register_categorias` WHERE `diario_id` = '%s'",$diarioID);
+			$sql = sprintf("SELECT `categoria_id`, `categoria_nome`, `categoria_description`, `diario_id`, `categoria_ordem` from `register_categorias` WHERE `diario_id` = '%s' ORDER BY `categoria_ordem`",$diarioID);
 			$rows = $db ->select($sql);
 			if ($rows) {
 				$i = 0;
 				foreach ($rows as $row) {
 					$categorias[$i] = $row;
 					$cat_id = $row['categoria_id'];
-					$sql_subc = "SELECT `subcategoria_id`,`subcategoria_nome`,`subcategoria_description`,`subcategoria_carry`,`categoria_id` FROM `register_subcategorias` 
-					WHERE `categoria_id` = '$cat_id';";
+					$sql_subc = "SELECT `subcategoria_id`,`subcategoria_nome`,`subcategoria_description`,`subcategoria_carry`,`categoria_id`,`subcategoria_ordem` FROM `register_subcategorias` 
+					WHERE `categoria_id` = '$cat_id' ORDER BY `subcategoria_ordem`;";
 					$subcategorias = $db->select($sql_subc);
 					$categorias[$i]['subcategorias'] = $subcategorias;
 					$i++;
