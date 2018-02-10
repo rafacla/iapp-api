@@ -615,7 +615,7 @@ $app->post('/categoria/move', function (Request $request) use ($app, $db) {
 					if ($move_to >= $countCategorias || $move_to < 0) {
 						return new Response("Sintaxe inválida", 400);
 					} else {
-						for ($i=$move_from;$i<=$move_to;$i++) {
+						for ($i=$move_from;$i<$move_to;$i++) {
 							if ($i==$move_from)
 								$categorias[$i]['categoria_ordem']=$move_to;
 							else
@@ -630,7 +630,7 @@ $app->post('/categoria/move', function (Request $request) use ($app, $db) {
 					if ($move_to >= $countCategorias || $move_to < 0) {
 						return new Response("Sintaxe inválida", 400);
 					} else {
-						for ($i=$move_to;$i<=$move_from;$i++) {
+						for ($i=$move_to;$i<$move_from;$i++) {
 							if ($i==$move_from)
 								$categorias[$i]['categoria_ordem']=$move_to;
 							else
