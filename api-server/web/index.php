@@ -615,11 +615,8 @@ $app->post('/categoria/move', function (Request $request) use ($app, $db) {
 					if ($move_to >= $countCategorias || $move_to < 0) {
 						return new Response("Sintaxe inválida", 400);
 					} else {
-						for ($i=$move_from;$i<$move_to;$i++) {
-							if ($i==$move_from)
-								$categorias[$i]['categoria_ordem']=$move_to;
-							else
-								$categorias[$i]['categoria_ordem']-=1;
+						for ($i=$move_from;$i<=$move_to;$i++) {
+							$categorias[$i]['categoria_ordem']=$i;
 							$sql_u = "UPDATE register_categorias SET categoria_ordem='".$categorias[$i]['categoria_ordem']."'
 										WHERE categoria_id = '".$categorias[$i]['categoria_id']."';";
 							$reordem = $db->query($sql_u);							
@@ -630,11 +627,8 @@ $app->post('/categoria/move', function (Request $request) use ($app, $db) {
 					if ($move_to >= $countCategorias || $move_to < 0) {
 						return new Response("Sintaxe inválida", 400);
 					} else {
-						for ($i=$move_to;$i<$move_from;$i++) {
-							if ($i==$move_from)
-								$categorias[$i]['categoria_ordem']=$move_to;
-							else
-								$categorias[$i]['categoria_ordem']+=1;
+						for ($i=$move_from;$i>=$move_to;$i--) {
+							$categorias[$i]['categoria_ordem']=$i;
 							$sql_u = "UPDATE register_categorias SET categoria_ordem='".$categorias[$i]['categoria_ordem']."'
 										WHERE categoria_id = '".$categorias[$i]['categoria_id']."';";
 							$reordem = $db->query($sql_u);
