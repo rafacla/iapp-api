@@ -827,7 +827,7 @@ $app->post('/categoria',function (Request $request) use ($app, $db) {
 			$atualizar = $db->query($sql_u);
 			
 			if ($atualizar)
-				return new Response("atualizado",200);
+				return new Response("atualizado: ".$sql_u,200);
 			else
 				return new Response("erro desconhecido", 500);
 		} else {
