@@ -869,7 +869,7 @@ $app->post('/subcategoria',function (Request $request) use ($app, $db) {
 		//se a subcategoria não foi informada, obrigatoriamente o categoria_id deve ser informada para criar uma nova subcategoria.
 		$operacao = "criar";
 		
-		$diario_uid = $db->escape_string($data['diario_uid']);
+		$categoria_id = $db->escape_string($data['categoria_id']);
 		$sql_s = "SELECT `user_id`, `id` AS `diario_id` FROM `register_categorias` JOIN `register_diarios` ON `register_categorias`.`diario_id` = `register_diarios`.`id` WHERE `categoria_id` = '$categoria_id'";
 		
 		$rows = $db->select($sql_s);
