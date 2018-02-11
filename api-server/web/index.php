@@ -929,15 +929,15 @@ VALUES ('$subcategoria_nome','$subcategoria_description','$nova_ordem','$categor
 		$update_carry = "";
 		$nr_up = 0;
 		if (isset($data['subcategoria_nome'])) {
-			$update[$nr_up] = "`categoria_nome` = '".$db->escape_string($data['categoria_nome'])."'";
+			$update[$nr_up] = "`subcategoria_nome` = '".$db->escape_string($data['subcategoria_nome'])."'";
 			$nr_up++;
 		}
 		if (isset($data['subcategoria_description'])) {
-			$update[$nr_up] = "`categoria_description` = '".$db->escape_string($data['categoria_description'])."'";
+			$update[$nr_up] = "`subcategoria_description` = '".$db->escape_string($data['subcategoria_description'])."'";
 			$nr_up++;
 		}
 		if (isset($data['subcategoria_ordem'])) {
-			$update[$nr_up] = "`categoria_ordem` = '".$db->escape_string($data['categoria_ordem'])."'";
+			$update[$nr_up] = "`subcategoria_ordem` = '".$db->escape_string($data['subcategoria_ordem'])."'";
 			$nr_up++;
 		}
 		if (isset($data['subcategoria_carry'])) {
