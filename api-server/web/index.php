@@ -740,7 +740,7 @@ $app->post('/categoria',function (Request $request) use ($app, $db) {
 		
 		$categoria_id = $db->escape_string($data['categoria_id']);
 		$sql_s = "SELECT user_id, diario_id FROM `register_categorias` JOIN `register_diarios` ON `register_categorias`.`diario_id` = `register_diarios`.`id` WHERE `categoria_id` = '$categoria_id'";
-		$rows = $db->select($sql);
+		$rows = $db->select($sql_s);
 		if ($rows) {
 			$user_id = $rows[0]['user_id'];
 			$diario_id = $rows[0]['diario_id'];
