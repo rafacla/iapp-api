@@ -795,7 +795,7 @@ $app->post('/categoria',function (Request $request) use ($app, $db) {
 				
 				return new Response(json_encode($resposta),201);
 			} else {
-				return new Response("erro desconhecido",500);
+				return new Response("erro desconhecido: ".$sql_i,500);
 			}
 		} else {
 			return new Response("erro de sintaxe: faltam parametros para criar", 400);
