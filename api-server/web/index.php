@@ -785,7 +785,7 @@ $app->post('/categoria',function (Request $request) use ($app, $db) {
 			}
 			
 			//ok, estamos prontos para criar:
-			$sql_i = "INSERT INTO `register_categorias` VALUES (`categoria_nome`,`categoria_description`,`categoria_ordem`,`diario_id`)
+			$sql_i = "INSERT INTO `register_categorias` (`categoria_nome`,`categoria_description`,`categoria_ordem`,`diario_id`)
 VALUES ('$categoria_nome','$categoria_description','$nova_ordem','$diario_id');";
 					
 			$inserido = $db->insert($sql_i);
@@ -795,7 +795,7 @@ VALUES ('$categoria_nome','$categoria_description','$nova_ordem','$diario_id');"
 				
 				return new Response(json_encode($resposta),201);
 			} else {
-				return new Response("erro desconhecido: ".$sql_i,500);
+				return new Response("erro desconhecido",500);
 			}
 		} else {
 			return new Response("erro de sintaxe: faltam parametros para criar", 400);
@@ -905,8 +905,8 @@ $app->post('/subcategoria',function (Request $request) use ($app, $db) {
 			}
 			
 			//ok, estamos prontos para criar:
-			$sql_i = "INSERT INTO `register_categorias` VALUES (`categoria_nome`,`categoria_description`,`categoria_ordem`,`diario_id`)
-					VALUES ('$categoria_nome','$categoria_description','$nova_ordem','$diario_id');";
+			$sql_i = "INSERT INTO `register_categorias` (`categoria_nome`,`categoria_description`,`categoria_ordem`,`diario_id`)
+VALUES ('$categoria_nome','$categoria_description','$nova_ordem','$diario_id');";
 					
 			$inserido = $db->insert($sql_i);
 			
@@ -915,7 +915,7 @@ $app->post('/subcategoria',function (Request $request) use ($app, $db) {
 				
 				return new Response(json_encode($resposta),201);
 			} else {
-				return new Response("erro desconhecido: ".$sql_i,500);
+				return new Response("erro desconhecido",500);
 			}
 		} else {
 			return new Response("erro de sintaxe: faltam parametros para criar", 400);
