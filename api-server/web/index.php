@@ -724,4 +724,129 @@ $app->post('/subcategoria/move', function (Request $request) use ($app, $db) {
 	}
 });
 
+$app->post('/categoria',function (Request $request) use ($app, $db) {
+	global $user;
+	$data = json_decode($request->getContent(), true);
+	
+	//vamos criar uma flag para saber se estamos criando ou atualizando uma linha:
+	$operacao = "";
+	$user_id = 0;
+	$diario_id = 0;
+	
+	//identificar a quem pertence o item:
+	if (isset($data['categoria_id'])) {
+		//se a categoria foi informada, vamos ignorar o parâmetro diario_uid pois é uma atualização
+		$operacao = "atualizar";
+		
+		$categoria_id = $db->escape_string($data['categoria_id']);
+		$sql_s = "SELECT user_id, diario_id FROM `register_categorias` JOIN `register_diarios` ON `register_categorias`.`diario_id` = `register_diarios`.`id` WHERE `categoria_id` = '$categoria_id'";
+		$rows = $db->select($sql);
+		if ($rows) {
+			$user_id = $rows[0]['user_id'];
+			$diario_id = $rows[0]['diario_id'];
+		}
+	} elseif (isset($data['diario_uid'])) {
+		//se a categoria não foi informada, obrigatoriamente o diario_uid deve ser informada para criar uma nova categoria.
+		$operacao = "criar";
+		
+		$diario_uid = $db->escape_string($data['diario_uid']);
+		$sql_s = "SELECT `user_id`, `id` AS `diario_id` FROM `register_diarios` WHERE `uid`='$diario_uid'";
+		
+		if ($rows) {
+			$user_id = $rows[0]['user_id'];
+			$diario_id = $rows[0]['diario_id'];
+		}
+	} else {
+		//se nenhum dos dois parametros foi informado, so sorry, erro de sintaxe:
+		return new Response("sintaxe inválida",400);
+	}
+	
+	//verificar se usuário tem permissão:
+	if (!$user['adm'] && $user['id']<>$user_id) {
+		return new Response("sem permissão para isso",403);
+	}
+	
+	//fazer o que tem que ser feito:
+	if ($operacao == "criar") {
+		//ok, vamos criar, então vamos preparar os campos obrigatórios:
+		if (isset($data['categoria_nome']) && isset($data['categoria_description'])) {
+			$categoria_nome = $db->escape_string($data['categoria_nome']);
+			$categoria_description = $db->escape_string($data['categoria_description']);
+			
+			//precisamos recuperar no servidor qual a ordem este item pertence:
+			$sql_s = "SELECT MAX(`categoria_ordem`)+1 AS `nova_ordem` FROM `register_categorias` WHERE `diario_id` = '$diario_id'";
+			$rows = $db->select($sql_s);
+			
+			$nova_ordem = 0; //caso não haja nenhuma categoria para este diário, a primeira terá ordem 0
+			if ($rows) {
+				$nova_ordem = $rows[0]['nova_ordem'];
+			}
+			
+			//ok, estamos prontos para criar:
+			$sql_i = "INSERT INTO `register_categorias` VALUES (`categoria_nome`,`categoria_description`,`categoria_ordem`,`diario_id`)
+					VALUES ('$categoria_nome','$categoria_description','$nova_ordem','$diario_id');";
+					
+			$inserido = $db->insert($sql_i);
+			
+			if ($inserido) {
+				$resposta['categoria_id'] = $inserido;
+				
+				return new Response(json_encode($resposta),201);
+			} else {
+				return new Response("erro desconhecido",500);
+			}
+		} else {
+			return new Response("erro de sintaxe: faltam parametros para criar", 400);
+		}
+	} elseif ($operacao == "atualizar") {
+		//vamos atualizar, vamos montar a query, jogo rápido:
+		$update_nome = "";
+		$update_description = "";
+		$update_ordem = "";
+		$nr_up = 0;
+		if (isset($data['categoria_nome'])) {
+			$update[0] = "`categoria_nome` = '".$db->escape_string($data['categoria_nome'])."'";
+			$nr_up++;
+		}
+		if (isset($data['categoria_description'])) {
+			$update[1] = "`categoria_description` = '".$db->escape_string($data['categoria_description'])."'";
+			$nr_up++;
+		}
+		if (isset($data['categoria_ordem'])) {
+			$update[2] = "`categoria_ordem` = '".$db->escape_string($data['categoria_ordem'])."'";
+			$nr_up++;
+		}
+		for ($i=0;$i<$nr_up;$i++) {
+			$update_text .= $update[$i];
+			if ($i<($nr_up-1))
+				$update_text .= ", ";
+		}
+		if ($nr_up > 0) {
+			$sql_u = "UPDATE `register_categorias` SET $update_text WHERE `categoria_id` = '$categoria_id'";
+			$atualizar = $db->query($sql_u);
+			
+			if ($atualizar)
+				return new Response("atualizado",200);
+			else
+				return new Response("erro desconhecido", 500);
+		} else {
+			return new Response("nada para atualizar", 400);
+		}
+	}
+	
+	return new Response("erro de sintaxe: final",400);
+});
+
+$app->post('/categoria/delete',function (Request $request) use ($app, $db) {
+	return new Response("method not allowed",485);
+});
+
+$app->post('/subcategoria',function (Request $request) use ($app, $db) {
+	return new Response("method not allowed",485);
+});
+
+$app->post('/subcategoria/delete',function (Request $request) use ($app, $db) {
+	return new Response("method not allowed",485);
+});
+
 $app->run();
