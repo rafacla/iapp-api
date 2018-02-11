@@ -816,6 +816,7 @@ $app->post('/categoria',function (Request $request) use ($app, $db) {
 			$update[2] = "`categoria_ordem` = '".$db->escape_string($data['categoria_ordem'])."'";
 			$nr_up++;
 		}
+		$update_text = "";
 		for ($i=0;$i<$nr_up;$i++) {
 			$update_text .= $update[$i];
 			if ($i<($nr_up-1))
