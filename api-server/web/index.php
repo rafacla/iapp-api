@@ -786,7 +786,7 @@ $app->post('/categoria',function (Request $request) use ($app, $db) {
 			
 			//ok, estamos prontos para criar:
 			$sql_i = "INSERT INTO `register_categorias` VALUES (`categoria_nome`,`categoria_description`,`categoria_ordem`,`diario_id`)
-					VALUES ('$categoria_nome','$categoria_description','$nova_ordem','$diario_id');";
+VALUES ('$categoria_nome','$categoria_description','$nova_ordem','$diario_id');";
 					
 			$inserido = $db->insert($sql_i);
 			
