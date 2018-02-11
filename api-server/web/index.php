@@ -891,12 +891,13 @@ $app->post('/subcategoria',function (Request $request) use ($app, $db) {
 	//fazer o que tem que ser feito:
 	if ($operacao == "criar") {
 		//ok, vamos criar, então vamos preparar os campos obrigatórios:
-		if (isset($data['categoria_nome']) && isset($data['categoria_description'])) {
-			$categoria_nome = $db->escape_string($data['categoria_nome']);
-			$categoria_description = $db->escape_string($data['categoria_description']);
+		if (isset($data['subcategoria_nome']) && isset($data['subcategoria_description']) && isset($data['categoria_id']) ) {
+			$categoria_nome = $db->escape_string($data['subcategoria_nome']);
+			$categoria_description = $db->escape_string($data['subcategoria_description']);
+			$categoria_id = $db->escape_string($data['categoria_id']);
 			
 			//precisamos recuperar no servidor qual a ordem este item pertence:
-			$sql_s = "SELECT MAX(`categoria_ordem`)+1 AS `nova_ordem` FROM `register_categorias` WHERE `diario_id` = '$diario_id'";
+			$sql_s = "SELECT MAX(`subcategoria_ordem`)+1 AS `nova_ordem` FROM `register_subcategorias` WHERE `categoria_id` = '$categoria_id'";
 			$rows = $db->select($sql_s);
 			
 			$nova_ordem = 0; //caso não haja nenhuma categoria para este diário, a primeira terá ordem 0
@@ -905,13 +906,13 @@ $app->post('/subcategoria',function (Request $request) use ($app, $db) {
 			}
 			
 			//ok, estamos prontos para criar:
-			$sql_i = "INSERT INTO `register_categorias` (`categoria_nome`,`categoria_description`,`categoria_ordem`,`diario_id`)
-VALUES ('$categoria_nome','$categoria_description','$nova_ordem','$diario_id');";
+			$sql_i = "INSERT INTO `register_subcategorias` (`subcategoria_nome`,`subcategoria_description`,`subcategoria_ordem`,`categoria_id`,`subcategoria_carry`)
+VALUES ('$subcategoria_nome','$subcategoria_description','$nova_ordem','$categoria_id',0);";
 					
 			$inserido = $db->insert($sql_i);
 			
 			if ($inserido) {
-				$resposta['categoria_id'] = $inserido;
+				$resposta['subcategoria_id'] = $inserido;
 				
 				return new Response(json_encode($resposta),201);
 			} else {
@@ -925,17 +926,22 @@ VALUES ('$categoria_nome','$categoria_description','$nova_ordem','$diario_id');"
 		$update_nome = "";
 		$update_description = "";
 		$update_ordem = "";
+		$update_carry = "";
 		$nr_up = 0;
-		if (isset($data['categoria_nome'])) {
+		if (isset($data['subcategoria_nome'])) {
 			$update[$nr_up] = "`categoria_nome` = '".$db->escape_string($data['categoria_nome'])."'";
 			$nr_up++;
 		}
-		if (isset($data['categoria_description'])) {
+		if (isset($data['subcategoria_description'])) {
 			$update[$nr_up] = "`categoria_description` = '".$db->escape_string($data['categoria_description'])."'";
 			$nr_up++;
 		}
-		if (isset($data['categoria_ordem'])) {
+		if (isset($data['subcategoria_ordem'])) {
 			$update[$nr_up] = "`categoria_ordem` = '".$db->escape_string($data['categoria_ordem'])."'";
+			$nr_up++;
+		}
+		if (isset($data['subcategoria_carry'])) {
+			$update[$nr_up] = "`subcategoria_carry` = '".$db->escape_string($data['subcategoria_carry'])."'";
 			$nr_up++;
 		}
 		$update_text = "";
@@ -945,7 +951,7 @@ VALUES ('$categoria_nome','$categoria_description','$nova_ordem','$diario_id');"
 				$update_text .= ", ";
 		}
 		if ($nr_up > 0) {
-			$sql_u = "UPDATE `register_categorias` SET $update_text WHERE `categoria_id` = '$categoria_id'";
+			$sql_u = "UPDATE `register_subcategorias` SET $update_text WHERE `subcategoria_id` = '$subcategoria_id'";
 			$atualizar = $db->query($sql_u);
 			
 			if ($atualizar)
