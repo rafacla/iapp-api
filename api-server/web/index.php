@@ -892,8 +892,8 @@ $app->post('/subcategoria',function (Request $request) use ($app, $db) {
 	if ($operacao == "criar") {
 		//ok, vamos criar, então vamos preparar os campos obrigatórios:
 		if (isset($data['subcategoria_nome']) && isset($data['subcategoria_description']) && isset($data['categoria_id']) ) {
-			$categoria_nome = $db->escape_string($data['subcategoria_nome']);
-			$categoria_description = $db->escape_string($data['subcategoria_description']);
+			$subcategoria_nome = $db->escape_string($data['subcategoria_nome']);
+			$subcategoria_description = $db->escape_string($data['subcategoria_description']);
 			$categoria_id = $db->escape_string($data['categoria_id']);
 			
 			//precisamos recuperar no servidor qual a ordem este item pertence:
