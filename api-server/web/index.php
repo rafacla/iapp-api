@@ -805,15 +805,15 @@ $app->post('/categoria',function (Request $request) use ($app, $db) {
 		$update_ordem = "";
 		$nr_up = 0;
 		if (isset($data['categoria_nome'])) {
-			$update[0] = "`categoria_nome` = '".$db->escape_string($data['categoria_nome'])."'";
+			$update[$nr_up] = "`categoria_nome` = '".$db->escape_string($data['categoria_nome'])."'";
 			$nr_up++;
 		}
 		if (isset($data['categoria_description'])) {
-			$update[1] = "`categoria_description` = '".$db->escape_string($data['categoria_description'])."'";
+			$update[$nr_up] = "`categoria_description` = '".$db->escape_string($data['categoria_description'])."'";
 			$nr_up++;
 		}
 		if (isset($data['categoria_ordem'])) {
-			$update[2] = "`categoria_ordem` = '".$db->escape_string($data['categoria_ordem'])."'";
+			$update[$nr_up] = "`categoria_ordem` = '".$db->escape_string($data['categoria_ordem'])."'";
 			$nr_up++;
 		}
 		$update_text = "";
