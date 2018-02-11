@@ -855,7 +855,7 @@ $app->post('/subcategoria',function (Request $request) use ($app, $db) {
 	
 	//identificar a quem pertence o item:
 	if (isset($data['subcategoria_id'])) {
-		//se a categoria foi informada, vamos ignorar o parâmetro diario_uid pois é uma atualização
+		//se a subcategoria foi informada, vamos ignorar o parâmetro categoria_id pois é uma atualização
 		$operacao = "atualizar";
 		
 		$subcategoria_id = $db->escape_string($data['subcategoria_id']);
@@ -865,12 +865,12 @@ $app->post('/subcategoria',function (Request $request) use ($app, $db) {
 			$user_id = $rows[0]['user_id'];
 			$diario_id = $rows[0]['diario_id'];
 		}
-	} elseif (isset($data['diario_uid'])) {
-		//se a categoria não foi informada, obrigatoriamente o diario_uid deve ser informada para criar uma nova categoria.
+	} elseif (isset($data['categoria_id'])) {
+		//se a subcategoria não foi informada, obrigatoriamente o categoria_id deve ser informada para criar uma nova subcategoria.
 		$operacao = "criar";
 		
 		$diario_uid = $db->escape_string($data['diario_uid']);
-		$sql_s = "SELECT `user_id`, `id` AS `diario_id` FROM `register_diarios` WHERE `uid`='$diario_uid'";
+		$sql_s = "SELECT `user_id`, `id` AS `diario_id` FROM `register_categorias` JOIN `register_diarios` ON `register_categorias`.`diario_id` = `register_diarios`.`id` WHERE `categoria_id` = '$categoria_id'";
 		
 		$rows = $db->select($sql_s);
 		
