@@ -792,6 +792,8 @@ VALUES ('$categoria_nome','$categoria_description','$nova_ordem','$diario_id');"
 			
 			if ($inserido) {
 				$resposta['categoria_id'] = $inserido;
+				$resposta['categoria_ordem'] = $nova_ordem;
+				$resposta['diario_id'] = $diario_id;
 				
 				return new Response(json_encode($resposta),201);
 			} else {
@@ -950,6 +952,8 @@ VALUES ('$subcategoria_nome','$subcategoria_description','$nova_ordem','$categor
 			
 			if ($inserido) {
 				$resposta['subcategoria_id'] = $inserido;
+				$resposta['subcategoria_ordem'] = $nova_ordem;
+				$resposta['categoria_id'] = $categoria_id;
 				
 				return new Response(json_encode($resposta),201);
 			} else {
