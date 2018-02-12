@@ -1004,7 +1004,42 @@ VALUES ('$subcategoria_nome','$subcategoria_description','$nova_ordem','$categor
 });
 
 $app->post('/subcategoria/delete',function (Request $request) use ($app, $db) {
-	return new Response("method not allowed",485);
+	global $user;
+	$data = json_decode($request->getContent(), true);
+	
+	$user_id = 0;
+	$diario_id = 0;
+	
+	//identificar a quem pertence o item:
+	if (isset($data['subcategoria_id'])) {
+		$subcategoria_id = $db->escape_string($data['subcategoria_id']);
+		$sql_s = "SELECT user_id, diario_id FROM `register_subcategorias` JOIN `register_categorias` ON `register_subcategorias`.`categoria_id` = `register_categorias`.`categoria_id` JOIN `register_diarios` ON `register_categorias`.`diario_id` = `register_diarios`.`id` WHERE `subcategoria_id` = '$subcategoria_id'";
+		$rows = $db->select($sql_s);
+		
+		if ($rows) {
+			$user_id = $rows[0]['user_id'];
+			$diario_id = $rows[0]['diario_id'];
+		}
+	} else {
+		//se o parametro nao foi informado, so sorry, erro de sintaxe:
+		return new Response("sintaxe inválida",400);
+	}
+	
+	//verificar se usuário tem permissão:
+	if (!$user['adm'] && $user['id']<>$user_id) {
+		return new Response("sem permissão para isso",403);
+	}
+	
+	//fazer o que tem que ser feito:
+	$sql_d = "DELETE FROM `register_subcategorias` WHERE `subcategoria_id` = '$subcategoria_id'";
+	
+		$query = $db->query($sql_d);
+	
+	if ($query) {
+		return new Response("excluido", 200);
+	} else {
+		return new Response("erro desconhecido", 500);
+	}
 });
 
 $app->run();
