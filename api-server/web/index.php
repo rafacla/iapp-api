@@ -937,6 +937,7 @@ $app->post('/subcategoria',function (Request $request) use ($app, $db) {
 			$subcategoria_nome = $db->escape_string($data['subcategoria_nome']);
 			$subcategoria_description = $db->escape_string($data['subcategoria_description']);
 			$categoria_id = $db->escape_string($data['categoria_id']);
+			$subcategoria_carry = $db->escape_string($data['subcategoria_carry']);
 			
 			//precisamos recuperar no servidor qual a ordem este item pertence:
 			$sql_s = "SELECT MAX(`subcategoria_ordem`)+1 AS `nova_ordem` FROM `register_subcategorias` WHERE `categoria_id` = '$categoria_id'";
@@ -949,7 +950,7 @@ $app->post('/subcategoria',function (Request $request) use ($app, $db) {
 			
 			//ok, estamos prontos para criar:
 			$sql_i = "INSERT INTO `register_subcategorias` (`subcategoria_nome`,`subcategoria_description`,`subcategoria_ordem`,`categoria_id`,`subcategoria_carry`)
-VALUES ('$subcategoria_nome','$subcategoria_description','$nova_ordem','$categoria_id',0);";
+VALUES ('$subcategoria_nome','$subcategoria_description','$nova_ordem','$categoria_id','$subcategoria_carry');";
 					
 			$inserido = $db->insert($sql_i);
 			
