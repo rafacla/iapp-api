@@ -142,7 +142,16 @@ $app->before(function(Request $request, Application $app) use ($app, $db, $stora
 });
 
 $app->get("/", function (Request $request) {
-	return new Response("method not allowed",485);
+	//return new Response("method not allowed",485);
+	$resposta[0]["id"] = 1;
+	$resposta[0]["name"] = "Rafael";
+	$resposta[1]["id"] = 2;
+	$resposta[1]["name"] = "Carol";
+	$resposta[2]["id"] = 3;
+	$resposta[2]["name"] = "Murilo";
+	$resposta[3]["id"] = 4;
+	$resposta[3]["name"] = "Zuzu";
+	return new Response(json_encode($resposta),200);
 });
 
 //Aqui estamos preparando o 'pré-voo' adicionando uma resposta válida para o method 'options'
