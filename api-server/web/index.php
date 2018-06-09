@@ -158,7 +158,12 @@ $app->get("/", function (Request $request) {
 
 //Aqui estamos preparando o 'pré-voo' adicionando uma resposta válida para o method 'options'
 $app->options("{anything}", function () {
-        return new \Symfony\Component\HttpFoundation\JsonResponse(null, 204);
+		$response = new \Symfony\Component\HttpFoundation\JsonResponse(null, 204);
+		$response->headers->set('Access-Control-Allow-Origin', '*');
+		$response->headers->set('Access-Control-Allow-Methods', 'GET,POST,PUT');
+		$response->headers->set('Access-Control-Allow-Headers', 'X-Custom-Header');
+		
+		return new $Response;
 })->assert("anything", ".*");
 
 // Autenticacao
@@ -474,6 +479,7 @@ $app->post('/diario', function (Request $request) use ($app, $user, $db) {
 		}
 		else
 			return new Response("Erro ao atualizar banco de dados ",400);
+			
 	} else {
 		return new Response("Sintaxe de entrada inválida",400);
 	}
