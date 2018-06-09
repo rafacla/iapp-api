@@ -8,3 +8,8 @@ RewriteRule ^(.*)$ web/$1 [L,QSA]
 RewriteCond $1 !^(index\.php|resources|robots\.txt)
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule .* web/ [L]
+
+<IfModule mod_headers.c>
+  Header set Access-Control-Allow-Origin: *  
+  Header set Access-Control-Allow-Credentials: true
+</IfModule>
