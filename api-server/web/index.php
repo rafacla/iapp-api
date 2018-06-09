@@ -1,5 +1,5 @@
 <?php 
-
+header('Access-Control-Allow-Origin: *');
 // web/index.php
 require_once __DIR__.'/../vendor/autoload.php';
 
@@ -29,57 +29,6 @@ $storage = new OAuth2\Storage\Pdo(array('dsn' => $db->dsn(), 'username' => $db->
 $server = new OAuth2\Server($storage);
 $server->addGrantType(new OAuth2\GrantType\ClientCredentials($storage));
 $server->addGrantType(new OAuth2\GrantType\UserCredentials($storage));
-
-function getDiarioID($diariouid) {
-	global $db;
-	$duid = $db->escape_string($diariouid);
-	$sql_diario = "SELECT `id` AS `diario_id`, `user_id` FROM `register_diarios` WHERE `uid` = '$duid'";
-	$rows = $db->select($sql_diario);
-	if ($rows)
-		return $rows[0];
-	else
-		return 0;
-}
-
-function MoveSubcategoria($move_from, $move_to, $categoria_id) {
-	global $db;
-	$sql = "SELECT `subcategoria_id`,`subcategoria_ordem` FROM `register_subcategorias` WHERE `categoria_id` = '$categoria_id' ORDER BY `subcategoria_ordem`;";
-	$subcategorias = $db->select($sql);
-	$countSubcategorias = count($subcategorias);
-	if ($move_from < $move_to) {
-		if ($move_to >= $countSubcategorias || $move_to < 0) {
-			return false;
-		} else {
-			for ($i=$move_from;$i<=$move_to;$i++) {
-				if ($i==$move_from)
-					$subcategorias[$i]['subcategoria_ordem']=$move_to;
-				else
-					$subcategorias[$i]['subcategoria_ordem']-=1;
-				$sql_u = "UPDATE register_subcategorias SET subcategoria_ordem='".$subcategorias[$i]['subcategoria_ordem']."'
-							WHERE subcategoria_id = '".$subcategorias[$i]['subcategoria_id']."';";
-				$reordem = $db->query($sql_u);							
-			}
-			return true;
-		}					
-	} elseif ($move_from > $move_to) {
-		if ($move_to >= $countSubcategorias || $move_to < 0) {
-			return false;
-		} else {
-			for ($i=$move_to;$i<=$move_from;$i++) {
-				if ($i==$move_from)
-					$subcategorias[$i]['subcategoria_ordem']=$move_to;
-				else
-					$subcategorias[$i]['subcategoria_ordem']+=1;
-				$sql_u = "UPDATE register_subcategorias SET subcategoria_ordem='".$subcategorias[$i]['subcategoria_ordem']."'
-							WHERE subcategoria_id = '".$subcategorias[$i]['subcategoria_id']."';";
-				$reordem = $db->query($sql_u);
-			}
-			return true;
-		}
-	} else {
-		return true;
-	}
-}
 
 
 // verificar autenticacao
@@ -140,6 +89,60 @@ $app->before(function(Request $request, Application $app) use ($app, $db, $stora
     }
 
 });
+
+
+function getDiarioID($diariouid) {
+	global $db;
+	$duid = $db->escape_string($diariouid);
+	$sql_diario = "SELECT `id` AS `diario_id`, `user_id` FROM `register_diarios` WHERE `uid` = '$duid'";
+	$rows = $db->select($sql_diario);
+	if ($rows)
+		return $rows[0];
+	else
+		return 0;
+}
+
+function MoveSubcategoria($move_from, $move_to, $categoria_id) {
+	global $db;
+	$sql = "SELECT `subcategoria_id`,`subcategoria_ordem` FROM `register_subcategorias` WHERE `categoria_id` = '$categoria_id' ORDER BY `subcategoria_ordem`;";
+	$subcategorias = $db->select($sql);
+	$countSubcategorias = count($subcategorias);
+	if ($move_from < $move_to) {
+		if ($move_to >= $countSubcategorias || $move_to < 0) {
+			return false;
+		} else {
+			for ($i=$move_from;$i<=$move_to;$i++) {
+				if ($i==$move_from)
+					$subcategorias[$i]['subcategoria_ordem']=$move_to;
+				else
+					$subcategorias[$i]['subcategoria_ordem']-=1;
+				$sql_u = "UPDATE register_subcategorias SET subcategoria_ordem='".$subcategorias[$i]['subcategoria_ordem']."'
+							WHERE subcategoria_id = '".$subcategorias[$i]['subcategoria_id']."';";
+				$reordem = $db->query($sql_u);							
+			}
+			return true;
+		}					
+	} elseif ($move_from > $move_to) {
+		if ($move_to >= $countSubcategorias || $move_to < 0) {
+			return false;
+		} else {
+			for ($i=$move_to;$i<=$move_from;$i++) {
+				if ($i==$move_from)
+					$subcategorias[$i]['subcategoria_ordem']=$move_to;
+				else
+					$subcategorias[$i]['subcategoria_ordem']+=1;
+				$sql_u = "UPDATE register_subcategorias SET subcategoria_ordem='".$subcategorias[$i]['subcategoria_ordem']."'
+							WHERE subcategoria_id = '".$subcategorias[$i]['subcategoria_id']."';";
+				$reordem = $db->query($sql_u);
+			}
+			return true;
+		}
+	} else {
+		return true;
+	}
+}
+
+
 
 $app->get("/", function (Request $request) {
 	//return new Response("method not allowed",485);
