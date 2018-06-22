@@ -320,6 +320,24 @@ $app->get('/users', function (Request $request) use ($app, $db) {
 	}
 });
 
+//Rota para pegar detalhes do usuário logado
+$app->get('/users/logged', function (Request $request) use ($app, $db) {
+	global $user;
+	
+	if ($user) {
+		$sql = sprintf("SELECT * from `register_users` WHERE `userID` = '%s'",$user['id']);
+		$rows = $db ->select($sql);
+		if ($rows) {
+			return $app->json($rows[0]);
+		} else {
+			return new Response("Este usuáro não existe, mas deveria existir - erro do servidor.", 500);
+		}
+	} else {
+		return new Response('Você não tem privilégios para isso.', 403);
+	}
+	
+});
+
 //Rota para pegar detalhes de um usuário específico (apenas ADM ou informações do próprio usuário)
 $app->get('/users/{id}', function (Request $request, $id) use ($app, $db) {
 	global $user;
