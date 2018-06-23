@@ -28,6 +28,7 @@ $storage = new OAuth2\Storage\Pdo(array('dsn' => $db->dsn(), 'username' => $db->
 $server = new OAuth2\Server($storage);
 $server->addGrantType(new OAuth2\GrantType\ClientCredentials($storage));
 $server->addGrantType(new OAuth2\GrantType\UserCredentials($storage));
+$server->addGrantType(new OAuth2\GrantType\RefreshToken($storage));
 
 
 // verificar autenticacao
@@ -144,16 +145,7 @@ function MoveSubcategoria($move_from, $move_to, $categoria_id) {
 
 
 $app->get("/", function (Request $request) {
-	//return new Response("method not allowed",485);
-	$resposta[0]["id"] = 1;
-	$resposta[0]["name"] = "Rafael";
-	$resposta[1]["id"] = 2;
-	$resposta[1]["name"] = "Carol";
-	$resposta[2]["id"] = 3;
-	$resposta[2]["name"] = "Murilo";
-	$resposta[3]["id"] = 4;
-	$resposta[3]["name"] = "Zuzu";
-	return new Response(json_encode($resposta),200);
+	return new Response("method not allowed",485);
 });
 
 //Aqui estamos preparando o 'pré-voo' adicionando uma resposta válida para o method 'options'
@@ -215,6 +207,7 @@ $app->post('/auth', function (Request $request) use ($app, $db, $storage, $serve
 	$respStr = $resposta->getResponseBody();
 	return new Response($respStr,$status);
 });
+
 
 //Rota para ativar o novo usuário
 $app->get('/activate/{actcode}', function (Request $request, $actcode) use ($app, $db) {
