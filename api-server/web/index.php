@@ -160,7 +160,7 @@ $app->options("{anything}", function () {
 		$response->headers->set('Access-Control-Allow-Headers', 'X-Custom-Header');
 		
 		return new $response;
-})->assert("anything", "*");
+})->assert("anything", ".*");
 
 // Autenticacao
 $app->post('/auth', function (Request $request) use ($app, $db, $storage, $server) {
