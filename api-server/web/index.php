@@ -25,13 +25,11 @@ $user["id"] = null;
 $user["adm"] = false;
 
 $storage = new OAuth2\Storage\Pdo(array('dsn' => $db->dsn(), 'username' => $db->username(), 'password' => $db->password()));
-$config = array(
-    'access_lifetime' => 100
-);
+
 $config_refresh_token = array (
 	'always_issue_new_refresh_token' => true
 );
-$server = new OAuth2\Server($storage, $config);
+$server = new OAuth2\Server($storage);
 $server->addGrantType(new OAuth2\GrantType\ClientCredentials($storage));
 $server->addGrantType(new OAuth2\GrantType\UserCredentials($storage));
 $server->addGrantType(new OAuth2\GrantType\RefreshToken($storage, $config_refresh_token));
