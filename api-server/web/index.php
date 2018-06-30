@@ -152,7 +152,15 @@ $app->get("/", function (Request $request) {
 	return new Response("method not allowed",485);
 });
 
-
+//Aqui estamos preparando o 'pré-voo' adicionando uma resposta válida para o method 'options'
+$app->options("{anything}", function () {
+		$response = new Response("OKDOK",204);
+		$response->headers->set('Access-Control-Allow-Origin', '*');
+		$response->headers->set('Access-Control-Allow-Methods', 'GET,POST,PUT');
+		$response->headers->set('Access-Control-Allow-Headers', 'X-Custom-Header');
+		
+		return new $response;
+})->assert("anything", "*");
 
 // Autenticacao
 $app->post('/auth', function (Request $request) use ($app, $db, $storage, $server) {
