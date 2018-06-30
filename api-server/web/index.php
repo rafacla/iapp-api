@@ -154,12 +154,12 @@ $app->get("/", function (Request $request) {
 
 //Aqui estamos preparando o 'pré-voo' adicionando uma resposta válida para o method 'options'
 $app->options("{anything}", function () {
-		$response = new \Symfony\Component\HttpFoundation\JsonResponse("OK", 204);
+		$response = new Response("OK",200);
 		$response->headers->set('Access-Control-Allow-Origin', '*');
 		$response->headers->set('Access-Control-Allow-Methods', 'GET,POST,PUT');
 		$response->headers->set('Access-Control-Allow-Headers', 'X-Custom-Header');
 		
-		return new $Response;
+		return new $response;
 })->assert("anything", ".*");
 
 // Autenticacao
