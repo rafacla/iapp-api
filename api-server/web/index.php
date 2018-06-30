@@ -162,6 +162,12 @@ $app->options("{anything}", function () {
 		return new $response;
 })->assert("anything", ".*");
 
+$app->after(function (Request $request, Response $response) {
+	$response->headers->set('Access-Control-Allow-Origin', '*');
+	$response->headers->set('Access-Control-Allow-Methods', 'GET,POST,PUT');
+	$response->headers->set('Access-Control-Allow-Headers', 'X-Custom-Header');
+});
+
 // Autenticacao
 $app->post('/auth', function (Request $request) use ($app, $db, $storage, $server) {
 	ob_start(); //Start output buffer
