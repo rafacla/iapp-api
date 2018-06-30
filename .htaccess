@@ -6,10 +6,6 @@ order deny,allow
 allow from all
 </Limit>
 
-<IfModule mod_headers.c>
-  Header set Access-Control-Allow-Origin: *  
-  Header set Access-Control-Allow-Credentials: true
-</IfModule>
 
 RewriteCond $1 !^(index\.php|resources|robots\.txt)
 RewriteCond %{REQUEST_FILENAME} !-f
