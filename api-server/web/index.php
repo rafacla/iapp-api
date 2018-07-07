@@ -453,12 +453,12 @@ $app->get('/diario/{diariouid}', function (Request $request, $diariouid) use ($a
 	} elseif ($resultado[0]['user_id']<>$user['id'] && $user['adm']!=true) {
 		return new Response("Não autorizado",403);	
 	} else {
-		$respota['id'] = $resultado[0]['id'];
-		$respota['diarioUID'] = $resultado[0]['diarioUID'];
-		$respota['diarioNome'] = $resultado[0]['diarioNome'];
-		$respota['diarioDescription'] = $resultado[0]['diarioDescription'];
-		$respota['isDefault'] = $resultado[0]['isDefault'];
-		$respota['userid'] = $resultado[0]['userid'];
+		$resposta['id'] = $resultado[0]['id'];
+		$resposta['diarioUID'] = $resultado[0]['diarioUID'];
+		$resposta['diarioNome'] = $resultado[0]['diarioNome'];
+		$resposta['diarioDescription'] = $resultado[0]['diarioDescription'];
+		$resposta['isDefault'] = $resultado[0]['isDefault'];
+		$resposta['userid'] = $resultado[0]['userid'];
 		
 		return new Response(json_encode($resposta),200);
 	}
