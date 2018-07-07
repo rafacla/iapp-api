@@ -446,7 +446,7 @@ $app->get('/diario', function (Request $request) use ($app, $user, $db) {
 //rota para recuperar um diario especifico
 $app->get('/diario/{diariouid}', function (Request $request, $diariouid) use ($app, $db) {
 	global $user;
-	$sql_s = "SELECT `user_id`, `default`, id, uid AS diarioUID, nome AS diarioNome, description AS diarioDescription, default AS isDefault, user_id AS userid from `register_diarios` WHERE `uid`='$diariouid';";
+	$sql_s = "SELECT `user_id`, `default`, id, uid AS diarioUID, nome AS diarioNome, description AS diarioDescription, `default` AS isDefault, user_id AS userid from `register_diarios` WHERE `uid`='$diariouid';";
 	$resultado = $db->select($sql_s);
 	if ($resultado == false) {
 		return new Response("não encontrado", 404);
