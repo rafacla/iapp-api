@@ -443,11 +443,32 @@ $app->get('/diario', function (Request $request) use ($app, $user, $db) {
 	}
 });
 
+//rota para recuperar um diario especifico
+$app->get('/diario/{diariouid}', function (Request $request, $diariouid) use ($app, $db) {
+	global $user;
+	$sql_s = "SELECT `user_id`, `default`, id, uid AS diarioUID, nome AS diarioNome, description AS diarioDescription, default AS isDefault, user_id AS userid from `register_diarios` WHERE `uid`='$diariouid';";
+	$resultado = $db->select($sql_s);
+	if ($resultado == false) {
+		return new Response("não encontrado", 404);
+	} elseif ($resultado[0]['user_id']<>$user['id'] && $user['adm']!=true) {
+		return new Response("Não autorizado",403);	
+	} else {
+		$respota['id'] = $resultado[0]['id'];
+		$respota['diarioUID'] = $resultado[0]['diarioUID'];
+		$respota['diarioNome'] = $resultado[0]['diarioNome'];
+		$respota['diarioDescription'] = $resultado[0]['diarioDescription'];
+		$respota['isDefault'] = $resultado[0]['isDefault'];
+		$respota['userid'] = $resultado[0]['userid'];
+		
+		return new Response(json_encode($resposta),200);
+	}
+});
+
 //rota para criar um novo diário
 $app->post('/diario', function (Request $request) use ($app, $user, $db) {
 	global $user;
 	$data = json_decode($request->getContent(), true);
-	if (isset($data['nome'][2]) && isset($data['description'][2]) && isset($data['userid'])) {
+	if (isset($data['nome'][1]) && isset($data['description'][1]) && isset($data['userid'])) {
 		if ($data['userid']<>$user['id'] && $user['adm']!=true)
 			return new Response("Não autorizado",403);		
 		$nome 			= $db->escape_string($data['nome']);
