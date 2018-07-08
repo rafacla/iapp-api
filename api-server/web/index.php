@@ -88,7 +88,7 @@ $app->before(function(Request $request, Application $app) use ($app, $db, $stora
 		}
 		else {
             // nao foi possivel extrair token do header Authorization
-            return new Response('Token não informado', 403);
+            return new Response('{"mensagem":"Token não informado"}', 403);
         } 
     }
 
@@ -149,7 +149,7 @@ function MoveSubcategoria($move_from, $move_to, $categoria_id) {
 
 
 $app->get("/", function (Request $request) {
-	return new Response("method not allowed",485);
+	return new Response('{"mensagem":"method not allowed"}',485);
 });
 
 //Aqui estamos preparando o 'pré-voo' adicionando uma resposta válida para o method 'options'
@@ -223,11 +223,11 @@ $app->get('/activate/{actcode}', function (Request $request, $actcode) use ($app
 		$sql_u = "UPDATE register_users SET userActive='1',userNotActiveReason=NULL,userActivationCode=NULL WHERE userID='".$rows[0]['userID']."'";
 		$ativo = $db->query($sql_u);
 		if ($ativo)
-			Return new Response('OK! Usuário ativado!', 201);
+			Return new Response('{"mensagem":"OK! Usuário ativado!"}', 201);
 		else 
-			Return new Response('Usuário não autorizado ou código inválido', 401);
+			Return new Response('{"mensagem":"Usuário não autorizado ou código inválido"}', 401);
 	} else {
-		Return new Response('Usuário não autorizado ou código inválido', 401);
+		Return new Response('{"mensagem":"Usuário não autorizado ou código inválido"}', 401);
 	}
 });
 
@@ -315,7 +315,7 @@ $app->get('/users', function (Request $request) use ($app, $db) {
 		$rows = $db ->select($sql);
 		return $app->json($rows);
 	} else {
-		return new Response('Acesso negado: usuário não possui privilégios de administrador', 403);
+		return new Response('{"mensagem":"Acesso negado: usuário não possui privilégios de administrador"}', 403);
 	}
 });
 
@@ -329,10 +329,10 @@ $app->get('/users/logged', function (Request $request) use ($app, $db) {
 		if ($rows) {
 			return $app->json($rows[0]);
 		} else {
-			return new Response("Este usuáro não existe, mas deveria existir - erro do servidor.", 500);
+			return new Response('{"mensagem":"Este usuáro não existe, mas deveria existir - erro do servidor"}', 500);
 		}
 	} else {
-		return new Response('Você não tem privilégios para isso.', 403);
+		return new Response('{"mensagem":"Você não tem privilégios para isso"}', 403);
 	}
 	
 });
@@ -347,10 +347,10 @@ $app->get('/users/{id}', function (Request $request, $id) use ($app, $db) {
 		if ($rows) {
 			return $app->json($rows[0]);
 		} else {
-			return new Response("Este usuáro não existe.", 404);
+			return new Response('{"mensagem":"Este usuáro não existe"}', 404);
 		}
 	} else {
-		return new Response('Você não tem privilégios para isso.', 403);
+		return new Response('{"mensagem":"Você não tem privilégios para isso"}', 403);
 	}
 });
 
@@ -363,14 +363,14 @@ $app->get('/cliente', function (Request $request) use ($app, $db) {
 		$rows = $db ->select($sql_s);
 		if ($rows) {
 			if ($rows[0]['ativo'] == 1) //eba existe e tá ativo, vamos retornar um ok!
-				return new Response("ok",200);
+				return new Response('{"mensagem":"ok"}',200);
 			else //vixe, o cliente até existe, mas está bloqueado, vamos informar ao cliente:
-				return new Response("cliente_bloqueado",403);
+				return new Response('{"mensagem":"cliente_bloqueado"}',403);
 		} else {
-			return new Response("credenciais_invalidas", 401);
+			return new Response('{"mensagem":"credenciais_invalidas"}', 401);
 		}
 	} else {
-		return new Response('credenciais_nao_enviadas',401);
+		return new Response('{"mensagem":"credenciais_nao_enviadas"}',401);
 	}
 });
 
@@ -379,7 +379,7 @@ $app->post('/cliente', function (Request $request) use ($app, $db) {
 	global $user;
 	$data = json_decode($request->getContent(), true);
 	if (!isset($data['client_id']) || !isset($data['client_secret'])) {
-		return new Response('falha_ao_criar_cliente: empty body',400);
+		return new Response('{"mensagem":"falha_ao_criar_cliente: empty body"}',400);
 	}
 	$client_id = $db->escape_string($data['client_id']);
 	$client_secret = $db->escape_string($data['client_secret']);
@@ -403,12 +403,12 @@ $app->post('/cliente', function (Request $request) use ($app, $db) {
 				return new Response(json_encode($resposta),200);
 			}
 			else
-				return new Response('cliente_bloqueado',403);
+				return new Response('{"mensagem":"cliente_bloqueado"}',403);
 		else
-			return new Response('cliente_existente',409);
+			return new Response('{"mensagem":"cliente_existente"}',409);
 	} else {
 		if (!isset($description)) {
-			return new Response('falha_ao_criar_cliente: no description found',400);
+			return new Response('{"mensagem":"falha_ao_criar_cliente: no description found"}',400);
 		}
 		$sql_i = "INSERT INTO oauth_clients (client_id,client_secret,grant_types,scope,user_id,description,ativo) ".
 		"VALUES ('$client_id','$client_secret','client_credentials','user','$user_id','$description',1)";
@@ -420,7 +420,7 @@ $app->post('/cliente', function (Request $request) use ($app, $db) {
 			return new Response(json_encode($resposta),201);
 		}
 		else {
-			return new Response('falha_ao_inserir_novo_cliente '.$sql_i,400);
+			return new Response('{"mensagem":"falha_ao_inserir_novo_cliente'.$sql_i.'"}',400);
 		}
 	}
 });
@@ -429,9 +429,9 @@ $app->post('/cliente', function (Request $request) use ($app, $db) {
 $app->get('/diario', function (Request $request) use ($app, $user, $db) {
 	global $user;
 	if ($request->headers->get("userid")==null) {
-		return new Response("Faltando userid",400);
+		return new Response('{"mensagem":"Faltando userid"}',400);
 	} elseif ($user['id']<>$request->headers->get("userid") && $user['adm']!=true) {
-		return new Response("Não autorizado",403);
+		return new Response('{"mensagem":"Não autorizado"}',403);
 	} else {
 		$user_id = $db->escape_string($request->headers->get("userid"));
 		$sql = "SELECT id,uid AS diarioUID, nome as diarioNome, description AS diarioDescription, `default` AS isDefault, `user_id` AS `userid` FROM register_diarios WHERE user_id = '$user_id';";
@@ -449,9 +449,9 @@ $app->get('/diario/{diariouid}', function (Request $request, $diariouid) use ($a
 	$sql_s = "SELECT `user_id`, `default`, id, uid AS diarioUID, nome AS diarioNome, description AS diarioDescription, `default` AS isDefault, user_id AS userid from `register_diarios` WHERE `uid`='$diariouid';";
 	$resultado = $db->select($sql_s);
 	if ($resultado == false) {
-		return new Response("não encontrado", 404);
+		return new Response('{"mensagem":"Não encontrado"}', 404);
 	} elseif ($resultado[0]['user_id']<>$user['id'] && $user['adm']!=true) {
-		return new Response("Não autorizado",403);	
+		return new Response('{"mensagem":"Não autorizado"}',403);	
 	} else {
 		$resposta['id'] = $resultado[0]['id'];
 		$resposta['diarioUID'] = $resultado[0]['diarioUID'];
@@ -516,10 +516,10 @@ $app->post('/diario', function (Request $request) use ($app, $user, $db) {
 			return new Response(json_encode($resposta),201);
 		}
 		else
-			return new Response("Erro ao atualizar banco de dados ",400);
+			return new Response('{"mensagem":"Erro ao atualizar banco de dados"}',400);
 			
 	} else {
-		return new Response("Sintaxe de entrada inválida",400);
+		return new Response('{"mensagem":"Sintaxe de entrada inválida"}',400);
 	}
 });
 
@@ -532,9 +532,9 @@ $app->post('/diario/put', function (Request $request) use ($app, $user, $db) {
 		$sql_s = "SELECT user_id from register_diarios WHERE uid='$uniqueid';";
 		$resultado = $db->select($sql_s);
 		if ($resultado == false) {
-			return new Response("não encontrado para atualizar", 404);
+			return new Response('{"mensagem":"Não encontrado para atualizar"}', 404);
 		} elseif ($resultado[0]['user_id']<>$user['id'] && $user['adm']!=true) {
-			return new Response("Não autorizado",403);	
+			return new Response('{"mensagem":"Não autorizado"}',403);	
 		} else {
 			$uniqueid 		= $db->escape_string($data['uniqueid']);
 			$nome 			= $db->escape_string($data['nome']);
@@ -542,12 +542,12 @@ $app->post('/diario/put', function (Request $request) use ($app, $user, $db) {
 			$sql_u = "UPDATE register_diarios SET nome='$nome',description='$description' WHERE uid='$uniqueid';";
 			$resultado = $db->query($sql_u);
 			if ($resultado)
-				return new Response("ok",200);
+				return new Response('{"mensagem":"ok"}',200);
 			else
-				return new Response("Sintaxe de entrada inválida",400);
+				return new Response('{"mensagem":"Sintaxe de entrada inválida"}',400);
 		}
 	} else {
-		return new Response("Sintaxe de entrada inválida",400);
+		return new Response('{"mensagem":"Sintaxe de entrada inválida"}',400);
 	}
 });
 
@@ -561,9 +561,9 @@ $app->post('/diario/delete', function (Request $request) use ($app, $user, $db) 
 		$resultado = $db->select($sql_s);
 		$isDefault = $resultado[0]['default'];
 		if ($resultado == false) {
-			return new Response("não encontrado para deletar", 404);
+			return new Response('{"mensagem":"Não encontrado para deletar"}', 404);
 		} elseif ($resultado[0]['user_id']<>$user['id'] && $user['adm']!=true) {
-			return new Response("Não autorizado",403);	
+			return new Response('{"mensagem":"Não autorizado"}',403);	
 		} else {
 			$sql_u = "DELETE FROM register_diarios WHERE uid='$uniqueid';";
 			$resultado = $db->query($sql_u);
@@ -575,13 +575,13 @@ $app->post('/diario/delete', function (Request $request) use ($app, $user, $db) 
 					$sql_default = "UPDATE `register_diarios` SET `default` = 1 WHERE user_id = '".$user['id']."' LIMIT 1";
 					$resultado = $db->query($sql_default);
 				}
-				return new Response("deletado",200);
+				return new Response('{"mensagem":"Deletado"}',200);
 			}
 			else
-				return new Response("Sintaxe de entrada inválida",400);
+				return new Response('{"mensagem":"Sintaxe de entrada inválida"}',400);
 		}
 	} else {
-		return new Response("Sintaxe de entrada inválida",400);
+		return new Response('{"mensagem":"Sintaxe de entrada inválida"}',400);
 	}
 });
 
@@ -594,19 +594,19 @@ $app->post('/diario/select', function (Request $request) use ($app, $user, $db) 
 		$sql_s 		= "SELECT user_id from register_diarios WHERE uid='$uniqueid';";
 		$resultado 	= $db->select($sql_s);
 		if ($resultado == false) {
-			return new Response("não encontrado para selecionar", 404);
+			return new Response('{"mensagem":"Não encontrado para selecionar"}', 404);
 		} elseif ($resultado[0]['user_id']<>$user['id'] && $user['adm']!=true) {
-			return new Response("Não autorizado",403);	
+			return new Response('{"mensagem":"Não autorizado"}',403);	
 		} else {
 			$sql_u		= "UPDATE `register_diarios` SET `default`=(`uid`='$uniqueid');";
 			$resultado = $db->query($sql_u);
 			if ($resultado)
-				return new Response("selecionado",200);
+				return new Response('{"mensagem":"Selecionado"}',200);
 			else
-				return new Response("Sintaxe de entrada inválida",400);
+				return new Response('{"mensagem":"Sintaxe de entrada inválida"}',400);
 		}
 	} else {
-		return new Response("Sintaxe de entrada inválida",400);
+		return new Response('{"mensagem":"Sintaxe de entrada inválida"}',400);
 	}
 });
 
@@ -633,13 +633,13 @@ $app->get('/categoria/{diariouid}', function (Request $request, $diariouid) use 
 				}
 				return new Response(json_encode($categorias),200);
 			} else {
-				return new Response("Este diário não existe.", 404);
+				return new Response('{"mensagem":"Este diário não existe"}', 404);
 			}
 		} else {
-			return new Response('Você não tem privilégios para isso.', 403);
+			return new Response('{"mensagem":"Você não tem privilégios para isso"}', 403);
 		}
 	} else {
-		return new Response("Diário não encontrado.", 404);
+		return new Response('{"mensagem":"Diário não encontrado"}', 404);
 	}
 });
 
@@ -668,7 +668,7 @@ $app->post('/categoria/move', function (Request $request) use ($app, $db) {
 				$countCategorias = count($categorias);
 				if ($move_from < $move_to) {
 					if ($move_to >= $countCategorias || $move_to < 0) {
-						return new Response("Sintaxe inválida", 400);
+						return new Response('{"mensagem":"Sintaxe inválida"}', 400);
 					} else {
 						for ($i=$move_from;$i<=$move_to;$i++) {
 							if ($i==$move_from)
@@ -679,11 +679,11 @@ $app->post('/categoria/move', function (Request $request) use ($app, $db) {
 										WHERE categoria_id = '".$categorias[$i]['categoria_id']."';";
 							$reordem = $db->query($sql_u);							
 						}
-						return new Response("Reordenado para baixo",200);
+						return new Response('{"mensagem":"Reordenado para baixo"}',200);
 					}					
 				} elseif ($move_from > $move_to) {
 					if ($move_to >= $countCategorias || $move_to < 0) {
-						return new Response("Sintaxe inválida", 400);
+						return new Response('{"mensagem":"Sintaxe inválida"}', 400);
 					} else {
 						for ($i=$move_from;$i>=$move_to;$i--) {
 							if ($i==$move_from)
@@ -694,19 +694,19 @@ $app->post('/categoria/move', function (Request $request) use ($app, $db) {
 										WHERE categoria_id = '".$categorias[$i]['categoria_id']."';";
 							$reordem = $db->query($sql_u);
 						}
-						return new Response("Reordenado para cima",200);
+						return new Response('{"mensagem":"Reordenado para cima"}',200);
 					}
 				} else {
-					return new Response("Reordenado",200);
+					return new Response('{"mensagem":"Reordenado"}',200);
 				}
 			} else {
-				return new Response("Não autorizado", 403);
+				return new Response('{"mensagem":"Não autorizado"}', 403);
 			}
 		} else {
-			return new Response("Não encontrado", 404);
+			return new Response('{"mensagem":"Não encontrado"}', 404);
 		}
 	} else {
-		return new Response("Sintaxe de entrada inválida",400);
+		return new Response('{"mensagem":"Sintaxe de entrada inválida"}',400);
 	}
 });
 
@@ -733,9 +733,9 @@ $app->post('/subcategoria/move', function (Request $request) use ($app, $db) {
 			if ($user['adm'] || $user['id']==$user_id) {
 				if (!isset($data['move_to_categoria_id']) || $data['move_to_categoria_id']==$categoria_id) {
 					if (MoveSubcategoria($move_from,$move_to,$categoria_id))
-						return new Response("Reordenado",200);
+						return new Response('{"mensagem":"Reordenado"}',200);
 					else
-						return new Response("Sintaxe inválida",400);
+						return new Response('{"mensagem":"Sintaxe inválida"}',400);
 				} else {
 					//antes de reordenar, precisamos transferir nossa subcategoria:
 					//então, na nova categoria, vamos descobrir a ultima posicao
@@ -758,24 +758,24 @@ $app->post('/subcategoria/move', function (Request $request) use ($app, $db) {
 								$db->query($sql_u);
 							}
 							if ($move)
-								return new Response("Transferido e Reordenado",200);
+								return new Response('{"mensagem":"Transferido e Reordenado"}',200);
 							else
-								return new Response("Falhou ao reordernar, mas transferimos",400);
+								return new Response('{"mensagem":"Falhou ao reordernar, mas transferimos"}',400);
 						} else {
-							return new Response("Falha ao transferir subcategoria",500);
+							return new Response('{"mensagem":"Falha ao transferir subcategoria"}',500);
 						}
 					} else {
-						return new Response("Nova categoria não encontrada",404);
+						return new Response('{"mensagem":"Nova categoria não encontrada"}',404);
 					}
 				}
 			} else {
-				return new Response("Não autorizado", 403);
+				return new Response('{"mensagem":"Não autorizado"}', 403);
 			}
 		} else {
-			return new Response("Não encontrado", 404);
+			return new Response('{"mensagem":"Não encontrado"}', 404);
 		}
 	} else {
-		return new Response("Sintaxe de entrada inválida",400);
+		return new Response('{"mensagem":"Sintaxe de entrada inválida"}',400);
 	}
 });
 
@@ -815,12 +815,12 @@ $app->post('/categoria',function (Request $request) use ($app, $db) {
 		}
 	} else {
 		//se nenhum dos dois parametros foi informado, so sorry, erro de sintaxe:
-		return new Response("sintaxe inválida",400);
+		return new Response('{"mensagem":"Sintaxe inválida"}',400);
 	}
 	
 	//verificar se usuário tem permissão:
 	if (!$user['adm'] && $user['id']<>$user_id) {
-		return new Response("sem permissão para isso",403);
+		return new Response('{"mensagem":"Não autorizado"}',403);
 	}
 	
 	//fazer o que tem que ser feito:
@@ -852,10 +852,10 @@ VALUES ('$categoria_nome','$categoria_description','$nova_ordem','$diario_id');"
 				
 				return new Response(json_encode($resposta),201);
 			} else {
-				return new Response("erro desconhecido",500);
+				return new Response('{"mensagem":"Erro desconhecido"}',500);
 			}
 		} else {
-			return new Response("erro de sintaxe: faltam parametros para criar", 400);
+			return new Response('{"mensagem":"erro de sintaxe: faltam parametros para criar"}', 400);
 		}
 	} elseif ($operacao == "atualizar") {
 		//vamos atualizar, vamos montar a query, jogo rápido:
@@ -891,13 +891,13 @@ VALUES ('$categoria_nome','$categoria_description','$nova_ordem','$diario_id');"
 				
 			}
 			else
-				return new Response("erro desconhecido", 500);
+				return new Response('{"mensagem":"Erro desconhecido"}', 500);
 		} else {
-			return new Response("nada para atualizar", 400);
+		return new Response('{"mensagem":"Nada para atualizar"}', 400);
 		}
 	}
 	
-	return new Response("erro de sintaxe: final",400);
+	return new Response('{"mensagem":"Erro de sintaxe"}',400);
 });
 
 $app->post('/categoria/delete',function (Request $request) use ($app, $db) {
@@ -921,12 +921,12 @@ $app->post('/categoria/delete',function (Request $request) use ($app, $db) {
 		}
 	} else {
 		//se o parametro não foi informado, so sorry, erro de sintaxe:
-		return new Response("sintaxe inválida",400);
+		return new Response('{"mensagem":"Sintaxe inválida"}',400);
 	}
 	
 	//verificar se usuário tem permissão:
 	if (!$user['adm'] && $user['id']<>$user_id) {
-		return new Response("sem permissão para isso",403);
+		return new Response('{"mensagem":"Não autorizado"}',403);
 	}
 	
 	//fazer o que tem que ser feito:
@@ -935,9 +935,9 @@ $app->post('/categoria/delete',function (Request $request) use ($app, $db) {
 	$query = $db->query($sql_d);
 	
 	if ($query) {
-		return new Response("excluido", 200);
+		return new Response('{"mensagem":"Excluido"}', 200);
 	} else {
-		return new Response("erro desconhecido", 500);
+		return new Response('{"mensagem":"Erro desconhecido"}', 500);
 	}
 });
 
@@ -977,12 +977,12 @@ $app->post('/subcategoria',function (Request $request) use ($app, $db) {
 		}
 	} else {
 		//se nenhum dos dois parametros foi informado, so sorry, erro de sintaxe:
-		return new Response("sintaxe inválida",400);
+		return new Response('{"mensagem":"Sintaxe inválida"}',400);
 	}
 	
 	//verificar se usuário tem permissão:
 	if (!$user['adm'] && $user['id']<>$user_id) {
-		return new Response("sem permissão para isso",403);
+		return new Response('{"mensagem":"Não autorizado"}',403);
 	}
 	
 	//fazer o que tem que ser feito:
@@ -1016,10 +1016,10 @@ VALUES ('$subcategoria_nome','$subcategoria_description','$nova_ordem','$categor
 				
 				return new Response(json_encode($resposta),201);
 			} else {
-				return new Response("erro desconhecido",500);
+				return new Response('{"mensagem":"Erro desconhecido"}',500);
 			}
 		} else {
-			return new Response("erro de sintaxe: faltam parametros para criar", 400);
+			return new Response('{"mensagem":"Erro de sintaxe: faltam parametros para criar"}', 400);
 		}
 	} elseif ($operacao == "atualizar") {
 		//vamos atualizar, vamos montar a query, jogo rápido:
@@ -1059,13 +1059,13 @@ VALUES ('$subcategoria_nome','$subcategoria_description','$nova_ordem','$categor
 				return new Response($resposta,200);
 			}
 			else
-				return new Response("erro desconhecido", 500);
+				return new Response('{"mensagem":"Erro desconhecido"}', 500);
 		} else {
-			return new Response("nada para atualizar", 400);
+			return new Response('{"mensagem":"Nada para atualizar"}', 400);
 		}
 	}
 	
-	return new Response("erro de sintaxe: final",400);
+	return new Response('{"mensagem":"Erro de sintaxe"}',400);
 });
 
 $app->post('/subcategoria/delete',function (Request $request) use ($app, $db) {
@@ -1087,12 +1087,12 @@ $app->post('/subcategoria/delete',function (Request $request) use ($app, $db) {
 		}
 	} else {
 		//se o parametro nao foi informado, so sorry, erro de sintaxe:
-		return new Response("sintaxe inválida",400);
+		return new Response('{"mensagem":"Sintaxe inválida"}',400);
 	}
 	
 	//verificar se usuário tem permissão:
 	if (!$user['adm'] && $user['id']<>$user_id) {
-		return new Response("sem permissão para isso",403);
+		return new Response('{"mensagem":"Não autorizado"}',403);
 	}
 	
 	//fazer o que tem que ser feito:
@@ -1101,9 +1101,9 @@ $app->post('/subcategoria/delete',function (Request $request) use ($app, $db) {
 		$query = $db->query($sql_d);
 	
 	if ($query) {
-		return new Response("excluido", 200);
+		return new Response('{"mensagem":"Excluido"}', 200);
 	} else {
-		return new Response("erro desconhecido", 500);
+		return new Response('{"mensagem":"Erro desconhecido"}', 500);
 	}
 });
 
