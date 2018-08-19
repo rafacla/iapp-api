@@ -1116,6 +1116,9 @@ $app->get('/transacao', function (Request $request) use ($app, $db) {
 	//$filtros = explode(',',$filtros_header);
 	$filtros = json_decode($filtros_header);
 	
+	var_dump($filtros_header);
+	var_dump($filtros);
+	
 	$sql_s = "SELECT * FROM `register_transacoes` LEFT JOIN `register_transacoes_itens` ON `register_transacoes`.`transacao_id` = `register_transacoes_itens`.`transacao_id` INNER JOIN `register_contas` ON `register_transacoes`.`conta_id` = `register_contas`.`conta_id` INNER JOIN `register_diarios` ON `register_contas`.`diario_id` = `register_diarios`.`id` LEFT JOIN `register_subcategorias` ON `register_transacoes_itens`.`subcategoria_id` = `register_subcategorias`.`subcategoria_id` LEFT JOIN `register_categorias` ON `register_subcategorias`.`categoria_id` = `register_categorias`.`categoria_id` WHERE `register_diarios`.`uid` = '$diario_uid' $filtros;";
 	
 	
