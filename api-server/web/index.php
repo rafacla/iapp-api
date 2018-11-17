@@ -887,7 +887,7 @@ VALUES ('$categoria_nome','$categoria_description','$nova_ordem','$diario_id');"
 			
 			if ($atualizar) {
 				$resposta["msg"]="atualizado";
-				return new Response($resposta,200);
+				return new Response(json_encode($resposta),200);
 				
 			}
 			else
@@ -1056,7 +1056,7 @@ VALUES ('$subcategoria_nome','$subcategoria_description','$nova_ordem','$categor
 			
 			if ($atualizar) {
 				$resposta["msg"] = "Atualizado";
-				return new Response($resposta,200);
+				return new Response(json_encode($resposta),200);
 			}
 			else
 				return new Response('{"mensagem":"Erro desconhecido"}', 500);
@@ -1285,8 +1285,7 @@ VALUES ('$conta_nome','$conta_descricao','$conta_budget','$diario_id','$conta_re
 			
 			if ($atualizar) {
 				$resposta["msg"]="atualizado";
-				return new Response($resposta,200);
-				
+				return new Response(json_encode($resposta),200);				
 			}
 			else
 				return new Response('{"mensagem":"Erro desconhecido"}', 500);
