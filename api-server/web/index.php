@@ -1125,5 +1125,29 @@ $app->get('/transacao', function (Request $request) use ($app, $db) {
 	return new Response (json_encode($filtros),200);
 });
 
+//rota para recuperar todas as contas dado um diario_uid
+$app->get('/conta/{diariouid}', function (Request $request, $diariouid) use ($app, $db) {
+	global $user;
+	
+	$diario = getDiarioID($diariouid);
+	
+	if ($diario) {
+		if ($user['adm'] || $user['id']==$diario['user_id']) {
+			$diarioID = $diario['diario_id'];
+			$sql = sprintf("SELECT `conta_id`, `conta_nome`, `conta_descricao`, `diario_id`, `conta_reconciliado_valor`, `conta_reconciliado_data`, `conta_budget`, `bank_id`, `conta_img` from `register_contas` WHERE `diario_id` = '%s' ORDER BY `conta_nome`",$diarioID);
+			$rows = $db ->select($sql);
+			if ($rows) {
+				return new Response(json_encode($rows),200);
+			} else {
+				return new Response('{"mensagem":"Este diário não existe"}', 404);
+			}
+		} else {
+			return new Response('{"mensagem":"Você não tem privilégios para isso"}', 403);
+		}
+	} else {
+		return new Response('{"mensagem":"Diário não encontrado"}', 404);
+	}
+});
+
 
 $app->run();
