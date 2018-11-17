@@ -1139,7 +1139,7 @@ $app->get('/contas/{diariouid}', function (Request $request, $diariouid) use ($a
 			if ($rows) {
 				return new Response(json_encode($rows),200);
 			} else {
-				return new Response('{"mensagem":"Este diário não existe"}', 404);
+				return new Response('{"mensagem":"Nenhuma conta encontrada para este diário"}', 404);
 			}
 		} else {
 			return new Response('{"mensagem":"Você não tem privilégios para isso"}', 403);
@@ -1148,6 +1148,131 @@ $app->get('/contas/{diariouid}', function (Request $request, $diariouid) use ($a
 		return new Response('{"mensagem":"Diário não encontrado"}', 404);
 	}
 });
+
+//rota para criar ou alterar uma conta
+$app->post('/conta',function (Request $request) use ($app, $db) {
+	global $user;
+	$data = json_decode($request->getContent(), true);
+	
+	//vamos criar uma flag para saber se estamos criando ou atualizando uma linha:
+	$operacao = "";
+	$user_id = 0;
+	$diario_id = 0;
+	
+	//identificar a quem pertence o item:
+	if (isset($data['conta_id'])) {
+		//se a categoria foi informada, vamos ignorar o parâmetro diario_uid pois é uma atualização
+		$operacao = "atualizar";
+		
+		$conta_id = $db->escape_string($data['conta_id']);
+		$sql_s = "SELECT user_id, conta_id FROM `register_contas` JOIN `register_diarios` ON `register_contas`.`diario_id` = `register_diarios`.`id` WHERE `conta_id` = '$conta_id'";
+		$rows = $db->select($sql_s);
+		if ($rows) {
+			$user_id = $rows[0]['user_id'];
+			$conta_id = $rows[0]['conta_id'];
+		}
+	} elseif (isset($data['diario_uid'])) {
+		//se a categoria não foi informada, obrigatoriamente o diario_uid deve ser informada para criar uma nova conta.
+		$operacao = "criar";
+		
+		$diario_uid = $db->escape_string($data['diario_uid']);
+		$sql_s = "SELECT `user_id`, `id` AS `diario_id` FROM `register_diarios` WHERE `uid`='$diario_uid'";
+		
+		$rows = $db->select($sql_s);
+		
+		if ($rows) {
+			$user_id = $rows[0]['user_id'];
+			$diario_id = $rows[0]['diario_id'];
+		}
+	} else {
+		//se nenhum dos dois parametros foi informado, so sorry, erro de sintaxe:
+		return new Response('{"mensagem":"Sintaxe inválida"}',400);
+	}
+	
+	//verificar se usuário tem permissão:
+	if (!$user['adm'] && $user['id']<>$user_id) {
+		return new Response('{"mensagem":"Não autorizado"}',403);
+	}
+	
+	//fazer o que tem que ser feito:
+	if ($operacao == "criar") {
+		//ok, vamos criar, então vamos preparar os campos obrigatórios:
+		if (isset($data['conta_nome']) && isset($data['conta_descricao'])) {
+			$conta_nome = $db->escape_string($data['conta_nome']);
+			$conta_descricao = $db->escape_string($data['conta_descricao']);
+			if (isset($data['conta_budget'])) {
+				$conta_budget = $db->escape_string($data['conta_budget']);
+			} else {
+				$conta_budget = 1;
+			}
+			if (isset($data['conta_reconciliado_valor'])) {
+				$conta_reconciliado_valor = $db->escape_string($data['conta_reconciliado_valor']);
+			} else {
+				$conta_reconciliado_valor = 0;
+			}
+			if (isset($data['conta_reconciliado_data'])) {
+				$conta_reconciliado_data = $db->escape_string($data['conta_reconciliado_data']);
+			} else {
+				$conta_reconciliado_data = date("Y-m-d");
+			}
+			
+			
+			//ok, estamos prontos para criar:
+			$sql_i = "INSERT INTO `register_contas` (`conta_nome`,`conta_descricao`,`conta_budget`,`diario_id`,`conta_reconciliado_valor`,`conta_reconciliado_data`)
+VALUES ('$conta_nome','$conta_descricao','$conta_budget','$diario_id','$conta_reconciliado_valor','conta_reconciliado_data');";
+					
+			$inserido = $db->insert($sql_i);
+			
+			if ($inserido) {
+				$resposta['conta_id'] = $inserido;
+				$resposta['conta_nome'] = $conta_nome;
+				$resposta['diario_id'] = $diario_id;
+				
+				return new Response(json_encode($resposta),201);
+			} else {
+				return new Response('{"mensagem":"Erro desconhecido"}',500);
+			}
+		} else {
+			return new Response('{"mensagem":"erro de sintaxe: faltam parametros para criar"}', 400);
+		}
+	} elseif ($operacao == "atualizar") {
+		//vamos atualizar, vamos montar a query, jogo rápido:
+		$update_nome = "";
+		$update_description = "";
+		$nr_up = 0;
+		if (isset($data['conta_nome'])) {
+			$update[$nr_up] = "`conta_nome` = '".$db->escape_string($data['conta_nome'])."'";
+			$nr_up++;
+		}
+		if (isset($data['conta_descricao'])) {
+			$update[$nr_up] = "`conta_descricao` = '".$db->escape_string($data['conta_descricao'])."'";
+			$nr_up++;
+		}
+		$update_text = "";
+		for ($i=0;$i<$nr_up;$i++) {
+			$update_text .= $update[$i];
+			if ($i<($nr_up-1))
+				$update_text .= ", ";
+		}
+		if ($nr_up > 0) {
+			$sql_u = "UPDATE `register_contas` SET $update_text WHERE `conta_id` = '$conta_id'";
+			$atualizar = $db->query($sql_u);
+			
+			if ($atualizar) {
+				$resposta["msg"]="atualizado";
+				return new Response($resposta,200);
+				
+			}
+			else
+				return new Response('{"mensagem":"Erro desconhecido"}', 500);
+		} else {
+		return new Response('{"mensagem":"Nada para atualizar"}', 400);
+		}
+	}
+	
+	return new Response('{"mensagem":"Erro de sintaxe"}',400);
+});
+
 
 
 $app->run();
