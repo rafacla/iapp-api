@@ -1134,7 +1134,9 @@ $app->get('/contas/{diariouid}', function (Request $request, $diariouid) use ($a
 	if ($diario) {
 		if ($user['adm'] || $user['id']==$diario['user_id']) {
 			$diarioID = $diario['diario_id'];
-			$sql = sprintf("SELECT `conta_id`, `conta_nome`, `conta_descricao`, `diario_id`, `conta_reconciliado_valor`, `conta_reconciliado_data`, `conta_budget`, `bank_id`, `conta_img` from `register_contas` WHERE `diario_id` = '%s' ORDER BY `conta_nome`",$diarioID);
+			$sql = sprintf("SELECT `conta_id`, `conta_nome`, `conta_descricao`, `diario_id`, `conta_reconciliado_valor`, `conta_reconciliado_data`, 
+`conta_budget`, `bank_id`, `conta_img`, `conta_cartao`, `conta_cartao_data_fechamento`, `conta_cartao_data_vencimento` FROM 
+`register_contas` WHERE `diario_id` = '%s' ORDER BY `conta_nome`",$diarioID);
 			$rows = $db ->select($sql);
 			if ($rows) {
 				return new Response(json_encode($rows),200);
