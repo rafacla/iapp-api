@@ -1126,7 +1126,7 @@ $app->get('/transacao', function (Request $request) use ($app, $db) {
 });
 
 //rota para recuperar todas as contas dado um diario_uid
-$app->get('/conta/{diariouid}', function (Request $request, $diariouid) use ($app, $db) {
+$app->get('/contas/{diariouid}', function (Request $request, $diariouid) use ($app, $db) {
 	global $user;
 	
 	$diario = getDiarioID($diariouid);
