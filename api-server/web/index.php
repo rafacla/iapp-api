@@ -1215,11 +1215,26 @@ $app->post('/conta',function (Request $request) use ($app, $db) {
 			} else {
 				$conta_reconciliado_data = date("Y-m-d");
 			}
-			
+			if (isset($data['conta_cartao'])) {
+				$conta_cartao = $db->escape_string($data['conta_cartao']);
+			} else {
+				$conta_cartao = 0;
+			}
+			if (isset($data['conta_cartao_data_vencimento'])) {
+				$conta_cartao_data_vencimento = $db->escape_string($data['conta_cartao_data_vencimento']);
+			} else {
+				$conta_cartao_data_vencimento = "";
+			}
+			if (isset($data['conta_cartao_data_fechamento'])) {
+				$conta_cartao_data_fechamento = $db->escape_string($data['conta_cartao_data_fechamento']);
+			} else {
+				$conta_cartao_data_fechamento = "";
+			}			
 			
 			//ok, estamos prontos para criar:
-			$sql_i = "INSERT INTO `register_contas` (`conta_nome`,`conta_descricao`,`conta_budget`,`diario_id`,`conta_reconciliado_valor`,`conta_reconciliado_data`)
-VALUES ('$conta_nome','$conta_descricao','$conta_budget','$diario_id','$conta_reconciliado_valor','conta_reconciliado_data');";
+			$sql_i = "INSERT INTO `register_contas` 
+(`conta_nome`,`conta_descricao`,`conta_budget`,`diario_id`,`conta_reconciliado_valor`,`conta_reconciliado_data`,`conta_cartao`,`conta_cartao_data_fechamento`,`conta_cartao_data_vencimento`)
+VALUES ('$conta_nome','$conta_descricao','$conta_budget','$diario_id','$conta_reconciliado_valor','$conta_reconciliado_data','$conta_cartao','$conta_cartao_data_fechamento','$conta_cartao_data_vencimento');";
 					
 			$inserido = $db->insert($sql_i);
 			
@@ -1246,6 +1261,14 @@ VALUES ('$conta_nome','$conta_descricao','$conta_budget','$diario_id','$conta_re
 		}
 		if (isset($data['conta_descricao'])) {
 			$update[$nr_up] = "`conta_descricao` = '".$db->escape_string($data['conta_descricao'])."'";
+			$nr_up++;
+		}
+		if (isset($data['conta_cartao_data_fechamento'])) {
+			$update[$nr_up] = "`conta_cartao_data_fechamento` = '".$db->escape_string($data['conta_cartao_data_fechamento'])."'";
+			$nr_up++;
+		}
+		if (isset($data['conta_cartao_data_vencimento'])) {
+			$update[$nr_up] = "`conta_cartao_data_vencimento` = '".$db->escape_string($data['conta_cartao_data_vencimento'])."'";
 			$nr_up++;
 		}
 		$update_text = "";
