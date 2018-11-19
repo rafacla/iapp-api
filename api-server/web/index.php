@@ -643,7 +643,7 @@ $app->get('/categoria/{diariouid}', function (Request $request, $diariouid) use 
 	}
 });
 
-$app->get('/categoria_tabular/{diariouid}', function (Request $request, $diariouid) use ($app, $db) {
+$app->get('/categoriatabular/{diariouid}', function (Request $request, $diariouid) use ($app, $db) {
 	global $user;
 	
 	$diario = getDiarioID($diariouid);
