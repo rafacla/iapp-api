@@ -1188,7 +1188,7 @@ $app->post('/conta',function (Request $request) use ($app, $db) {
 		}
 	} else {
 		//se nenhum dos dois parametros foi informado, so sorry, erro de sintaxe:
-		return new Response('{"mensagem":"Sintaxe inválida"}',400);
+		return new Response('{"mensagem":"Sintaxe inválida: faltando diarioUID ou id da conta"}',400);
 	}
 	
 	//verificar se usuário tem permissão:
@@ -1246,13 +1246,15 @@ VALUES ('$conta_nome','$conta_descricao','$conta_budget','$diario_id','$conta_re
 				$resposta['diario_id'] = $diario_id;
 				
 				return new Response(json_encode($resposta),201);
-			} else {
+			} else 
+			{
 				return new Response('{"mensagem":"Erro desconhecido"}',500);
 			}
 		} else {
 			return new Response('{"mensagem":"erro de sintaxe: faltam parametros para criar"}', 400);
 		}
-	} elseif ($operacao == "atualizar") {
+	} elseif ($operacao == "atualizar") 
+	{
 		//vamos atualizar, vamos montar a query, jogo rápido:
 		$update_nome = "";
 		$update_description = "";
@@ -1297,6 +1299,50 @@ VALUES ('$conta_nome','$conta_descricao','$conta_budget','$diario_id','$conta_re
 	return new Response('{"mensagem":"Erro de sintaxe"}',400);
 });
 
+//rota para deletar uma conta
+$app->post('/conta/delete',function (Request $request) use ($app, $db) {
+	global $user;
+	$data = json_decode($request->getContent(), true);
+	
+	//vamos criar uma flag para saber se estamos criando ou atualizando uma linha:
+	$operacao = "";
+	$user_id = 0;
+	$diario_id = 0;
+	
+	//identificar a quem pertence o item:
+	if (isset($data['conta_id'])) {
+		$operacao = "deletar";
+		
+		$conta_id = $db->escape_string($data['conta_id']);
+		$sql_s = "SELECT user_id, conta_id FROM `register_contas` JOIN `register_diarios` ON `register_contas`.`diario_id` = `register_diarios`.`id` WHERE `conta_id` = '$conta_id'";
+		$rows = $db->select($sql_s);
+		if ($rows) {
+			$user_id = $rows[0]['user_id'];
+			$conta_id = $rows[0]['conta_id'];
+		}
+	} else {
+		//se nenhum dos dois parametros foi informado, so sorry, erro de sintaxe:
+		return new Response('{"mensagem":"Sintaxe inválida: faltando id da conta"}',400);
+	}
+	
+	//verificar se usuário tem permissão:
+	if (!$user['adm'] && $user['id']<>$user_id) {
+		return new Response('{"mensagem":"Não autorizado"}',403);
+	}
+	
+	if ($operacao == "deletar") 
+	{
+		$sql_u = "DELETE FROM register_contas WHERE conta_id='$conta_id';";
+			$resultado = $db->query($sql_u);
+			if ($resultado) {
+				return new Response('{"mensagem":"Deletado"}',200);
+			}
+			else
+				return new Response('{"mensagem":"Sintaxe de entrada inválida"}',400);
+	}
+	
+	return new Response('{"mensagem":"Erro de sintaxe"}',400);
+});
 
 
 $app->run();
