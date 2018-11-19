@@ -665,9 +665,7 @@ $app->get('/categoriatabular/{diariouid}', function (Request $request, $diarioui
 					$temp_cat = $categorias[$i];
 					$i++;
 					foreach ($subcategorias as $subrow) {
-						$categorias[$i] = $temp_cat;
-						
-						$i++	
+
 					}
 				}
 				return new Response(json_encode($categorias),200);
