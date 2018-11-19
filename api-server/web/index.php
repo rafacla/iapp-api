@@ -655,7 +655,12 @@ $app->get('/categoriatabular/{diariouid}', function (Request $request, $diarioui
 			$rows = $db ->select($sql);
 			if ($rows) {
 				$i = 0;
-				
+				foreach ($rows as $row) {
+					$categorias[$i] = $row;
+					$categorias[$i]['subcategoria_is'] = 0;
+					$cat_id = $row['categoria_id'];
+					
+				}
 				return new Response(json_encode($categorias),200);
 			} 
 			else {
