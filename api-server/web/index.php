@@ -655,17 +655,7 @@ $app->get('/categoriatabular/{diariouid}', function (Request $request, $diarioui
 			$rows = $db ->select($sql);
 			if ($rows) {
 				$i = 0;
-				foreach ($rows as $row) {
-					$categorias[$i] = $row;
-					$categorias[$i]['subcategoria_is'] = 0;
-					$cat_id = $row['categoria_id'];
-					$sql_subc = "SELECT `subcategoria_id`,`subcategoria_nome`,`subcategoria_description`,`subcategoria_carry`,`categoria_id`,`subcategoria_ordem` FROM `register_subcategorias` 
-					WHERE `categoria_id` = '$cat_id' ORDER BY `subcategoria_ordem`;";
-					$subcategorias = $db->select($sql_subc);
-					$temp = $categorias[$i];
-					$i++;
-					
-				}
+				
 				return new Response(json_encode($categorias),200);
 			} 
 			else {
