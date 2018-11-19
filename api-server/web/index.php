@@ -664,16 +664,7 @@ $app->get('/categoriatabular/{diariouid}', function (Request $request, $diarioui
 					$subcategorias = $db->select($sql_subc);
 					$temp = $categorias[$i];
 					$i++;
-					foreach ($subcategorias as $subrow) {
-						$categorias[$i] = $temp;
-						$categorias[$i]['subcategoria_is'] = 1;
-						$categorias[$i]['subcategoria_id'] = $subrow['subcategoria_id'];
-						$categorias[$i]['subcategoria_nome'] = $subrow['subcategoria_nome'];
-						$categorias[$i]['subcategoria_description'] = $subrow['subcategoria_description'];
-						$categorias[$i]['subcategoria_carry'] = $subrow['subcategoria_carry'];
-						$categorias[$i]['subcategoria_ordem'] = $subrow['subcategoria_ordem'];
-						$i++	
-					}
+					
 				}
 				return new Response(json_encode($categorias),200);
 			} 
