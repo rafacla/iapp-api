@@ -662,8 +662,10 @@ $app->get('/categoriatabular/{diariouid}', function (Request $request, $diarioui
 					$sql_subc = "SELECT `subcategoria_id`,`subcategoria_nome`,`subcategoria_description`,`subcategoria_carry`,`categoria_id`,`subcategoria_ordem` FROM `register_subcategorias` 
 					WHERE `categoria_id` = '$cat_id' ORDER BY `subcategoria_ordem`;";
 					$subcategorias = $db->select($sql_subc);
+					$categorias[$i]['categoria_filhos'] = count($subcategorias);
 					$temp_cat = $categorias[$i];
 					$i++;
+					$k=1;
 					foreach ($subcategorias as $subrow) {
 						$categorias[$i] = $temp_cat;
 						$categorias[$i]['subcategoria_is'] = 1;
@@ -672,7 +674,13 @@ $app->get('/categoriatabular/{diariouid}', function (Request $request, $diarioui
 						$categorias[$i]['subcategoria_description'] = $subrow['subcategoria_description'];
 						$categorias[$i]['subcategoria_carry'] = $subrow['subcategoria_carry'];
 						$categorias[$i]['subcategoria_ordem'] = $subrow['subcategoria_ordem'];
+						if ($k<$temp_cat['categoria_filhos']) {
+							$categorias[$i]['subcategoria_ultima'] = false;
+						} else {
+							$categorias[$i]['subcategoria_ultima'] = true;
+						}
 						$i++;
+						$k++;
 					}
 				}
 				return new Response(json_encode($categorias),200);
