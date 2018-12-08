@@ -146,8 +146,6 @@ function MoveSubcategoria($move_from, $move_to, $categoria_id) {
 	}
 }
 
-
-
 $app->get("/", function (Request $request) {
 	return new Response('{"mensagem":"method not allowed"}',485);
 });
@@ -894,7 +892,7 @@ $app->post('/categoria',function (Request $request) use ($app, $db) {
 			
 			//ok, estamos prontos para criar:
 			$sql_i = "INSERT INTO `register_categorias` (`categoria_nome`,`categoria_description`,`categoria_ordem`,`diario_id`)
-VALUES ('$categoria_nome','$categoria_description','$nova_ordem','$diario_id');";
+				VALUES ('$categoria_nome','$categoria_description','$nova_ordem','$diario_id');";
 					
 			$inserido = $db->insert($sql_i);
 			
@@ -1058,7 +1056,7 @@ $app->post('/subcategoria',function (Request $request) use ($app, $db) {
 			
 			//ok, estamos prontos para criar:
 			$sql_i = "INSERT INTO `register_subcategorias` (`subcategoria_nome`,`subcategoria_description`,`subcategoria_ordem`,`categoria_id`,`subcategoria_carry`)
-VALUES ('$subcategoria_nome','$subcategoria_description','$nova_ordem','$categoria_id','$subcategoria_carry');";
+				VALUES ('$subcategoria_nome','$subcategoria_description','$nova_ordem','$categoria_id','$subcategoria_carry');";
 					
 			$inserido = $db->insert($sql_i);
 			
@@ -1188,8 +1186,8 @@ $app->get('/contas/{diariouid}', function (Request $request, $diariouid) use ($a
 		if ($user['adm'] || $user['id']==$diario['user_id']) {
 			$diarioID = $diario['diario_id'];
 			$sql = sprintf("SELECT `conta_id`, `conta_nome`, `conta_descricao`, `diario_id`, `conta_reconciliado_valor`, `conta_reconciliado_data`, 
-`conta_budget`, `bank_id`, `conta_img`, `conta_cartao`, `conta_cartao_data_fechamento`, `conta_cartao_data_vencimento` FROM 
-`register_contas` WHERE `diario_id` = '%s' ORDER BY `conta_nome`",$diarioID);
+				`conta_budget`, `bank_id`, `conta_img`, `conta_cartao`, `conta_cartao_data_fechamento`, `conta_cartao_data_vencimento` FROM 
+				`register_contas` WHERE `diario_id` = '%s' ORDER BY `conta_nome`",$diarioID);
 			$rows = $db ->select($sql);
 			if ($rows) {
 				return new Response(json_encode($rows),200);
@@ -1288,8 +1286,8 @@ $app->post('/conta',function (Request $request) use ($app, $db) {
 			
 			//ok, estamos prontos para criar:
 			$sql_i = "INSERT INTO `register_contas` 
-(`conta_nome`,`conta_descricao`,`conta_budget`,`diario_id`,`conta_reconciliado_valor`,`conta_reconciliado_data`,`conta_cartao`,`conta_cartao_data_fechamento`,`conta_cartao_data_vencimento`)
-VALUES ('$conta_nome','$conta_descricao','$conta_budget','$diario_id','$conta_reconciliado_valor','$conta_reconciliado_data','$conta_cartao','$conta_cartao_data_fechamento','$conta_cartao_data_vencimento');";
+				(`conta_nome`,`conta_descricao`,`conta_budget`,`diario_id`,`conta_reconciliado_valor`,`conta_reconciliado_data`,`conta_cartao`,`conta_cartao_data_fechamento`,`conta_cartao_data_vencimento`)
+				VALUES ('$conta_nome','$conta_descricao','$conta_budget','$diario_id','$conta_reconciliado_valor','$conta_reconciliado_data','$conta_cartao','$conta_cartao_data_fechamento','$conta_cartao_data_vencimento');";
 					
 			$inserido = $db->insert($sql_i);
 			
