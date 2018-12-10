@@ -317,8 +317,7 @@ $app->post('/users/put', function (Request $request) use ($app, $db) {
 			$userFirstName = $db->escape_string($data['userFirstName']);
 			$userLastName = $db->escape_string($data['userLastName']);
 			$userPhoneNumber = $db->escape_string($data['userPhoneNumber']);
-			$sql_u = "UPDATE register_users SET `userFirstName`='$userFirstName',`userLastName`='$userLastName',`userPhoneNumber`='$userPhoneNumber' 
-			WHERE userID='$userID';";
+			$sql_u = "UPDATE register_users SET `userFirstName`='$userFirstName',`userLastName`='$userLastName',`userPhoneNumber`='$userPhoneNumber' WHERE userID='$userID';";
 			$resultado = $db->query($sql_u);
 			if ($resultado)
 				return new Response('{"mensagem":"ok"}',200);
@@ -327,10 +326,7 @@ $app->post('/users/put', function (Request $request) use ($app, $db) {
 		} elseif ($data['userEmail']) {
 			$userEmail = $db->escape_string($data['userEmail']);
 			$actCode = $db->escape_string (sha1(mt_rand(10000,99999).time().$userEmail));
-			$sql_u = "UPDATE register_users SET `userEmail`='$userEmail',`userActive`='0',
-			`userNotActiveReason`='E-mail atualizado, necessário verificar!',
-			`userActivationCode` = '$actCode' 
-			WHERE userID='$userID';";
+			$sql_u = "UPDATE register_users SET `userEmail`='$userEmail',`userActive`='0', `userNotActiveReason`='E-mail atualizado, necessário verificar!', `userActivationCode` = '$actCode' WHERE userID='$userID';";
 			$resultado = $db->query($sql_u);
 			if ($resultado) {
 				//Envia um email com um novo código de ativação:
@@ -348,8 +344,7 @@ $app->post('/users/put', function (Request $request) use ($app, $db) {
 				return new Response('{"mensagem":"Sintaxe de entrada inválida"}',400);
 		} elseif ($data['userPassword']) {
 			$userPassword = password_hash($data['userPassword'], PASSWORD_DEFAULT);
-			$sql_u = "UPDATE register_users SET `userPassword`='$userPassword' 
-			WHERE userID='$userID';";
+			$sql_u = "UPDATE register_users SET `userPassword`='$userPassword' WHERE userID='$userID';";
 			$resultado = $db->query($sql_u);
 			if ($resultado)
 				return new Response('{"mensagem":"ok"}',200);
