@@ -310,6 +310,54 @@ $app->post('/users/put', function (Request $request) use ($app, $db) {
 	global $user;
 	
 	if ($user) {
+		//Nunca alteraremos de uma vez: dados pessoais, email ou senha, apenas um por vez, ok?
+		$data = json_decode($request->getContent(), true);
+		$userID = $user['id'];
+		if ($data['userFirstName']) {
+			$userFirstName = $db->escape_string($data['userFirstName']);
+			$userLastName = $db->escape_string($data['userLastName']);
+			$userPhoneNumber = $db->escape_string($data['userPhoneNumber']);
+			$sql_u = "UPDATE register_users SET `userFirstName`='$userFirstName',`userLastName`='$userLastName',`userPhoneNumber`='$userPhoneNumber' 
+			WHERE userID='$userID';";
+			$resultado = $db->query($sql_u);
+			if ($resultado)
+				return new Response('{"mensagem":"ok"}',200);
+			else
+				return new Response('{"mensagem":"Sintaxe de entrada inválida"}',400);
+		} elseif ($data['userEmail']) {
+			$userEmail = $db->escape_string($data['userEmail']);
+			$actCode = $db->escape_string (sha1(mt_rand(10000,99999).time().$userEmail));
+			$sql_u = "UPDATE register_users SET `userEmail`='$userEmail',`userActive`='0',
+			`userNotActiveReason`='E-mail atualizado, necessário verificar!',
+			`userActivationCode` = '$actCode' 
+			WHERE userID='$userID';";
+			$resultado = $db->query($sql_u);
+			if ($resultado) {
+				//Envia um email com um novo código de ativação:
+				$destinatario = $userEmail;
+				$assunto = "Você trocou seu e-mail no Meus Investimentos";
+				$template="change_email";
+				$variaveis['actCode'] = $request->getSchemeAndHttpHost().'/activate/'.$actCode;
+				
+				ob_start();
+				$mail = new enviarEmail($destinatario,$assunto,$template,$variaveis);
+				$envio = $mail->enviar();
+				ob_clean();
+				return new Response('{"mensagem":"ok"}',200);
+			} else
+				return new Response('{"mensagem":"Sintaxe de entrada inválida"}',400);
+		} elseif ($data['userPassword']) {
+			$userPassword = password_hash($data['userPassword'], PASSWORD_DEFAULT);
+			$sql_u = "UPDATE register_users SET `userPassword`='$userPassword' 
+			WHERE userID='$userID';";
+			$resultado = $db->query($sql_u);
+			if ($resultado)
+				return new Response('{"mensagem":"ok"}',200);
+			else
+				return new Response('{"mensagem":"Sintaxe de entrada inválida"}',400);
+		} else {
+			return new Response('{"mensagem":"Não encontramos os campos necessários para atualizar."}', 400)
+		}
 		
 	} else {
 		return new Response('{"mensagem":"Você não tem privilégios para isso"}', 403);
