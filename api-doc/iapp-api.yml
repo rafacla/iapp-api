@@ -30,10 +30,10 @@ tags:
 - name: "contas"
     description: "Permite listar, adicionar ou remover contas bancárias (e cartões)"
 schemes:
-- "https"
+  - "https"
 security:
-- application:
-  - "user"
+  - application:
+    - "user"
 paths:
   /activate/{actcode}:
     get:
