@@ -153,15 +153,15 @@ paths:
       - in: "body"
         name: "body"
         properties:
-          firstName:
+          userFirstName:
             type: "string"
-          lastName:
+          userLastName:
             type: "string"
-          phoneNumber:
+          userPhoneNumber:
             type: string
-          emailAddress:
+          userEmail:
             type: string
-          password:
+          userPassword:
             type: string
       responses:
         200:
