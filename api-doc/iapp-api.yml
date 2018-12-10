@@ -29,11 +29,11 @@ tags:
     description: "Permite listar, adicionar ou remover orçamentos mensais"
   - name: "contas"
     description: "Permite listar, adicionar ou remover contas bancárias (e cartões)"
-  schemes:
+schemes:
   - "https"
-  security:
+security:
   - application:
-    - "user"
+  - "user"
 paths:
   /activate/{actcode}:
     get:
