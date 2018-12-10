@@ -305,6 +305,17 @@ $app->post('/users', function (Request $request) use ($app, $db) {
 	}
 });
 
+//Rota para alterar um usuário:
+$app->post('/users/edit', function (Request $request) use ($app, $db) {
+	global $user;
+	
+	if ($user) {
+		
+	} else {
+		return new Response('{"mensagem":"Você não tem privilégios para isso"}', 403);
+	}
+});
+
 //Rota para listar todos os usuarios do sistema (apenas ADM)
 $app->get('/users', function (Request $request) use ($app, $db) {
 	global $user;
