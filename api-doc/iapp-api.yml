@@ -144,43 +144,23 @@ paths:
                 type: "string"
                 example: "usuario_existente"
                 description: "retorna usuario_existente ou erro_desconhecido"
-    put:
+  /users/put:
+    post:
       tags:
       - "users"
       summary: "Altera um usuário"
       parameters:
       - in: "body"
         name: "body"
-        description: "Created user object"
-        required: true
-        schema:
-          $ref: "#/definitions/User"
-      responses:
-        201:
-          description: "Novo usuário criado com sucesso"
-          schema:
-            type: "object"
-            properties:
+        properties:
               id:
                 type: "integer"
-                description: "Retorna o ID do novo usuário."
+                description: "Retorna o ID do usuário autenticado."
+      responses:
+        200:
+          description: "Usuário alterado com sucesso"
         400:
           description: "retorna false para os campos inválidos"
-          schema:
-            type: "object"
-            properties:
-              username:
-                type: "boolean"
-              firstName:
-                type: "boolean"
-              lastName:
-                type: "boolean"
-              email:
-                type: "boolean"
-              password:
-                type: "boolean"
-              phoneNumber:
-                type: "boolean"
   /users/{id}:
     get:
       tags:

@@ -306,7 +306,7 @@ $app->post('/users', function (Request $request) use ($app, $db) {
 });
 
 //Rota para alterar um usuário:
-$app->post('/users/edit', function (Request $request) use ($app, $db) {
+$app->post('/users/put', function (Request $request) use ($app, $db) {
 	global $user;
 	
 	if ($user) {
