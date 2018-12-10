@@ -13,26 +13,26 @@ info:
 host: "api.rafacla.com"
 basePath: "/"
 tags:
-  - name: "adm"
+- name: "adm"
     description: "Permite alterar configurações do servidor e ações com usuários"
-  - name: "users"
+- name: "users"
     description: "Permite criar e editar usuarios"
-  - name: "cliente"
+- name: "cliente"
     description: "Transações com cliente"
-  - name: "diários"
+- name: "diários"
     description: "Lista os diários de um usuário"
-  - name: "categorias"
+- name: "categorias"
     description: "Permite adicionar ou remover categorias de transações"
-  - name: "transações"
+- name: "transações"
     description: "Permite listar, adicionar ou remover transações"
-  - name: "orçamentos"
+- name: "orçamentos"
     description: "Permite listar, adicionar ou remover orçamentos mensais"
-  - name: "contas"
+- name: "contas"
     description: "Permite listar, adicionar ou remover contas bancárias (e cartões)"
 schemes:
-  - "https"
+- "https"
 security:
-  - application:
+- application:
   - "user"
 paths:
   /activate/{actcode}:
