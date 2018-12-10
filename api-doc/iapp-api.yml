@@ -13,7 +13,7 @@ info:
 host: "api.rafacla.com"
 basePath: "/"
 tags:
-- name: "adm"
+  - name: "adm"
     description: "Permite alterar configurações do servidor e ações com usuários"
 - name: "users"
     description: "Permite criar e editar usuarios"
