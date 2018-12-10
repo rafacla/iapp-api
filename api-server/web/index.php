@@ -330,7 +330,15 @@ $app->post('/users/put', function (Request $request) use ($app, $db) {
 			$resultado = $db->query($sql_u);
 			if ($resultado) {
 				//Envia um email com um novo código de ativação:
+				$destinatario = $userEmail;
+				$assunto = "Você trocou seu e-mail no Meus Investimentos";
+				$template="change_email";
+				$variaveis['actCode'] = $request->getSchemeAndHttpHost().'/activate/'.$actCode;
 				
+				ob_start();
+				$mail = new enviarEmail($destinatario,$assunto,$template,$variaveis);
+				$envio = $mail->enviar();
+				ob_clean();
 				return new Response('{"mensagem":"ok"}',200);
 			} else
 				return new Response('{"mensagem":"Sintaxe de entrada inválida"}',400);
@@ -343,7 +351,7 @@ $app->post('/users/put', function (Request $request) use ($app, $db) {
 			else
 				return new Response('{"mensagem":"Sintaxe de entrada inválida"}',400);
 		} else {
-			return new Response('{"mensagem":"Não encontramos os campos necessários para atualizar."}', 400)
+			return new Response('{"mensagem":"Não encontramos os campos necessários para atualizar."}', 400);
 		}
 		
 	} else {
