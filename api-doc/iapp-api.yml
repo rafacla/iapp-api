@@ -153,9 +153,16 @@ paths:
       - in: "body"
         name: "body"
         properties:
-              id:
-                type: "integer"
-                description: "Retorna o ID do usuário autenticado."
+          firstName:
+            type: "string"
+          lastName:
+            type: "string"
+          phoneNumber:
+            type: string
+          emailAddress:
+            type: string
+          password:
+            type: string
       responses:
         200:
           description: "Usuário alterado com sucesso"
