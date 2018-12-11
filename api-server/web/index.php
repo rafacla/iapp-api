@@ -181,7 +181,7 @@ $app->post('/auth', function (Request $request) use ($app, $db, $storage, $serve
 		$client_id = $request->get("client_id");
 		$client_secret = $request->get("client_secret");
 	}
-	$grant_type = $data->get("grant_type");
+	$grant_type = $request->get("grant_type");
 	$username = $request->get("username");
 	$password = $request->get("password");
 	
