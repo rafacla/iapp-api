@@ -181,12 +181,12 @@ $app->post('/auth', function (Request $request) use ($app, $db, $storage, $serve
 		$client_id = $request->get("client_id");
 		$client_secret = $request->get("client_secret");
 	}
-	$grant_type = $request->get("grant_type");
+	$grant_type = $data->get("grant_type");
 	$username = $request->get("username");
 	$password = $request->get("password");
 	
 	var_dump($grant_type);
-	var_dump($data);
+	var_dump($data['grant_type']);
 	if ($grant_type == "password") {
 		$sql_s_u = "SELECT userActive, userNotActiveReason FROM register_users WHERE  userEmail= '".$username."';";
 		$rows = $db ->select($sql_s_u);
