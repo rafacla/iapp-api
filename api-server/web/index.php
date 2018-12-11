@@ -242,7 +242,7 @@ $app->get('/activate/{actcode}', function (Request $request, $actcode) use ($app
 
 //Rota para resetar a senha e ativar o usuário
 $app->get('/lostpassword/{actcode}', function (Request $request, $actcode) use ($app, $db) {
-	$sql = "SELECT userID FROM register_users WHERE userActivationCode = '".$actcode."'";
+	$sql = "SELECT userID, userEmail FROM register_users WHERE userActivationCode = '".$actcode."'";
 	$rows = $db ->select($sql);
 	if ($rows) {
 		$senha = randomPassword();
@@ -251,7 +251,7 @@ $app->get('/lostpassword/{actcode}', function (Request $request, $actcode) use (
 		$ativo = $db->query($sql_u);
 		if ($ativo) {
 			//Envia um email com um novo código de ativação:
-			$destinatario = $userEmail;
+			$destinatario = $rows[0]['userEmail'];
 			$assunto = "Sua nova senha para acesso ao Meus Investimentos";
 			$template="new_password";
 			$variaveis['actCode'] = $senha;
