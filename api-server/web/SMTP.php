@@ -46,6 +46,10 @@ class enviarEmail
 
 		// Set the subject
 		self::$mail->Subject = $assunto;
+
+		// Encoding e anything
+		self::$mail->CharSet = 'UTF-8';
+		self::$mail->Encoding = 'base64';
 		
 		// Retrieve the email template required
 		$message = file_get_contents('mail_templates/'.$template.'.html');

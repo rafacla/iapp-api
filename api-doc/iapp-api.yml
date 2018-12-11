@@ -168,6 +168,25 @@ paths:
           description: "Usuário alterado com sucesso"
         400:
           description: "retorna false para os campos inválidos"
+  /users/enviaLostPasswordLink:
+    post:
+      tags:
+      - "users"
+      summary: "Recupera o link para resetar a senha"
+      parameters:
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            type: object
+            properties:
+              userEmail:
+                type: "string"
+      responses:
+        200:
+          description: "OK"
+        400:
+          description: "E-mail não foi encontrado."
   /users/{id}:
     get:
       tags:

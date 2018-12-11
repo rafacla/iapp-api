@@ -213,7 +213,6 @@ $app->post('/auth', function (Request $request) use ($app, $db, $storage, $serve
 	return new Response($respStr,$status);
 });
 
-
 //Rota para ativar o novo usuário
 $app->get('/activate/{actcode}', function (Request $request, $actcode) use ($app, $db) {
 	$sql = "SELECT userID FROM register_users WHERE userActivationCode = '".$actcode."'";
@@ -228,6 +227,31 @@ $app->get('/activate/{actcode}', function (Request $request, $actcode) use ($app
 	} else {
 		Return new Response('{"mensagem":"Usuário não autorizado ou código inválido"}', 401);
 	}
+});
+
+$app->post('/users/enviaLostPasswordLink', function (Request $request) use ($app, $db) {
+	$data = json_decode($request->getContent(), true);
+	$userEmail = $db->escape_string($data['userEmail']);
+	$actCode = $db->escape_string (sha1(mt_rand(10000,99999).time().$userEmail));
+	$sql_u = "UPDATE register_users SET `userActivationCode` = '$actCode' WHERE `userEmail`='$userEmail';";
+	$resultado = $db->query($sql_u);
+
+	if ($resultado) {
+		//Envia um email com um novo código de ativação:
+		$destinatario = $userEmail;
+		$assunto = "Você trocou seu e-mail no Meus Investimentos";
+		$template="change_email";
+		$variaveis['actCode'] = $request->getSchemeAndHttpHost().'/lostpassword/'.$actCode;
+		
+		ob_start();
+		$mail = new enviarEmail($destinatario,$assunto,$template,$variaveis);
+		$envio = $mail->enviar();
+		ob_clean();
+		return new Response('{"mensagem":"ok"}',200);
+	} else {
+		return new Response('{"mensagem":"e-mail não encontrado"}', 400);
+	}
+
 });
 
 //Rota para criar um novo usuário
