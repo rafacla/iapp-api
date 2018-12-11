@@ -185,6 +185,7 @@ $app->post('/auth', function (Request $request) use ($app, $db, $storage, $serve
 	$username = $request->get("username");
 	$password = $request->get("password");
 	
+	var_dump($request);
 	if ($grant_type == "password") {
 		$sql_s_u = "SELECT userActive, userNotActiveReason FROM register_users WHERE  userEmail= '".$username."';";
 		$rows = $db ->select($sql_s_u);
