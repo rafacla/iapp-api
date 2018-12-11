@@ -50,6 +50,21 @@ paths:
           description: "OK. Usuário ativado"
         401:
           description: "Usuário não autorizado ou código inválido"
+  /lostpassword/{actcode}:
+    get:
+      tags:
+      - "users"
+      summary: "Recupera uma senha nova via email"
+      parameters:
+      - name: "actcode"
+        in: "path"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "OK. Senha enviada"
+        401:
+          description: "Usuário não autorizado ou código inválido"
   /users/logged:
     get:
       tags:

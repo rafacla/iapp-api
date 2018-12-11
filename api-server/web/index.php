@@ -46,6 +46,7 @@ $app->before(function(Request $request, Application $app) use ($app, $db, $stora
 	$rotaslivres[2] = "GET_"; //esta é a rota padrão e exibe uma mensagem de erro amigável, dispensa autenticação por isso
 	$rotaslivres[3] = "GET_activate_actcode"; //esta rota serve para ativar um usuário recem registrado que recebeu o link por email
 	$rotaslivres[4] = "POST_users_enviaLostPasswordLink"; // rota para recuperar link de resetar senha
+	$rotaslivres[5] = "GET_lostpassword_actcode"; // rota para resetar senha
     if(!in_array($route,$rotaslivres) && $request->getMethod() != 'OPTIONS') {
 		$authorization = $request->headers->get("Authorization");
 		list($jwt) = sscanf($authorization, 'Bearer %s');
@@ -94,6 +95,16 @@ $app->before(function(Request $request, Application $app) use ($app, $db, $stora
 
 });
 
+function randomPassword() {
+    $alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
+    $pass = array(); //remember to declare $pass as an array
+    $alphaLength = strlen($alphabet) - 1; //put the length -1 in cache
+    for ($i = 0; $i < 8; $i++) {
+        $n = rand(0, $alphaLength);
+        $pass[] = $alphabet[$n];
+    }
+    return implode($pass); //turn the array into a string
+}
 
 function getDiarioID($diariouid) {
 	global $db;
@@ -229,6 +240,36 @@ $app->get('/activate/{actcode}', function (Request $request, $actcode) use ($app
 	}
 });
 
+//Rota para resetar a senha e ativar o usuário
+$app->get('/lostpassword/{actcode}', function (Request $request, $actcode) use ($app, $db) {
+	$sql = "SELECT userID FROM register_users WHERE userActivationCode = '".$actcode."'";
+	$rows = $db ->select($sql);
+	if ($rows) {
+		$senha = randomPassword();
+		$userPassword = password_hash($senha, PASSWORD_DEFAULT);
+		$sql_u = "UPDATE register_users SET userActive='1',userNotActiveReason=NULL,userActivationCode=NULL, `userPassword`='$userPassword' WHERE userID='".$rows[0]['userID']."'";
+		$ativo = $db->query($sql_u);
+		if ($ativo) {
+			//Envia um email com um novo código de ativação:
+			$destinatario = $userEmail;
+			$assunto = "Sua nova senha para acesso ao Meus Investimentos";
+			$template="new_password";
+			$variaveis['actCode'] = $senha;
+			
+			ob_start();
+			$mail = new enviarEmail($destinatario,$assunto,$template,$variaveis);
+			$envio = $mail->enviar();
+			ob_clean();
+
+			return new Response('{"mensagem":"OK! E-mail com sua nova senha foi enviada para o seu e-mail!"}', 201);
+		}
+		else 
+			return new Response('{"mensagem":"Usuário não autorizado ou código inválido"}', 401);
+	} else {
+		return new Response('{"mensagem":"Usuário não autorizado ou código inválido"}', 401);
+	}
+});
+
 $app->post('/users/enviaLostPasswordLink', function (Request $request) use ($app, $db) {
 	$data = json_decode($request->getContent(), true);
 	$userEmail = $db->escape_string($data['userEmail']);
@@ -240,7 +281,7 @@ $app->post('/users/enviaLostPasswordLink', function (Request $request) use ($app
 		//Envia um email com um novo código de ativação:
 		$destinatario = $userEmail;
 		$assunto = "Você trocou seu e-mail no Meus Investimentos";
-		$template="change_email";
+		$template="lost_password";
 		$variaveis['actCode'] = $request->getSchemeAndHttpHost().'/lostpassword/'.$actCode;
 		
 		ob_start();
