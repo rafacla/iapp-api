@@ -184,12 +184,12 @@ $app->post('/auth', function (Request $request) use ($app, $db, $storage, $serve
 	$grant_type = $request->get("grant_type");
 	$username = $request->get("username");
 	$password = $request->get("password");
-
+	var_dump($rows);
+		die();
 	if ($grant_type == "password") {
 		$sql_s_u = "SELECT userActive, userNotActiveReason FROM register_users WHERE  userEmail= '".$username."';";
 		$rows = $db ->select($sql_s_u);
-		var_dump($rows);
-		die();
+		
 		if ($rows) {
 			if ($rows[0]['userActive']==0) {
 				$resp['error']="usuario_inativo";
