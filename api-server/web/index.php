@@ -45,7 +45,7 @@ $app->before(function(Request $request, Application $app) use ($app, $db, $stora
 	$rotaslivres[1] = "POST_users"; //rota para criar um novo usuário
 	$rotaslivres[2] = "GET_"; //esta é a rota padrão e exibe uma mensagem de erro amigável, dispensa autenticação por isso
 	$rotaslivres[3] = "GET_activate_actcode"; //esta rota serve para ativar um usuário recem registrado que recebeu o link por email
-	
+	$rotaslivres[4] = "POST_users_enviaLostPasswordLink"; // rota para recuperar link de resetar senha
     if(!in_array($route,$rotaslivres) && $request->getMethod() != 'OPTIONS') {
 		$authorization = $request->headers->get("Authorization");
 		list($jwt) = sscanf($authorization, 'Bearer %s');
