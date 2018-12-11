@@ -184,7 +184,7 @@ $app->post('/auth', function (Request $request) use ($app, $db, $storage, $serve
 	$grant_type = $request->get("grant_type");
 	$username = $request->get("username");
 	$password = $request->get("password");
-	var_dump($grant_type);
+	
 	var_dump($request);
 		die();
 	if ($grant_type == "password") {
