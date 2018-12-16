@@ -198,7 +198,8 @@ function MoveSubcategoria($move_from, $move_to, $categoria_id) {
 }
 
 $app->get("/", function (Request $request) {
-	return new Response('{"mensagem":"method not allowed"}',485);
+	$lastScriptModifiedDate = getlastmod();
+	return new Response('{"mensagem":"method not allowed","current_version":"$lastScriptModifiedDate"}',485);
 });
 
 //Aqui estamos preparando o 'pré-voo' adicionando uma resposta válida para o method 'options'
