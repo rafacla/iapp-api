@@ -263,8 +263,11 @@ $app->post('/auth', function (Request $request) use ($app, $db, $storage, $serve
 	$status = $resposta->getStatusCode();
 	$respStr = $resposta->getResponseBody();
 
+	var_dump($resposta);
+	var_dump($status);
 	if ($status == 200) {
 		//significa que autenticou
+		
 		$tData = $server->getAccessTokenData(OAuth2\Request::createFromGlobals());
 		$userID = $tData['user_id'];
 		atualizaLastLogin($userID,$request->getClientIp());
