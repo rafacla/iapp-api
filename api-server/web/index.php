@@ -36,7 +36,7 @@ $server->addGrantType(new OAuth2\GrantType\RefreshToken($storage, $config_refres
 
 
 // verificar autenticacao
-$app->before(function(Request $request, Application $app) use ($app, $db, $storage, $server) {
+$app->before(function(Request $request) use ($app, $db, $storage, $server) {
 	global $user;
     $route = $request->get('_route');
 	
@@ -123,6 +123,15 @@ function atualizaCreated($table, $pkColumn, $pkID, $ip) {
 	return $db->query($sql_u);
 }
 
+/**
+ * Atualiza os campos de ModifiedIP e ModifiedDate da tabela designada baseaso em uma chave primaria e seu ID
+ *
+ * @param string $table
+ * @param string $pkColumn
+ * @param string $pkID
+ * @param int $ip
+ * @return boolean
+ */
 function atualizaModified($table, $pkColumn, $pkID, $ip) {
 	global $db;
 	$sql_u = "UPDATE $table SET ModifiedIP='$ip', ModifiedDate=CURDATE() WHERE $pkColumn = '$pkID';";
@@ -403,8 +412,10 @@ $app->post('/users/put', function (Request $request) use ($app, $db) {
 			$userPhoneNumber = $db->escape_string($data['userPhoneNumber']);
 			$sql_u = "UPDATE register_users SET `userFirstName`='$userFirstName',`userLastName`='$userLastName',`userPhoneNumber`='$userPhoneNumber' WHERE userID='$userID';";
 			$resultado = $db->query($sql_u);
-			if ($resultado)
+			if ($resultado) {
+				atualizaModified('register_users','userID',$userID, $request->getClientIp());
 				return new Response('{"mensagem":"ok"}',200);
+			}
 			else
 				return new Response('{"mensagem":"Sintaxe de entrada inválida"}',400);
 		} elseif ($data['userEmail']) {
