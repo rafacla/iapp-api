@@ -117,6 +117,24 @@ function getDiarioID($diariouid) {
 		return 0;
 }
 
+function atualizaCreated($table, $pkColumn, $pkID, $ip) {
+	global $db;
+	$sql_u = "UPDATE $table SET CreatedIP='$ip', CreatedDate=CURDATE(), ModifiedIP='$ip', ModifiedDate=CURDATE() WHERE $pkColumn = '$pkID';";
+	return $db->query($sql_u);
+}
+
+function atualizaModified($table, $pkColumn, $pkID, $ip) {
+	global $db;
+	$sql_u = "UPDATE $table SET ModifiedIP='$ip', ModifiedDate=CURDATE() WHERE $pkColumn = '$pkID';";
+	return $db->query($sql_u);
+}
+
+function atualizaLastChildModifiedDate($diarioUID) {
+	global $db;
+	$sql_u = "UPDATE `register_diarios` SET `LastChildModifiedDate`=CURDATE() WHERE `uid`='$diarioUID';";
+	return $db->query($sql_u);
+}
+
 function MoveSubcategoria($move_from, $move_to, $categoria_id) {
 	global $db;
 	$sql = "SELECT `subcategoria_id`,`subcategoria_ordem` FROM `register_subcategorias` WHERE `categoria_id` = '$categoria_id' ORDER BY `subcategoria_ordem`;";
