@@ -144,6 +144,19 @@ function atualizaLastChildModifiedDate($diarioUID) {
 	return $db->query($sql_u);
 }
 
+/**
+ * Atualiza a data e o IP do último login do usuário
+ *
+ * @param int $userID ID do usuário que está sendo atualizado
+ * @param true $userIP IP da requisição que fez a tentativa de login
+ * @return boolean Verdadeiro se atualizado, falso se falhou
+ */
+function atualizaLastLogin($userID, $userIP) {
+	global $db;
+	$sql_u = "UPDATE `register_users` SET `userLastLoginIP`='$userIP',`userLastLoginDate`=CURDATE() WHERE `userID`='$userID';";
+	return $db->query($sql_u);
+}
+
 function MoveSubcategoria($move_from, $move_to, $categoria_id) {
 	global $db;
 	$sql = "SELECT `subcategoria_id`,`subcategoria_ordem` FROM `register_subcategorias` WHERE `categoria_id` = '$categoria_id' ORDER BY `subcategoria_ordem`;";
@@ -248,6 +261,13 @@ $app->post('/auth', function (Request $request) use ($app, $db, $storage, $serve
 	} 
 	$status = $resposta->getStatusCode();
 	$respStr = $resposta->getResponseBody();
+
+	if ($status == '200') {
+		//significa que autenticou
+		$tData = $server->getAccessTokenData(OAuth2\Request::createFromGlobals());
+		$userID = $tData['user_id'];
+		atualizaLastLogin($userID,$request->getClientIp());
+	}
 	return new Response($respStr,$status);
 });
 
@@ -434,6 +454,7 @@ $app->post('/users/put', function (Request $request) use ($app, $db) {
 				$mail = new enviarEmail($destinatario,$assunto,$template,$variaveis);
 				$envio = $mail->enviar();
 				ob_clean();
+				atualizaModified('register_users','userID',$userID, $request->getClientIp());
 				return new Response('{"mensagem":"ok"}',200);
 			} else
 				return new Response('{"mensagem":"Sintaxe de entrada inválida"}',400);
@@ -441,8 +462,10 @@ $app->post('/users/put', function (Request $request) use ($app, $db) {
 			$userPassword = password_hash($data['userPassword'], PASSWORD_DEFAULT);
 			$sql_u = "UPDATE register_users SET `userPassword`='$userPassword' WHERE userID='$userID';";
 			$resultado = $db->query($sql_u);
-			if ($resultado)
+			if ($resultado) {
+				atualizaModified('register_users','userID',$userID, $request->getClientIp());
 				return new Response('{"mensagem":"ok"}',200);
+			}
 			else
 				return new Response('{"mensagem":"Sintaxe de entrada inválida"}',400);
 		} else {
