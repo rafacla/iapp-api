@@ -1,3 +1,4 @@
+mysql_host = mysql.example.com
 mysql_user = user
 mysql_password = example
 smtp_host = smtp.example.com

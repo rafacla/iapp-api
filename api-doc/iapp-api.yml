@@ -10,7 +10,6 @@ info:
   license:
     name: "Apache 2.0"
     url: "http://www.apache.org/licenses/LICENSE-2.0.html"
-host: "api.rafacla.com"
 basePath: "/"
 tags:
   - name: "adm"
@@ -1066,14 +1065,16 @@ paths:
 securityDefinitions:
   autenticar:
     type: "oauth2"
-    tokenUrl: "https://api.rafacla.com/auth"
+    tokenUrl: "/auth"
+    refreshUrl: "/auth"
     flow: "password"
     scopes:
       user: "Atividades de um usuário comum"
       adm: "Atividades de um administrador"
   application:
     type: "oauth2"
-    tokenUrl: "https://api.rafacla.com/auth"
+    tokenUrl: "/auth"
+    refreshUrl: "/auth"
     flow: "application"
     scopes:
       user: "Atividades de um usuário comum"

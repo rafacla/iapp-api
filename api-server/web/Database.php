@@ -1,9 +1,7 @@
 <?php
 class Database
 {
-	protected static $servername = "localhost";
-	protected static $local_servername = "localhost";
-	protected static $remote_servername = "mysql762.umbler.com";
+	protected static $servername;
 	protected static $username;
 	protected static $password;
 	protected static $database = "iapp";
@@ -14,6 +12,7 @@ class Database
 		if (!file_exists("config.ini"))
 			die("Não encontrei o arquivo config.ini dentro da pasta \"web\" ou você arruma ou eu paro por aqui.<br>Verifique o arquivo de exemplo chamado \"config.ini.sample\"");
 		$ini_array = parse_ini_file("config.ini", true);
+		self::$servername = $ini_array['mysql_host'];
 		self::$username = $ini_array['mysql_user'];
 		self::$password = $ini_array['mysql_password'];
 		self::$connection = $this -> connect();
@@ -21,12 +20,7 @@ class Database
 	}
 
 	public function dsn() {
-		if ($_SERVER['HTTP_HOST'] == "api.localhost") {
-			$servername = self::$local_servername;
-		} else {
-			$servername = self::$remote_servername;
-		}
-		$dsn      = 'mysql:dbname='.self::$database.';host='.$servername;
+		$dsn      = 'mysql:dbname='.self::$database.';host='.self::$servername;
 		return ($dsn);
 	}
 	
@@ -41,12 +35,7 @@ class Database
 	
 	public function connect() {
 		if(!isset($connection)) {
-			if ($_SERVER['HTTP_HOST'] == "api.localhost") {
-			$servername = self::$local_servername;
-		} else {
-			$servername = self::$remote_servername;
-		}
-			self::$connection = new mysqli($servername,self::$username,self::$password,self::$database);
+			self::$connection = new mysqli(self::$servername,self::$username,self::$password,self::$database);
 		}
 		
 		// If connection was not successful, handle the error
