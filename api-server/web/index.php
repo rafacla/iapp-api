@@ -682,7 +682,8 @@ $app->post('/diario', function (Request $request) use ($app, $user, $db) {
 		$description	= $db->escape_string($data['description']);
 		$userid			= $db->escape_string($data['userid']);
 		$uuid 			= md5(uniqid(""));
-		$sql_i = "INSERT INTO register_diarios (uid,nome,description,user_id,`default`,`CreatedIP`,`ModifiedIP`,`CreatedDate`,`ModifiedDate`) VALUES ('$uuid','$nome','$description','$userid','1','$request->getClientIp()','$request->getClientIp()','CURDATE()','CURDATE()');";
+		$ip = $request->getClientIp();
+		$sql_i = "INSERT INTO register_diarios (uid,nome,description,user_id,`default`,`CreatedIP`,`ModifiedIP`,`CreatedDate`,`ModifiedDate`) VALUES ('$uuid','$nome','$description','$userid','1','$ip','$ip',CURDATE(),CURDATE());";
 		$resultado = $db->insert($sql_i);
 		//Inserimos um novo diário e definimos o mesmo como default, mas já devia ter um default, precisamos setar ele como não default
 		//ou seja, todos os demais são false agora.
@@ -700,7 +701,7 @@ $app->post('/diario', function (Request $request) use ($app, $user, $db) {
 				$categoria_nome = $categoria['categoria_nome'];
 				$categoria_desc = $categoria['categoria_description'];
 				$sql_i_categoria = "INSERT INTO `register_categorias` (`categoria_nome`,`categoria_description`,`diario_id`,`categoria_ordem`,`CreatedIP`,`ModifiedIP`,`CreatedDate`,`ModifiedDate`) VALUES
-				 ('$categoria_nome','$categoria_desc','$diario_id','$i','$request->getClientIp()','$request->getClientIp()','CURDATE()','CURDATE()');";
+				 ('$categoria_nome','$categoria_desc','$diario_id','$i','$ip','$ip',CURDATE(),CURDATE());";
 				
 				$res = $db->insert($sql_i_categoria);
 				$i++;
@@ -713,7 +714,7 @@ $app->post('/diario', function (Request $request) use ($app, $user, $db) {
 						$subc_desc = $subcategoria['subcategoria_description'];
 						
 						$sql_i_subc = "INSERT INTO `register_subcategorias` (`subcategoria_nome`,`subcategoria_description`,`subcategoria_carry`,
-						`categoria_id`,`subcategoria_ordem`,`CreatedIP`,`ModifiedIP`,`CreatedDate`,`ModifiedDate`) VALUES ('$subc_nome','$subc_desc',0,'$cat_id','$j','$request->getClientIp()','$request->getClientIp()','CURDATE()','CURDATE()')";
+						`categoria_id`,`subcategoria_ordem`,`CreatedIP`,`ModifiedIP`,`CreatedDate`,`ModifiedDate`) VALUES ('$subc_nome','$subc_desc',0,'$cat_id','$j','$ip','$ip',CURDATE(),CURDATE())";
 						$res_s = $db->insert($sql_i_subc);
 						$j++;
 					}
@@ -746,10 +747,13 @@ $app->post('/diario/put', function (Request $request) use ($app, $user, $db) {
 			$uniqueid 		= $db->escape_string($data['uniqueid']);
 			$nome 			= $db->escape_string($data['nome']);
 			$description	= $db->escape_string($data['description']);
-			$sql_u = "UPDATE register_diarios SET nome='$nome',description='$description' WHERE uid='$uniqueid';";
+			$ip = $request->getClientIp();
+			$sql_u = "UPDATE register_diarios SET nome='$nome',description='$description', `ModifiedIP`='$ip', `ModifiedDate`=CURDATE() WHERE uid='$uniqueid';";
 			$resultado = $db->query($sql_u);
-			if ($resultado)
+			if ($resultado) {
+				atualizaLastChildModifiedDate($uniqueid);
 				return new Response('{"mensagem":"ok"}',200);
+			}
 			else
 				return new Response('{"mensagem":"Sintaxe de entrada inválida"}',400);
 		}
@@ -807,8 +811,10 @@ $app->post('/diario/select', function (Request $request) use ($app, $user, $db) 
 		} else {
 			$sql_u		= "UPDATE `register_diarios` SET `default`=(`uid`='$uniqueid');";
 			$resultado = $db->query($sql_u);
-			if ($resultado)
+			if ($resultado) {
+				atualizaLastChildModifiedDate($uniqueid);
 				return new Response('{"mensagem":"Selecionado"}',200);
+			}
 			else
 				return new Response('{"mensagem":"Sintaxe de entrada inválida"}',400);
 		}
@@ -1063,6 +1069,7 @@ $app->post('/categoria',function (Request $request) use ($app, $db) {
 	} elseif (isset($data['diario_uid'])) {
 		//se a categoria não foi informada, obrigatoriamente o diario_uid deve ser informada para criar uma nova categoria.
 		$operacao = "criar";
+		atualizaLastChildModifiedDate($data['diario_uid']);
 		
 		$diario_uid = $db->escape_string($data['diario_uid']);
 		$sql_s = "SELECT `user_id`, `id` AS `diario_id` FROM `register_diarios` WHERE `uid`='$diario_uid'";
@@ -1083,6 +1090,8 @@ $app->post('/categoria',function (Request $request) use ($app, $db) {
 		return new Response('{"mensagem":"Não autorizado"}',403);
 	}
 	
+	$ip = $request->getClientIp();
+
 	//fazer o que tem que ser feito:
 	if ($operacao == "criar") {
 		//ok, vamos criar, então vamos preparar os campos obrigatórios:
@@ -1100,8 +1109,8 @@ $app->post('/categoria',function (Request $request) use ($app, $db) {
 			}
 			
 			//ok, estamos prontos para criar:
-			$sql_i = "INSERT INTO `register_categorias` (`categoria_nome`,`categoria_description`,`categoria_ordem`,`diario_id`)
-				VALUES ('$categoria_nome','$categoria_description','$nova_ordem','$diario_id');";
+			$sql_i = "INSERT INTO `register_categorias` (`categoria_nome`,`categoria_description`,`categoria_ordem`,`diario_id`,`CreatedIP`,`ModifiedIP`,`CreatedDate`,`ModifiedDate`)
+				VALUES ('$categoria_nome','$categoria_description','$nova_ordem','$diario_id','$ip','$ip',CURDATE(),CURDATE());";
 					
 			$inserido = $db->insert($sql_i);
 			
@@ -1142,7 +1151,7 @@ $app->post('/categoria',function (Request $request) use ($app, $db) {
 				$update_text .= ", ";
 		}
 		if ($nr_up > 0) {
-			$sql_u = "UPDATE `register_categorias` SET $update_text WHERE `categoria_id` = '$categoria_id'";
+			$sql_u = "UPDATE `register_categorias` SET $update_text, `ModifiedIP`='$ip', `ModifiedDate`=CURDATE() WHERE `categoria_id` = '$categoria_id'";
 			$atualizar = $db->query($sql_u);
 			
 			if ($atualizar) {
@@ -1209,6 +1218,8 @@ $app->post('/subcategoria',function (Request $request) use ($app, $db) {
 	$operacao = "";
 	$user_id = 0;
 	$diario_id = 0;
+
+	$ip = $request->getClientIp();
 	
 	//identificar a quem pertence o item:
 	if (isset($data['subcategoria_id'])) {
@@ -1264,8 +1275,8 @@ $app->post('/subcategoria',function (Request $request) use ($app, $db) {
 			}
 			
 			//ok, estamos prontos para criar:
-			$sql_i = "INSERT INTO `register_subcategorias` (`subcategoria_nome`,`subcategoria_description`,`subcategoria_ordem`,`categoria_id`,`subcategoria_carry`)
-				VALUES ('$subcategoria_nome','$subcategoria_description','$nova_ordem','$categoria_id','$subcategoria_carry');";
+			$sql_i = "INSERT INTO `register_subcategorias` (`subcategoria_nome`,`subcategoria_description`,`subcategoria_ordem`,`categoria_id`,`subcategoria_carry`,`CreatedIP`,`ModifiedIP`,`CreatedDate`, `ModifiedDate`)
+				VALUES ('$subcategoria_nome','$subcategoria_description','$nova_ordem','$categoria_id','$subcategoria_carry','$ip','$ip',CURDATE(),CURDATE());";
 					
 			$inserido = $db->insert($sql_i);
 			
@@ -1311,7 +1322,7 @@ $app->post('/subcategoria',function (Request $request) use ($app, $db) {
 				$update_text .= ", ";
 		}
 		if ($nr_up > 0) {
-			$sql_u = "UPDATE `register_subcategorias` SET $update_text WHERE `subcategoria_id` = '$subcategoria_id'";
+			$sql_u = "UPDATE `register_subcategorias` SET $update_text, `ModifiedIP`= '$ip', `ModifiedDate`=CURDATE() WHERE `subcategoria_id` = '$subcategoria_id'";
 			$atualizar = $db->query($sql_u);
 			
 			if ($atualizar) {
@@ -1392,6 +1403,7 @@ $app->get('/contas/{diariouid}', function (Request $request, $diariouid) use ($a
 	$diario = getDiarioID($diariouid);
 	
 	if ($diario) {
+		atualizaLastChildModifiedDate($diariouid);
 		if ($user['adm'] || $user['id']==$diario['user_id']) {
 			$diarioID = $diario['diario_id'];
 			$sql = sprintf("SELECT `conta_id`, `conta_nome`, `conta_descricao`, `diario_id`, `conta_reconciliado_valor`, `conta_reconciliado_data`, 
@@ -1493,10 +1505,12 @@ $app->post('/conta',function (Request $request) use ($app, $db) {
 				$conta_cartao_data_fechamento = "";
 			}			
 			
+			$ip = $request->getClientIp();
+
 			//ok, estamos prontos para criar:
 			$sql_i = "INSERT INTO `register_contas` 
-				(`conta_nome`,`conta_descricao`,`conta_budget`,`diario_id`,`conta_reconciliado_valor`,`conta_reconciliado_data`,`conta_cartao`,`conta_cartao_data_fechamento`,`conta_cartao_data_vencimento`)
-				VALUES ('$conta_nome','$conta_descricao','$conta_budget','$diario_id','$conta_reconciliado_valor','$conta_reconciliado_data','$conta_cartao','$conta_cartao_data_fechamento','$conta_cartao_data_vencimento');";
+				(`conta_nome`,`conta_descricao`,`conta_budget`,`diario_id`,`conta_reconciliado_valor`,`conta_reconciliado_data`,`conta_cartao`,`conta_cartao_data_fechamento`,`conta_cartao_data_vencimento`,`CreatedIP`,`ModifiedIP`,`CreatedDate`,`ModifiedDate`)
+				VALUES ('$conta_nome','$conta_descricao','$conta_budget','$diario_id','$conta_reconciliado_valor','$conta_reconciliado_data','$conta_cartao','$conta_cartao_data_fechamento','$conta_cartao_data_vencimento','$ip','$ip',CURDATE(),CURDATE());";
 					
 			$inserido = $db->insert($sql_i);
 			
@@ -1542,7 +1556,7 @@ $app->post('/conta',function (Request $request) use ($app, $db) {
 				$update_text .= ", ";
 		}
 		if ($nr_up > 0) {
-			$sql_u = "UPDATE `register_contas` SET $update_text WHERE `conta_id` = '$conta_id'";
+			$sql_u = "UPDATE `register_contas` SET $update_text, `ModifiedIP`='$ip',`ModifiedDate`=CURDATE() WHERE `conta_id` = '$conta_id'";
 			$atualizar = $db->query($sql_u);
 			
 			if ($atualizar) {
