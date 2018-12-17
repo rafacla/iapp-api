@@ -901,50 +901,107 @@ paths:
           description: "não autorizado"
         404:
           description: "não encontrado"
-  /subtransacao/aprova:
-    post:
+  /parcelamento:
+    get:
       tags:
       - "transações"
-      summary: "Aprova ou reprova uma ou mais subtransações"
+      summary: "Lista todos os parcelamentos dado uma conta_id e filtros"
       parameters:
-      - in: "body"
-        name: "body"
+      - name: "contaid"
+        in: "header"
+        required: true
+        type: "string"
+      - name: "filtros"
+        in: "header"
         required: false
-        schema:
-          type: "array"
-          items:
-            $ref: "#/definitions/body_12"
+        type: "string"
       responses:
         200:
-          description: "ok"
-        400:
-          description: "sintaxe inválida"
-        403:
-          description: "não autorizado"
-        404:
-          description: "não encontrado"
-  /subtransacao/concilia:
+          description: "array com os parcelamentos"
+          schema:
+            type: "array"
+            items:
+              type: "object"
+              properties:
+                parcelamento_id:
+                  type: "integer"
+                parcelamento_data:
+                  type: "string"
+                parcelamento_valor_sjuros:
+                  type: "number"
+                parcelamento_comentarios:
+                  type: "string"
+                conta_id:
+                  type: "number"
     post:
       tags:
-      - "transações"
-      summary: "Concilia ou não uma ou mais subtransações"
+        - "transações"
+      summary: "Cria um novo parcelamento"
       parameters:
-      - in: "body"
-        name: "body"
-        required: false
-        schema:
-          type: "array"
-          items:
-            $ref: "#/definitions/body_13"
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            type: "object"
+            properties:
+              parcelamento_data:
+                type: "string"
+              parcelamento_valor_sjuros:
+                type: "number"
+              parcelamento_comentarios:
+                type: "string"
+              conta_id:
+                type: "number"
+      responsees:
+        200:
+          description: "OK"
+          schema:
+            type: "object"
+            properties:
+              parcelamento_id:
+                type: "string"
+  /parcelamento/put:
+    post:
+      tags:
+        - "transações"
+      summary:  "Altera um parcelamento"
+      paramters:
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            type: "object"
+            properties:
+              parcelamento_id:
+                type: "number"
+              parcelamento_data:
+                type: "string"
+              parcelamento_valor_sjuros:
+                type: "number"
+              parcelamento_comentarios:
+                type: "string"
+              conta_id:
+                type: "number"
       responses:
         200:
-          description: "ok"
-        400:
-          description: "sintaxe inválida"
-        403:
-          description: "não autorizado"
-        404:
-          description: "não encontrado"
+          description: "OK"
+  /parcelamento/delete:
+    post:
+      tags:
+        - "transações"
+      summary:  "Deleta um parcelamento"
+      paramters:
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            type: "object"
+            properties:
+              parcelamento_id:
+                type: "number"
+      responses:
+        200:
+          description: "OK"
   /orcamento:
     get:
       tags:
