@@ -12,6 +12,8 @@ class Database
 		if (!file_exists("config.ini"))
 			die("Não encontrei o arquivo config.ini dentro da pasta \"web\" ou você arruma ou eu paro por aqui.<br>Verifique o arquivo de exemplo chamado \"config.ini.sample\"");
 		$ini_array = parse_ini_file("config.ini", true);
+		if(!isset($ini_array['mysql_host']) || !isset($ini_array['mysql_user']) || !isset($ini_array['mysql_password']))
+			die("Seu arquivo config.ini está faltando parâmetros ou você arruma ou eu paro por aqui.");
 		self::$servername = $ini_array['mysql_host'];
 		self::$username = $ini_array['mysql_user'];
 		self::$password = $ini_array['mysql_password'];
