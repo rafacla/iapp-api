@@ -1646,6 +1646,55 @@ $app->post('/parcelamento',function (Request $request) use ($app, $db) {
 		return new Response('{"mensagem":"Faltando entradas"}',403);
 	}
 });
+
+//rota para editar um parcelamento
+$app->post('/parcelamento',function (Request $request) use ($app, $db) {
+	global $user;
+	$data = json_decode($request->getContent(), true);
+	$user_id = 0;
+	$ip = $request->getClientIp();
+
+	if (isset($data['parcelamento_comentarios'])) {
+		$parc_comentarios = $db->escape_string($data['parcelamento_comentarios']);
+	} else {
+		$parc_comentarios = null;
+	}
+
+	if (isset($data['parcelamento_data']) && isset($data['parcelamento_valor_sjuros']) && isset($data['conta_id'])) {
+		$conta_id = $db->escape_string($data['conta_id']);
+		$sql_s = "SELECT user_id, conta_id FROM `register_contas` JOIN `register_diarios` ON `register_contas`.`diario_id` = `register_diarios`.`id` WHERE `conta_id` = '$conta_id'";
+		$rows = $db->select($sql_s);
+		if ($rows) {
+			$user_id = $rows[0]['user_id'];
+			$conta_id = $rows[0]['conta_id'];
+
+			//verificar se usuário tem permissão:
+			if (!$user['adm'] && $user['id']<>$user_id) {
+				return new Response('{"mensagem":"Não autorizado"}',403);
+			} else {
+				//Tudo certo, vamos inserir:
+				$parc_data = $db->escape_string($data['parcelamento_data']);
+				$parc_valor_sjuros = $db->escape_string($data['parcelamento_valor_sjuros']);
+				$sql = "INSERT INTO `register_parcelamentos` (`parcelamento_data`,`parcelamento_valor_sjuros`,`parcelamento_comentarios`,`conta_id`,`CreatedIP`,`ModifiedIP`,`CreatedDate`,`ModifiedDate`)
+				 VALUES ('$parc_data','$parc_valor_sjuros','$parc_comentarios','$conta_id','$ip','$ip',CURDATE(),CURDATE());";
+
+				$inserido = $db->insert($sql);
+							
+				if ($inserido) {
+					$resposta['parcelamento_id'] = $inserido;
+					return new Response(json_encode($resposta),201);
+				} else 
+				{
+					return new Response('{"mensagem":"Erro desconhecido"}',500);
+				}
+			}
+		}
+	} else {
+		return new Response('{"mensagem":"Faltando entradas"}',403);
+	}
+});
+
+
 //rota para listar as transações dado um diario_uid e filtros:
 $app->get('/transacao', function (Request $request) use ($app, $db) {
 	global $user;

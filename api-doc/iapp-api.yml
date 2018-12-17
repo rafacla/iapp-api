@@ -959,7 +959,7 @@ paths:
             type: "object"
             properties:
               parcelamento_id:
-                type: "string"
+              type: "string"
   /parcelamento/put:
     post:
       tags:
