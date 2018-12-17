@@ -30,6 +30,7 @@ tags:
     description: "Permite listar, adicionar ou remover contas bancárias (e cartões)"
 schemes:
   - "https"
+  - "http"
 security:
   - application:
     - "user"

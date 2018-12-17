@@ -47,6 +47,7 @@ $app->before(function(Request $request) use ($app, $db, $storage, $server) {
 	$rotaslivres[3] = "GET_activate_actcode"; //esta rota serve para ativar um usuário recem registrado que recebeu o link por email
 	$rotaslivres[4] = "POST_users_enviaLostPasswordLink"; // rota para recuperar link de resetar senha
 	$rotaslivres[5] = "GET_lostpassword_actcode"; // rota para resetar senha
+	
     if(!in_array($route,$rotaslivres) && $request->getMethod() != 'OPTIONS') {
 		$authorization = $request->headers->get("Authorization");
 		list($jwt) = sscanf($authorization, 'Bearer %s');
@@ -117,6 +118,15 @@ function getDiarioID($diariouid) {
 		return 0;
 }
 
+/**
+ * Atualiza os campos Created IP, CreatedDate, ModifiedIP e ModifiedDate da tabela designada baseado em uma chave primária e seu ID
+ *
+ * @param string $table
+ * @param string $pkColumn
+ * @param string $pkID
+ * @param int $ip
+ * @return boolean 
+ */
 function atualizaCreated($table, $pkColumn, $pkID, $ip) {
 	global $db;
 	$sql_u = "UPDATE $table SET CreatedIP='$ip', CreatedDate=CURDATE(), ModifiedIP='$ip', ModifiedDate=CURDATE() WHERE $pkColumn = '$pkID';";
@@ -138,10 +148,33 @@ function atualizaModified($table, $pkColumn, $pkID, $ip) {
 	return $db->query($sql_u);
 }
 
+/**
+ * Atualiza a última alteração em um diário
+ *
+ * @param string $diarioUID Unique ID do diário a ser atualizado
+ * @return void
+ */
 function atualizaLastChildModifiedDate($diarioUID) {
 	global $db;
 	$sql_u = "UPDATE `register_diarios` SET `LastChildModifiedDate`=CURDATE() WHERE `uid`='$diarioUID';";
 	return $db->query($sql_u);
+}
+
+/**
+ * Retorna o ID de usuário baseado no Access Token
+ *
+ * @param string $accessToken
+ * @return int User ID
+ */
+function getUserIDbyAcessToken(string $accessToken) {
+	global $db;
+	$sql_s = "SELECT `user_id` FROM `oauth_access_tokens` WHERE `access_token` = '$accessToken';";
+	$rows = $db->select($sql_s);
+	if ($rows) {
+		return $rows[0]['user_id'];
+	} else {
+		return -1;
+	}
 }
 
 /**
@@ -220,7 +253,7 @@ $app->post('/auth', function (Request $request) use ($app, $db, $storage, $serve
 	$resposta = $server->handleTokenRequest(OAuth2\Request::createFromGlobals());
 	$data = json_decode($request->getContent(), true);
 	$authorization = $request->headers->get("Authorization");
-
+	
 	if ($authorization!=null) {
 		sscanf($authorization, 'Basic %s',$basic);
 		$client_credentials = explode(":",base64_decode($basic));
@@ -262,14 +295,12 @@ $app->post('/auth', function (Request $request) use ($app, $db, $storage, $serve
 	} 
 	$status = $resposta->getStatusCode();
 	$respStr = $resposta->getResponseBody();
-
-	var_dump($resposta);
-	var_dump($status);
+	
+	
 	if ($status == 200) {
 		//significa que autenticou
-		
-		$tData = $server->getAccessTokenData(OAuth2\Request::createFromGlobals());
-		$userID = $tData['user_id'];
+		$resp = $resposta->getParameters();
+		$userID = getUserIDbyAcessToken($resp['access_token']);
 		atualizaLastLogin($userID,$request->getClientIp());
 	}
 	return new Response($respStr,$status);
@@ -417,6 +448,8 @@ $app->post('/users', function (Request $request) use ($app, $db) {
 		$mail = new enviarEmail($destinatario,$assunto,$template,$variaveis);
 		$envio = $mail->enviar();
 		ob_clean();
+
+		atualizaCreated('register_users','userID',$id, $request->getClientIp());
 		
 		return new Response (json_encode($resposta), 201);
 	}
@@ -649,7 +682,7 @@ $app->post('/diario', function (Request $request) use ($app, $user, $db) {
 		$description	= $db->escape_string($data['description']);
 		$userid			= $db->escape_string($data['userid']);
 		$uuid 			= md5(uniqid(""));
-		$sql_i = "INSERT INTO register_diarios (uid,nome,description,user_id,`default`) VALUES ('$uuid','$nome','$description','$userid','1');";
+		$sql_i = "INSERT INTO register_diarios (uid,nome,description,user_id,`default`,`CreatedIP`,`ModifiedIP`,`CreatedDate`,`ModifiedDate`) VALUES ('$uuid','$nome','$description','$userid','1','$request->getClientIp()','$request->getClientIp()','CURDATE()','CURDATE()');";
 		$resultado = $db->insert($sql_i);
 		//Inserimos um novo diário e definimos o mesmo como default, mas já devia ter um default, precisamos setar ele como não default
 		//ou seja, todos os demais são false agora.
@@ -666,8 +699,8 @@ $app->post('/diario', function (Request $request) use ($app, $user, $db) {
 				$diario_id = $resultado;
 				$categoria_nome = $categoria['categoria_nome'];
 				$categoria_desc = $categoria['categoria_description'];
-				$sql_i_categoria = "INSERT INTO `register_categorias` (`categoria_nome`,`categoria_description`,`diario_id`,`categoria_ordem`) VALUES
-				 ('$categoria_nome','$categoria_desc','$diario_id','$i');";
+				$sql_i_categoria = "INSERT INTO `register_categorias` (`categoria_nome`,`categoria_description`,`diario_id`,`categoria_ordem`,`CreatedIP`,`ModifiedIP`,`CreatedDate`,`ModifiedDate`) VALUES
+				 ('$categoria_nome','$categoria_desc','$diario_id','$i','$request->getClientIp()','$request->getClientIp()','CURDATE()','CURDATE()');";
 				
 				$res = $db->insert($sql_i_categoria);
 				$i++;
@@ -680,7 +713,7 @@ $app->post('/diario', function (Request $request) use ($app, $user, $db) {
 						$subc_desc = $subcategoria['subcategoria_description'];
 						
 						$sql_i_subc = "INSERT INTO `register_subcategorias` (`subcategoria_nome`,`subcategoria_description`,`subcategoria_carry`,
-						`categoria_id`,`subcategoria_ordem`) VALUES ('$subc_nome','$subc_desc',0,'$cat_id','$j')";
+						`categoria_id`,`subcategoria_ordem`,`CreatedIP`,`ModifiedIP`,`CreatedDate`,`ModifiedDate`) VALUES ('$subc_nome','$subc_desc',0,'$cat_id','$j','$request->getClientIp()','$request->getClientIp()','CURDATE()','CURDATE()')";
 						$res_s = $db->insert($sql_i_subc);
 						$j++;
 					}
