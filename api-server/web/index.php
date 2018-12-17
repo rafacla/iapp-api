@@ -47,7 +47,8 @@ $app->before(function(Request $request) use ($app, $db, $storage, $server) {
 	$rotaslivres[3] = "GET_activate_actcode"; //esta rota serve para ativar um usuário recem registrado que recebeu o link por email
 	$rotaslivres[4] = "POST_users_enviaLostPasswordLink"; // rota para recuperar link de resetar senha
 	$rotaslivres[5] = "GET_lostpassword_actcode"; // rota para resetar senha
-	
+	echo "teste";
+	die();
     if(!in_array($route,$rotaslivres) && $request->getMethod() != 'OPTIONS') {
 		$authorization = $request->headers->get("Authorization");
 		list($jwt) = sscanf($authorization, 'Bearer %s');
