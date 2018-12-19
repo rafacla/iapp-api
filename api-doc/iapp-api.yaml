@@ -1,0 +1,1492 @@
+openapi: 3.0.0
+info:
+  description: >-
+    Esta API servirá de backend pro site do MIMV (nome provisório) e o APP
+    Android
+  version: "0.1.5-oas3"
+  title: Meus Investimentos - IAPP
+  contact:
+    email: rafa@rafacla.com
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+tags:
+  - name: adm
+    description: Permite alterar configurações do servidor e ações com usuários
+  - name: users
+    description: Permite criar e editar usuarios
+  - name: cliente
+    description: Transações com cliente
+  - name: diários
+    description: Lista os diários de um usuário
+  - name: categorias
+    description: Permite adicionar ou remover categorias de transações
+  - name: transações
+    description: 'Permite listar, adicionar ou remover transações'
+  - name: orçamentos
+    description: 'Permite listar, adicionar ou remover orçamentos mensais'
+  - name: contas
+    description: 'Permite listar, adicionar ou remover contas bancárias (e cartões)'
+security:
+  - application:
+      - user
+paths:
+  /activate/{actcode}:
+    get:
+      tags:
+        - users
+      summary: Ativa um usuário dado o código de ativação
+      parameters:
+        - name: actcode
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK. Usuário ativado
+        '401':
+          description: Usuário não autorizado ou código inválido
+  /lostpassword/{actcode}:
+    get:
+      tags:
+        - users
+      summary: Recupera uma senha nova via email
+      parameters:
+        - name: actcode
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK. Senha enviada
+        '401':
+          description: Usuário não autorizado ou código inválido
+  /users/logged:
+    get:
+      tags:
+        - users
+      summary: Retorna os detalhes do usuário logado
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                properties:
+                  userID:
+                    type: number
+                  userEmail:
+                    type: string
+                  userPassword:
+                    type: string
+                  userFirstName:
+                    type: string
+                  userLastName:
+                    type: string
+                  userPhoneNumber:
+                    type: string
+                  userLastLoginIP:
+                    type: string
+                  userLastLoginDate:
+                    type: string
+                  userActivationCode:
+                    type: string
+                  userForgottenPasswordCode:
+                    type: string
+                  userForgottenPasswordTime:
+                    type: string
+                  userActive:
+                    type: boolean
+                  userNotActiveReason:
+                    type: string
+        '403':
+          description: Não autorizado
+        '500':
+          description: erro do servidor ao buscar usuário
+  /users:
+    get:
+      tags:
+        - users
+        - adm
+      summary: Lista os usuários cadastrados no sistema
+      description: >-
+        Lista todos os usuários cadastrados no sistema, retornando seus IDs e
+        informações pessoais
+      responses:
+        '200':
+          description: OK
+        '403':
+          description: 'Acesso negado: usuário não possui privilégios de administrador'
+      security:
+        - application:
+            - adm
+    post:
+      tags:
+        - users
+      summary: Cria um novo usuário
+      responses:
+        '201':
+          description: Novo usuário criado com sucesso
+          content:
+            '*/*':
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    description: Retorna true se for sucesso
+                  id:
+                    type: integer
+                    description: Retorna o ID do novo usuário.
+        '400':
+          description: retorna false para os campos inválidos
+          content:
+            '*/*':
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                    description: retorna false se falhar
+                  reason:
+                    type: string
+                    example: usuario_existente
+                    description: retorna usuario_existente ou erro_desconhecido
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+  /users/put:
+    post:
+      tags:
+        - users
+      summary: Altera um usuário
+      responses:
+        '200':
+          description: Usuário alterado com sucesso
+        '400':
+          description: retorna false para os campos inválidos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userFirstName:
+                  type: string
+                userLastName:
+                  type: string
+                userPhoneNumber:
+                  type: string
+                userEmail:
+                  type: string
+                userPassword:
+                  type: string
+  /users/enviaLostPasswordLink:
+    post:
+      tags:
+        - users
+      summary: Recupera o link para resetar a senha
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: E-mail não foi encontrado.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userEmail:
+                  type: string
+        required: true
+  /users/{id}:
+    get:
+      tags:
+        - users
+      summary: Retorna os detalhes do usuário
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Retorna os detalhes do usuário
+          content:
+            '*/*':
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: Retorna o ID do usuário autenticado.
+                  admin:
+                    type: boolean
+                    description: Retorna se o usuário é Administrador ou não
+                  clientName:
+                    type: string
+                    description: Retorna um nome de cliente para o usuário se aplicável
+                  clientSecret:
+                    type: string
+                    description: Retorna um segredo para autenticar o cliente
+        '400':
+          description: Este usuário não existe
+        '403':
+          description: Você não tem permissão para isso
+    delete:
+      tags:
+        - users
+      summary: Deleta um usuário pelo id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Usuário excluído com sucesso
+        '403':
+          description: 'Acesso negado: usuário não possui privilégios de administrador'
+        '404':
+          description: Este usuário não existe
+  /cliente:
+    get:
+      tags:
+        - cliente
+      summary: 'Verifica se um client existe baseado em seu ID, segredo'
+      parameters:
+        - name: clientid
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: clientsecret
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ok
+        '401':
+          description: credenciais_invalidas
+        '403':
+          description: cliente_bloqueado
+    post:
+      tags:
+        - cliente
+      summary: Cria um novo cliente
+      responses:
+        '200':
+          description: cliente atualizado
+          content:
+            '*/*':
+              schema:
+                type: object
+                properties:
+                  nome:
+                    type: string
+                    description: nome completo do usuário
+                  id:
+                    type: string
+                    description: id do usuário
+        '201':
+          description: criado novo cliente
+          content:
+            '*/*':
+              schema:
+                type: object
+                properties:
+                  nome:
+                    type: string
+                    description: nome completo do usuário
+                  id:
+                    type: string
+                    description: id do usuario
+        '400':
+          description: falha_ao_criar_cliente
+        '403':
+          description: cliente bloqueado
+        '409':
+          description: cliente_existente
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Cliente'
+        required: true
+  /cliente/{id}:
+    delete:
+      tags:
+        - cliente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Cliente excluído com sucesso
+        '403':
+          description: Você não tem permissão para isso
+        '404':
+          description: Cliente não encontrado
+  /diario:
+    get:
+      tags:
+        - diários
+      summary: Retorna todos os diários dado um id de usuário
+      parameters:
+        - name: userid
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Retorna lista de diários para um dado usuário
+          content:
+            '*/*':
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: ID do livro diário.
+                  diarioUID:
+                    type: string
+                    description: Retorna um ID codificado e único para o livro diário
+                  diarioNome:
+                    type: string
+                    description: Nome do livro diário
+                  diarioDescription:
+                    type: string
+                    description: Breve descrição do livro diário
+                  isDefault:
+                    type: boolean
+                    description: Se o diário é o padrão.
+                  userid:
+                    type: integer
+                    description: ID do usuário dono deste diário
+        '400':
+          description: Faltando userid
+        '403':
+          description: Não autorizado
+    post:
+      tags:
+        - diários
+      summary: Cria um novo diário e retorna seu uid
+      responses:
+        '201':
+          description: criado
+          content:
+            '*/*':
+              schema:
+                type: object
+                properties:
+                  uid:
+                    type: string
+                    description: Unique ID do diário criado
+        '400':
+          description: sintaxe de entrada inválida
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/body'
+  /diario/{diariouid}:
+    get:
+      tags:
+        - diários
+      summary: Cria um novo diário e retorna seu uid
+      parameters:
+        - name: diariouid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Retorna um diário para um diario UID
+          content:
+            '*/*':
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: ID do livro diário.
+                  diarioUID:
+                    type: string
+                    description: Retorna um ID codificado e único para o livro diário
+                  diarioNome:
+                    type: string
+                    description: Nome do livro diário
+                  diarioDescription:
+                    type: string
+                    description: Breve descrição do livro diário
+                  isDefault:
+                    type: boolean
+                    description: Se o diário é o padrão.
+                  userid:
+                    type: integer
+                    description: ID do usuário dono deste diário
+        '403':
+          description: Não autorizado
+        '404':
+          description: Não encontrado
+  /diario/put:
+    post:
+      tags:
+        - diários
+      summary: Atualiza um diário dado seu uid
+      responses:
+        '200':
+          description: ok
+        '400':
+          description: sintaxe de entrada inválida
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/body_1'
+  /diario/delete:
+    post:
+      tags:
+        - diários
+      summary: apaga um diário dado seu uid
+      responses:
+        '200':
+          description: deletado
+        '403':
+          description: não autorizado
+        '404':
+          description: não encontrado para deletar
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/body_2'
+  /diario/select:
+    post:
+      tags:
+        - diários
+      summary: seleciona e torna o diário do usuário como padrão
+      responses:
+        '200':
+          description: selecionado
+        '400':
+          description: sintaxe inválida
+        '403':
+          description: não autorizado
+        '404':
+          description: não encontrado
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/body_3'
+  /categoria/{diariouid}:
+    get:
+      tags:
+        - categorias
+      summary: retorna todas as categorias dado um diario
+      parameters:
+        - name: diariouid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: array com as categorias e subcategorias do diaroi
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    categoria_id:
+                      type: integer
+                      description: ID interno da categoria
+                    categoria_nome:
+                      type: string
+                      description: Nome da categoria
+                    categoria_description:
+                      type: string
+                      description: Descrição da categoria
+                    diario_id:
+                      type: integer
+                      description: Id do diário mãe
+                    categoria_ordem:
+                      type: integer
+                      description: Ordem da categoria
+                    subcategorias:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/categoriadiariouid_subcategorias'
+        '400':
+          description: sintaxe de entrada inválida
+        '403':
+          description: não autorizado
+  /categoria_tabular/{diariouid}:
+    get:
+      tags:
+        - categorias
+      summary: retorna todas as categorias dado um diario
+      parameters:
+        - name: diariouid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: array com as categorias e subcategorias do diaroi
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    categoria_id:
+                      type: integer
+                      description: ID interno da categoria
+                    categoria_nome:
+                      type: string
+                      description: Nome da categoria
+                    categoria_description:
+                      type: string
+                      description: Descrição da categoria
+                    diario_id:
+                      type: integer
+                      description: Id do diário mãe
+                    categoria_ordem:
+                      type: integer
+                      description: Ordem da categoria
+                    subcategoria_id:
+                      type: integer
+                      description: ID interno da subcategoria
+                    subcategoria_nome:
+                      type: string
+                      description: Nome da subcategoria
+                    subcategoria_description:
+                      type: string
+                      description: Descricação da subcategoria
+                    subcategoria_carry:
+                      type: integer
+                      description: >-
+                        Flag que sinaliza se a categoria carrega ou não valores
+                        negativos ao próximo mês
+                    subcategoria_ordem:
+                      type: integer
+        '400':
+          description: sintaxe de entrada inválida
+        '403':
+          description: não autorizado
+  /categoria:
+    post:
+      tags:
+        - categorias
+      summary: Adiciona ou altera uma categoria
+      responses:
+        '200':
+          description: Alterado
+        '201':
+          description: Criada
+        '400':
+          description: Erro de sintaxe
+        '403':
+          description: Sem autorização para isso
+        '404':
+          description: Não encontrada para alterar
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/body_4'
+  /categoria/delete:
+    post:
+      tags:
+        - categorias
+      summary: Deleta uma categoria
+      responses:
+        '200':
+          description: Excluido
+        '400':
+          description: Erro de sintaxe
+        '403':
+          description: Sem autorização para isso
+        '404':
+          description: Não encontrada para excluir
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/body_5'
+  /subcategoria:
+    post:
+      tags:
+        - categorias
+      summary: Adiciona ou altera uma subcategoria
+      responses:
+        '200':
+          description: Alterado
+        '201':
+          description: Criada
+        '400':
+          description: Erro de sintaxe
+        '403':
+          description: Sem autorização para isso
+        '404':
+          description: Não encontrada para alterar
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/body_6'
+  /subcategoria/delete:
+    post:
+      tags:
+        - categorias
+      summary: Deleta uma subcategoria
+      responses:
+        '200':
+          description: Excluido
+        '400':
+          description: Erro de sintaxe
+        '403':
+          description: Sem autorização para isso
+        '404':
+          description: Não encontrada para excluir
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/body_7'
+  /categoria/move:
+    post:
+      tags:
+        - categorias
+      summary: Muda a ordem de uma categoria
+      responses:
+        '200':
+          description: reordenado
+        '400':
+          description: sintaxe inválida
+        '403':
+          description: não autorizado
+        '404':
+          description: não encontrado
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/body_8'
+  /subcategoria/move:
+    post:
+      tags:
+        - categorias
+      summary: Muda a ordem de uma subcategoria
+      responses:
+        '200':
+          description: reordenado
+        '400':
+          description: sintaxe inválida
+        '403':
+          description: não autorizado
+        '404':
+          description: não encontrado
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/body_9'
+  /transacao:
+    get:
+      tags:
+        - transações
+      summary: Lista todas as transações dado um diario_uid e filtros
+      parameters:
+        - name: diariouid
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: filtros
+          in: header
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: array com as transacoes e subtransacoes
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    transacao_id:
+                      type: integer
+                      description: ID interno da transacao
+                    transacao_nome:
+                      type: string
+                      description: Nome da transacao
+                    transacao_data:
+                      type: string
+                      description: Data da transacao
+                    transacao_sacado:
+                      type: string
+                      description: Sacado da transacao
+                    transacao_descricao:
+                      type: string
+                      description: Descricao da transacao
+                    transacao_valor:
+                      type: number
+                      description: Valor da transação
+                    transacao_conciliada:
+                      type: boolean
+                      description: Se a transação foi conciliada
+                    transacao_aprovada:
+                      type: boolean
+                      description: Se a transação já foi aprovada
+                    transacao_merged_to_id:
+                      type: integer
+                      description: >-
+                        Caso a transação tenha sido mesclada com outra, o id
+                        desta
+                    conta_id:
+                      type: integer
+                      description: O id da conta a qual esta transação pertence
+                    conta_nome:
+                      type: string
+                      description: O nome da conta a qual esta transação pertence
+                    diario_uid:
+                      type: string
+                      description: O UID do diario a qual esta transação pertence
+                    subtransacoes:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/transacao_subtransacoes'
+        '400':
+          description: sintaxe de entrada inválida
+        '403':
+          description: não autorizado
+    post:
+      tags:
+        - transações
+      summary: Cria ou altera uma transação
+      responses:
+        '200':
+          description: ok
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    transacao_id:
+                      type: integer
+        '400':
+          description: sintaxe inválida
+        '403':
+          description: não autorizado
+        '404':
+          description: não encontrado
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/body_10'
+  /transacao/delete:
+    post:
+      tags:
+        - transações
+      summary: Deleta uma ou mais transações
+      responses:
+        '200':
+          description: ok
+        '400':
+          description: sintaxe inválida
+        '403':
+          description: não autorizado
+        '404':
+          description: não encontrado
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/body_11'
+  /transacao/aprova:
+    post:
+      tags:
+        - transações
+      summary: Aprova ou reprova uma ou mais transações
+      responses:
+        '200':
+          description: ok
+        '400':
+          description: sintaxe inválida
+        '403':
+          description: não autorizado
+        '404':
+          description: não encontrado
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/body_12'
+  /transacao/concilia:
+    post:
+      tags:
+        - transações
+      summary: Concilia ou não uma ou mais transações
+      responses:
+        '200':
+          description: ok
+        '400':
+          description: sintaxe inválida
+        '403':
+          description: não autorizado
+        '404':
+          description: não encontrado
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/body_13'
+  /subtransacao:
+    post:
+      tags:
+        - transações
+      summary: Cria ou altera uma subtransação
+      responses:
+        '200':
+          description: ok
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    transacao_id:
+                      type: integer
+        '400':
+          description: sintaxe inválida
+        '403':
+          description: não autorizado
+        '404':
+          description: não encontrado
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/body_14'
+  /subtransacao/delete:
+    post:
+      tags:
+        - transações
+      summary: Deleta uma ou mais subtransações
+      responses:
+        '200':
+          description: ok
+        '400':
+          description: sintaxe inválida
+        '403':
+          description: não autorizado
+        '404':
+          description: não encontrado
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/body_15'
+  /parcelamento:
+    get:
+      tags:
+        - transações
+      summary: Lista todos os parcelamentos dado uma conta_id e filtros
+      parameters:
+        - name: diariouid
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: filtros
+          in: header
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: array com os parcelamentos
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    parcelamento_id:
+                      type: integer
+                    parcelamento_data:
+                      type: string
+                    parcelamento_valor_sjuros:
+                      type: number
+                    parcelamento_comentarios:
+                      type: string
+                    conta_id:
+                      type: number
+    post:
+      tags:
+        - transações
+      summary: Cria um novo parcelamento
+      responses:
+        200:
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                properties:
+                  parcelamento_id:
+                    type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                parcelamento_data:
+                  type: string
+                parcelamento_valor_sjuros:
+                  type: number
+                parcelamento_comentarios:
+                  type: string
+                conta_id:
+                  type: number
+        required: true
+  /parcelamento/put:
+    post:
+      tags:
+        - transações
+      summary: Altera um parcelamento
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                parcelamento_id:
+                  type: number
+                parcelamento_data:
+                  type: string
+                parcelamento_valor_sjuros:
+                  type: number
+                parcelamento_comentarios:
+                  type: string
+                conta_id:
+                  type: number
+        required: true
+  /parcelamento/delete:
+    post:
+      tags:
+        - transações
+      summary: Deleta um parcelamento
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                parcelamento_id:
+                  type: number
+        required: true
+  /orcamento:
+    get:
+      tags:
+        - orçamentos
+      summary: Lista todos os orçamentos para um mesano e um diario_uid
+      parameters:
+        - name: diariouid
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: ano
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: mes
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ok
+          content:
+            '*/*':
+              schema:
+                type: object
+                properties:
+                  orcamento_mesano:
+                    type: string
+                  orcamento_fundos_mes:
+                    type: number
+                  orcamento_sobregasto_mes_anterior:
+                    type: number
+                  orcamento_orcado_mes:
+                    type: number
+                  orcamento_fundo_disponivel_mes:
+                    type: number
+                  categorias:
+                    type: array
+                    items:
+                      properties:
+                        subcategoria_id:
+                          type: integer
+                        subcategoria_nome:
+                          type: string
+                        subcategoria_orcado:
+                          type: number
+                        subcategoria_incorrido:
+                          type: number
+                        subcategoria_disponivel:
+                          type: number
+                        subcategoria_persiste_negativo:
+                          type: boolean
+                      example:
+                        subcategoria_persiste_negativo: true
+                        subcategoria_id: 3
+                        subcategoria_disponivel: 7.386281948385884
+                        subcategoria_incorrido: 4.145608029883936
+                        subcategoria_nome: subcategoria_nome
+                        subcategoria_orcado: 2.027123023002322
+        '400':
+          description: sintaxe inválida
+        '403':
+          description: não autorizado
+        '404':
+          description: não encontrado
+  /contas/{diariouid}:
+    get:
+      tags:
+        - contas
+      summary: Lista todas as contas para um diario_uid
+      parameters:
+        - name: diariouid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ok
+          content:
+            '*/*':
+              schema:
+                type: object
+                properties:
+                  conta_id:
+                    type: number
+                  conta_nome:
+                    type: string
+                  conta_descricao:
+                    type: string
+                  conta_reconciliado_valor:
+                    type: number
+                  conta_reconciliado_data:
+                    type: string
+                  conta_budget:
+                    type: boolean
+                  conta_cartao:
+                    type: boolean
+                  conta_cartao_data_vencimento:
+                    type: string
+                  conta_cartao_data_fechamento:
+                    type: string
+                  bank_id:
+                    type: number
+                  conta_img:
+                    type: string
+  /conta:
+    post:
+      tags:
+        - contas
+      summary: Adiciona ou altera uma conta
+      responses:
+        '200':
+          description: ok
+          content:
+            '*/*':
+              schema:
+                type: object
+                properties:
+                  conta_id:
+                    type: number
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/body_conta'
+  /conta/delete/{conta_id}:
+    post:
+      tags:
+        - contas
+      summary: Deleta uma conta
+      parameters:
+        - name: conta_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ok
+        '403':
+          description: sem privilégios para isso
+        '404':
+          description: conta não encontrada
+servers:
+  - url: /
+components:
+  securitySchemes:
+    autenticar:
+      type: oauth2
+      flows:
+        password:
+          tokenUrl: /auth
+          scopes:
+            user: Atividades de um usuário comum
+            adm: Atividades de um administrador
+    application:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: /auth
+          scopes:
+            user: Atividades de um usuário comum
+            adm: Atividades de um administrador
+  schemas:
+    User:
+      type: object
+      required:
+        - userEmail
+        - userFirstName
+        - userLastName
+        - userPassword
+        - userPhoneNumber
+      properties:
+        userID:
+          type: integer
+          format: int64
+        userEmail:
+          type: string
+        userPassword:
+          type: string
+        userFirstName:
+          type: string
+        userLastName:
+          type: string
+        userPhoneNumber:
+          type: string
+        userActive:
+          type: boolean
+        userNotActiveReason:
+          type: string
+        inputIP:
+          type: string
+          description: 'For ''web'' client, consider this inputIP'
+      xml:
+        name: User
+      example:
+        userActive: true
+        userNotActiveReason: userNotActiveReason
+        userPassword: userPassword
+        inputIP: inputIP
+        userLastName: userLastName
+        userPhoneNumber: userPhoneNumber
+        userEmail: userEmail
+        userFirstName: userFirstName
+        userID: 0
+    Cliente:
+      type: object
+      properties:
+        client_id:
+          type: string
+          maxLength: 80
+        client_secret:
+          type: string
+          maxLength: 80
+        user_id:
+          type: integer
+        description:
+          type: string
+      xml:
+        name: Cliente
+      example:
+        user_id: 0
+        description: description
+        client_secret: client_secret
+        client_id: client_id
+    body:
+      type: object
+      properties:
+        nome:
+          type: string
+        description:
+          type: string
+        userid:
+          type: integer
+    body_1:
+      type: object
+      properties:
+        uniqueid:
+          type: string
+        nome:
+          type: string
+        description:
+          type: string
+    body_2:
+      type: object
+      properties:
+        uniqueid:
+          type: string
+    body_3:
+      type: object
+      properties:
+        uniqueid:
+          type: string
+    categoriadiariouid_subcategorias:
+      properties:
+        subcategoria_id:
+          type: integer
+          description: ID interno da subcategoria
+        subcategoria_nome:
+          type: string
+          description: Nome da subcategoria
+        subcategoria_description:
+          type: string
+          description: Descricação da subcategoria
+        subcategoria_carry:
+          type: integer
+          description: >-
+            Flag que sinaliza se a categoria carrega ou não valores negativos ao
+            próximo mês
+        categoria_id:
+          type: integer
+          description: id da categoria mãe
+    body_4:
+      type: object
+      properties:
+        categoria_id:
+          type: integer
+          description: >-
+            enviar o código da categoria caso seja edição, não enviar nada se
+            for inclusão
+        categoria_nome:
+          type: string
+        categoria_description:
+          type: string
+        categoria_ordem:
+          type: integer
+        diario_uid:
+          type: string
+    body_5:
+      type: object
+      properties:
+        categoria_id:
+          type: integer
+    body_6:
+      type: object
+      properties:
+        subcategoria_id:
+          type: integer
+          description: >-
+            enviar o código da subcategoria caso seja edição, não enviar nada se
+            for inclusão
+        subcategoria_nome:
+          type: string
+        subcategoria_description:
+          type: string
+        subcategoria_ordem:
+          type: integer
+        subcategoria_carry:
+          type: integer
+        categoria_id:
+          type: integer
+    body_7:
+      type: object
+      properties:
+        subcategoria_id:
+          type: integer
+    body_8:
+      type: object
+      properties:
+        categoria_id:
+          type: integer
+        move_to:
+          type: integer
+    body_9:
+      type: object
+      properties:
+        subcategoria_id:
+          type: integer
+        move_to:
+          type: integer
+        move_to_categoria_id:
+          type: integer
+    transacao_subtransacoes:
+      properties:
+        subtransacao_id:
+          type: integer
+          description: ID interno da subtransacao
+        subtransacao_nome:
+          type: string
+          description: Nome da subtransacao
+        subtransacao_description:
+          type: string
+          description: Descricação da subtransacao
+        categoria_id:
+          type: integer
+          description: ID da categoria atribuída a esta transação
+        categoria_nome:
+          type: string
+          description: Nome da categoria atribuída a esta transação
+        subcategoria_id:
+          type: integer
+          description: ID da subcategoria atribuída a esta transação
+        subcategoria_nome:
+          type: string
+          description: Nome da subcategoria atribuída a esta transação
+        transf_para_conta_id:
+          type: integer
+          description: ID da conta se esta subtransação for uma transferência
+    body_10:
+      type: object
+      properties:
+        diario_uid:
+          type: string
+        transacao_id:
+          type: integer
+        transacao_numero:
+          type: string
+        transacao_data:
+          type: string
+        transacao_sacado:
+          type: string
+        transacao_descricao:
+          type: string
+        transacao_valor:
+          type: number
+        transacao_conciliada:
+          type: boolean
+        transacao_aprovada:
+          type: boolean
+        transacao_merged_to_id:
+          type: integer
+        conta_id:
+          type: integer
+    body_11:
+      type: object
+      properties:
+        transacao_id:
+          type: array
+          items:
+            type: integer
+    body_12:
+      properties:
+        id:
+          type: integer
+        aprova:
+          type: boolean
+    body_13:
+      properties:
+        id:
+          type: integer
+        concilia:
+          type: boolean
+    body_14:
+      type: object
+      properties:
+        subtransacao_id:
+          type: integer
+        transacao_id:
+          type: integer
+        subtransacao_valor:
+          type: number
+        subtransacao_descricao:
+          type: string
+        subcategoria_id:
+          type: integer
+        transf_para_conta_id:
+          type: integer
+          description: >-
+            se preenchido, a subtransacao passa a ser tratada como transferência
+            e a subcategoria_id é ignorada
+    body_15:
+      type: object
+      properties:
+        transacao_id:
+          type: array
+          items:
+            type: integer
+    body_conta:
+      type: object
+      properties:
+        conta_id:
+          type: integer
+          description: >-
+            enviar o código da conta caso seja edição, não enviar nada se for
+            inclusão
+        conta_nome:
+          type: string
+        conta_descricao:
+          type: string
+        conta_budget:
+          type: boolean
+        diario_uid:
+          type: string
+        conta_reconciliado_valor:
+          type: number
+        conta_reconciliado_data:
+          type: string
+        conta_cartao:
+          type: boolean
+        conta_cartao_data_fechamento:
+          type: string
+        conta_cartao_data_vencimento:
+          type: string
+        bank_id:
+          type: number
+        conta_img:
+          type: string

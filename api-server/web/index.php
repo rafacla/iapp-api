@@ -1641,6 +1641,8 @@ $app->post('/parcelamento',function (Request $request) use ($app, $db) {
 					return new Response('{"mensagem":"Erro desconhecido"}',500);
 				}
 			}
+		} else {
+			return new Response('{"mensagem":"Entradas inválidas"}',403);
 		}
 	} else {
 		return new Response('{"mensagem":"Faltando entradas"}',403);
@@ -1648,23 +1650,41 @@ $app->post('/parcelamento',function (Request $request) use ($app, $db) {
 });
 
 //rota para editar um parcelamento
-$app->post('/parcelamento',function (Request $request) use ($app, $db) {
+$app->post('/parcelamento/put',function (Request $request) use ($app, $db) {
 	global $user;
 	$data = json_decode($request->getContent(), true);
 	$user_id = 0;
 	$ip = $request->getClientIp();
 
+	$sql = "";
 	if (isset($data['parcelamento_comentarios'])) {
-		$parc_comentarios = $db->escape_string($data['parcelamento_comentarios']);
-	} else {
-		$parc_comentarios = null;
+		$sql = montaUpdateSQL('`parcelamento_comentarios`',$db->escape_string($data['parcelamento_comentarios']),$sql);
+	}
+	if (isset($data['conta_id'])) {
+		$sql = montaUpdateSQL('`conta_id`',$db->escape_string($data['conta_id']),$sql);
+	}
+	if (isset($data['parcelamento_data'])) {
+		$sql = montaUpdateSQL('`parcelamento_data`',$db->escape_string($data['parcelamento_data']),$sql);
+	}
+	if (isset($data['`parcelamento_valor_sjuros`'])) {
+		$sql = montaUpdateSQL('parcelamento_valor_sjuros',$db->escape_string($data['parcelamento_valor_sjuros']),$sql);
 	}
 
-	if (isset($data['parcelamento_data']) && isset($data['parcelamento_valor_sjuros']) && isset($data['conta_id'])) {
-		$conta_id = $db->escape_string($data['conta_id']);
-		$sql_s = "SELECT user_id, conta_id FROM `register_contas` JOIN `register_diarios` ON `register_contas`.`diario_id` = `register_diarios`.`id` WHERE `conta_id` = '$conta_id'";
+	if (strlen($sql)>0 && isset($data['parcelamento_id'])) {
+		$parcelamento_id = $db->escape_string($data['parcelamento_id']);
+		$sql_s = "SELECT user_id, `register_parcelamentos`.conta_id FROM `register_contas` JOIN `register_diarios` ON `register_contas`.`diario_id` = `register_diarios`.`id` JOIN `register_parcelamentos` ON `register_parcelamentos`.`conta_id` = `register_contas`.`conta_id` WHERE `parcelamento_id` = '$parcelamento_id'";
 		$rows = $db->select($sql_s);
 		if ($rows) {
+			if (isset($data['conta_id'])) {
+				$contaIDnova = $db->escape_string($data['conta_id']);
+				$sql_s = "SELECT user_id FROM `register_contas` JOIN `register_diarios` ON `register_contas`.`diario_id` = `register_diarios`.`id` WHERE `conta_id` = '$contaIDnova'";
+				$rows1 = $db->select($sql_s);
+				if (!$rows1)
+					return new Response('{"mensagem":"Conta inválida"}',403);
+				if ($rows1[0]['user_id']!=$rows[0]['user_id']) {
+					return new Response('{"mensagem":"Não autorizado"}',403);
+				}
+			}
 			$user_id = $rows[0]['user_id'];
 			$conta_id = $rows[0]['conta_id'];
 
@@ -1672,28 +1692,112 @@ $app->post('/parcelamento',function (Request $request) use ($app, $db) {
 			if (!$user['adm'] && $user['id']<>$user_id) {
 				return new Response('{"mensagem":"Não autorizado"}',403);
 			} else {
-				//Tudo certo, vamos inserir:
-				$parc_data = $db->escape_string($data['parcelamento_data']);
-				$parc_valor_sjuros = $db->escape_string($data['parcelamento_valor_sjuros']);
-				$sql = "INSERT INTO `register_parcelamentos` (`parcelamento_data`,`parcelamento_valor_sjuros`,`parcelamento_comentarios`,`conta_id`,`CreatedIP`,`ModifiedIP`,`CreatedDate`,`ModifiedDate`)
-				 VALUES ('$parc_data','$parc_valor_sjuros','$parc_comentarios','$conta_id','$ip','$ip',CURDATE(),CURDATE());";
+				//Tudo certo, vamos atualizar:
+				$sql = "UPDATE `register_parcelamentos` SET $sql,`ModifiedIP`='$ip',`ModifiedDate`=CURDATE() WHERE `parcelamento_id`='$parcelamento_id';";
 
-				$inserido = $db->insert($sql);
+				$inserido = $db->query($sql);
 							
 				if ($inserido) {
-					$resposta['parcelamento_id'] = $inserido;
-					return new Response(json_encode($resposta),201);
+					return new Response('{"mensagem":"Atualizado"}',200);
 				} else 
 				{
 					return new Response('{"mensagem":"Erro desconhecido"}',500);
 				}
 			}
+		} else {
+			return new Response('{"mensagem":"Entradas inválidas"}',403);
 		}
 	} else {
 		return new Response('{"mensagem":"Faltando entradas"}',403);
 	}
 });
 
+//rota para deletar um parcelamento
+$app->post('/parcelamento/delete',function (Request $request) use ($app, $db) {
+	global $user;
+	$data = json_decode($request->getContent(), true);
+	$user_id = 0;
+
+	if (!isset($data['parcelamento_id']))
+		return new Response('{"mensagem":"Faltando entradas!"}',403);
+		
+		$parcelamento_id = $db->escape_string($data['parcelamento_id']);
+		$sql_s = "SELECT `user_id` FROM `register_parcelamentos` JOIN `register_contas` ON `register_parcelamentos`.`conta_id` = `register_contas`.`conta_id` JOIN `register_diarios` ON `register_contas`.`diario_id` = `register_diarios`.`id` WHERE `register_parcelamentos`.`parcelamento_id` = '$parcelamento_id';";
+
+		$rows = $db->select($sql_s);
+
+		if ($rows) {
+			if (!$user['adm'] && $user['id'] != $rows[0]['user_id']) {
+				return new Response('{"mensagem":"Não autorizado"}',403);	
+			} else {
+				$sql_d = "DELETE FROM `register_parcelamentos` WHERE `parcelamento_id` = '$parcelamento_id'";
+				$res = $db->query($sql_d);
+				if ($res) {
+					return new Response('{"mensagem":"Excluído"}',200);
+				} else {
+					return new Response('{"mensagem":"Erro desconhecido"}',500);
+				}
+			}
+		} else {
+			return new Response('{"mensagem":"Entrada inválida"}',403);
+		}
+});
+
+//rota para recuperar parcelamento
+$app->get('/parcelamento',function (Request $request) use ($app, $db) {
+	global $user;
+	
+	$diario_uid = $db->escape_string($request->headers->get("diariouid"));
+	$filtros_header 	= $request->headers->get("filtros");
+	$filtros = json_decode($filtros_header);
+
+	if ($filtros_header == null) {
+		$sql_s = "SELECT `register_parcelamentos`.`parcelamento_id`, `parcelamento_data`,`parcelamento_valor_sjuros`,`parcelamento_comentarios`,
+		`register_contas`.`conta_id`,`conta_nome`,`conta_budget`,`conta_cartao` 
+		FROM `register_parcelamentos` 
+		JOIN `register_contas` ON `register_parcelamentos`.`conta_id` 
+		JOIN `register_diarios` ON `register_contas`.`diario_id` = `register_diarios`.`id` 
+		WHERE `register_diarios`.`uid` = '$diario_uid';";
+		$rows = $db->select($sql_s);
+
+		if ($rows) {
+			return new Response (json_encode($rows),200);
+		} else {
+			return new Response('{"mensagem":"Nenhum resultado"}', 404);
+		}
+	} if ($filtros === null) {
+		return new Response('{"mensagem":"Sintaxe inválida dos filtros"}', 403);
+	} else {
+		$where = "";
+		if (isset($filtros->parcelamento_id)) {
+			$where = montaWhereSQL('`register_parcelamentos`.`parcelamento_id`',$db->escape_string($filtros->parcelamento_id),$where);
+		}
+		if (isset($filtros->parcelamento_comentarios)) {
+			$where = montaWhereSQL('`register_parcelamentos`.`parcelamento_comentarios`',$db->escape_string($filtros->parcelamento_comentarios),$where);
+		}
+		if (isset($filtros->parcelamento_data)) {
+			$where = montaWhereSQL('`register_parcelamentos`.`parcelamento_data`',$db->escape_string($filtros->parcelamento_data),$where);
+		}
+		if (isset($filtros->conta_id)) {
+			$where = montaWhereSQL('`register_parcelamentos`.`conta_id`',$db->escape_string($filtros->conta_id),$where);
+		}
+		
+
+		$sql_s = "SELECT `register_parcelamentos`.`parcelamento_id`, `parcelamento_data`,`parcelamento_valor_sjuros`,`parcelamento_comentarios`,
+		`register_contas`.`conta_id`,`conta_nome`,`conta_budget`,`conta_cartao` 
+		FROM `register_parcelamentos` 
+		JOIN `register_contas` ON `register_parcelamentos`.`conta_id` 
+		JOIN `register_diarios` ON `register_contas`.`diario_id` = `register_diarios`.`id` 
+		WHERE `register_diarios`.`uid` = '$diario_uid' AND $where;";
+		$rows = $db->select($sql_s);
+
+		if ($rows) {
+			return new Response (json_encode($rows),200);
+		} else {
+			return new Response('{"mensagem":"Nenhum resultado"}', 404);
+		}
+	}
+});
 
 //rota para listar as transações dado um diario_uid e filtros:
 $app->get('/transacao', function (Request $request) use ($app, $db) {
@@ -1712,5 +1816,39 @@ $app->get('/transacao', function (Request $request) use ($app, $db) {
 	
 	return new Response (json_encode($filtros),200);
 });
+
+/**
+ * Retorna um par para incluir no SET
+ *
+ * @param string $column
+ * @param string $value
+ * @param string $sql
+ * @return string part SET `$column` = $value
+ */
+function montaUpdateSQL(string $column, string $value, string $sql = "") {
+	if (strlen($sql) > 0) {
+		$sql = $sql . ",$column = '$value'";
+	} else {
+		$sql = "$column = '$value'";
+	}
+	return $sql;
+}
+
+/**
+ * Retorna um par para incluir no WHERE
+ *
+ * @param string $column
+ * @param string $value
+ * @param string $sql
+ * @return string WHERE Clause
+ */
+function montaWhereSQL(string $column, string $value, string $sql = "") {
+	if (strlen($sql) > 0) {
+		$sql = $sql . "AND $column = '$value'";
+	} else {
+		$sql = "$column = '$value'";
+	}
+	return $sql;
+}
 
 $app->run();
