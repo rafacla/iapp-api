@@ -37,7 +37,7 @@
 	},
 	"SQLINSERT": {
 		"prefix": "SQLINSERT",
-		"body": "\"INSERT INTO `${1:table}` (`${2:columns}`) VALUES ('${3:values}}';\"",
+		"body": "\"INSERT INTO `${1:table}` (`${2:columns}`) VALUES ('${3:values})';\"",
 		"description": "Modelo de SQL INSERT"
 	}
 

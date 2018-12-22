@@ -851,9 +851,7 @@ paths:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/body_12'
+              $ref: '#/components/schemas/body_transacao_aprova'
   /transacao/concilia:
     post:
       tags:
@@ -872,9 +870,7 @@ paths:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/body_13'
+              $ref: '#/components/schemas/body_transacao_concilia'
   /subtransacao:
     post:
       tags:
@@ -1423,18 +1419,28 @@ components:
           type: array
           items:
             type: integer
-    body_12:
+    body_transacao_aprova:
+      type: object
       properties:
-        id:
-          type: integer
-        aprova:
-          type: boolean
-    body_13:
+        transacoes:
+          type: array
+          items:
+            properties:
+              id:
+                type: integer
+              aprova:
+                type: boolean
+    body_transacao_concilia:
+      type: object
       properties:
-        id:
-          type: integer
-        concilia:
-          type: boolean
+        transacoes:
+          type: array
+          items:
+            properties:
+              id:
+                type: integer
+              concilia:
+                type: boolean
     body_14:
       type: object
       properties:
