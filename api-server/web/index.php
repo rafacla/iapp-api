@@ -1809,7 +1809,7 @@ $app->post('/transacao',function (Request $request) use ($app, $db) {
 
 	if (isset($data['transacao_id'])) {
 		$atualizacao = true;
-	} elseif(isset($data['diario_uid'])) {
+	} elseif(isset($data['conta_id'])) {
 		$atualizacao = false;
 	} else {
 		return new Response('{"mensagem":"Sintaxe inválida"}', 400);
@@ -1824,8 +1824,7 @@ $app->post('/transacao',function (Request $request) use ($app, $db) {
 	} else
 		$sql_verificacao = "SELECT `user_id` FROM `register_diarios`
 							JOIN `register_contas` ON `register_diarios`.`id` = `register_contas`.`diario_id` 
-							WHERE `uid` = '".$data['diario_uid']."'
-								AND `register_contas`.`conta_id` = '".$data['conta_id']."';";
+							WHERE `register_contas`.`conta_id` = '".$data['conta_id']."';";
 	$rows = $db->select($sql_verificacao);
 	if (!$rows) {
 		return new Response('{"mensagem":"Sintaxe inválida"}', 400);
@@ -1843,7 +1842,7 @@ $app->post('/transacao',function (Request $request) use ($app, $db) {
 		$colunasModificar		= "transacao_numero,transacao_data,transacao_sacado,transacao_descricao,transacao_valor,transacao_conciliada,transacao_conciliada,transacao_merged_to_id,transacao_fatura_data,parcelamento_id";
 		$colunasWhere			= "transacao_id";
 	} else {
-		$colunasObrigatorias	= "diario_uid,transacao_data,transacao_sacado,transacao_valor,conta_id";
+		$colunasObrigatorias	= "transacao_data,transacao_sacado,transacao_valor,conta_id";
 		$colunasModificar		= "transacao_numero,transacao_data,transacao_sacado,transacao_descricao,transacao_valor,transacao_conciliada,transacao_conciliada,transacao_merged_to_id,conta_id,transacao_fatura_data,parcelamento_id";
 	}
 
@@ -1905,7 +1904,6 @@ $app->post('/transacao',function (Request $request) use ($app, $db) {
 		}
 	}	
 });
-
 
 //rota para deletar uma transação
 $app->post('/transacao/delete',function (Request $request) use ($app, $db) {
@@ -2033,21 +2031,38 @@ $app->post('/transacao/concilia',function (Request $request) use ($app, $db) {
 	}
 });
 
-//rota para recuperar parcelamento
-$app->get('/transacao',function (Request $request) use ($app, $db) {
+//rota para recuperar transacoes incluindo subtransacoes
+$app->get('/subtransacao',function (Request $request) use ($app, $db) {
 	global $user;
 	
-	$diario_uid = $db->escape_string($request->headers->get("diariouid"));
+	$diario_uid 		= $db->escape_string($request->headers->get("diariouid"));
 	$filtros_header 	= $request->headers->get("filtros");
-	$filtros = json_decode($filtros_header);
+	$filtros 			= json_decode($filtros_header);
 
+	$foreignColumns[0] = new ForeignRelationship('register_diarios',"id",null);
+
+	if (!$request->headers->get("diariouid")) {
+		return new Response('{"mensagem":"Você deve informar um UniqueID de Diário"}', 400);
+	}
+
+	$user_id = retrieveUserIdFromTables($foreignColumns,'uid',$diario_uid);
+	if (!$user['adm'] && $user['id'] != $user_id) {
+		return new Response('{"mensagem":"Sem autorização."}', 403);
+	}
 	if ($filtros_header == null) {
-		$sql_s = "SELECT `register_parcelamentos`.`parcelamento_id`, `parcelamento_data`,`parcelamento_valor_sjuros`,`parcelamento_comentarios`,
-		`register_contas`.`conta_id`,`conta_nome`,`conta_budget`,`conta_cartao` 
-		FROM `register_parcelamentos` 
-		JOIN `register_contas` ON `register_parcelamentos`.`conta_id` 
-		JOIN `register_diarios` ON `register_contas`.`diario_id` = `register_diarios`.`id` 
-		WHERE `register_diarios`.`uid` = '$diario_uid';";
+		$sql_s = "SELECT `register_transacoes`.`transacao_id`,`register_transacoes`.`transacao_data`,
+				`register_transacoes`.`transacao_sacado`,`register_transacoes`.`transacao_descricao`, `register_transacoes`.`transacao_valor`,
+				`register_transacoes`.`transacao_conciliada`,`register_transacoes`.`transacao_aprovada`,`register_transacoes`.`transacao_merged_to_id`,
+				`register_transacoes`.`conta_id`,`register_contas`.`conta_nome`,`register_diarios`.`uid` AS `diario_uid`,
+				`register_transacoes_itens`.`transacoes_item_id`,`register_transacoes_itens`.`transacoes_item_descricao`, `register_transacoes_itens`.`transacoes_item_valor`,
+				`register_transacoes_itens`.`transf_para_conta_id`,`register_categorias`.`categoria_id`,`register_categorias`.`categoria_nome`,
+				`register_subcategorias`.`subcategoria_id`,`register_subcategorias`.`subcategoria_nome` FROM `register_diarios`
+				JOIN `register_contas` ON `register_contas`.`diario_id` = `register_diarios`.`id`
+				JOIN `register_transacoes` ON `register_transacoes`.`conta_id` = `register_contas`.`conta_id`
+				LEFT JOIN `register_transacoes_itens` ON `register_transacoes_itens`.`transacao_id` = `register_transacoes`.`transacao_id`
+				LEFT JOIN `register_subcategorias` ON `register_subcategorias`.`subcategoria_id` = `register_transacoes_itens`.`subcategoria_id`
+				LEFT JOIN `register_categorias` ON `register_categorias`.`categoria_id` = `register_subcategorias`.`categoria_id`
+				WHERE `register_diarios`.`uid` = '$diario_uid'";
 		$rows = $db->select($sql_s);
 
 		if ($rows) {
@@ -2059,26 +2074,35 @@ $app->get('/transacao',function (Request $request) use ($app, $db) {
 		return new Response('{"mensagem":"Sintaxe inválida dos filtros"}', 403);
 	} else {
 		$where = "";
-		if (isset($filtros->parcelamento_id)) {
-			$where = montaWhereSQL('`register_parcelamentos`.`parcelamento_id`',$db->escape_string($filtros->parcelamento_id),$where);
+		$colunas = array(
+			"transacao_id" => "register_transacoes",
+			"transacao_sacado" => "register_transacoes"
+		);
+		foreach ($filtros as $filtro) {
+			if (isset($colunas[$filtro->column_name])) {
+				$coluna = $colunas[$filtro->column_name];
+				$valoresPermitidosComparacao = array("=","<>",">",">=","<","<=","like","in","between");
+				if (!in_array($filtro->kindOfCompare,$valoresPermitidosComparacao))
+					$filtro->kindOfCompare = "="; //caso o usuario tenha tentado ser espertinho, resetamos o valor. SQL Injection
+				$filtro->column_name = $db->escape_string($filtro->column_name);
+				$where = montaWhereSQL("`$coluna`.`$filtro->column_name`",$db->escape_string($filtro->value),$where,$filtro->kindOfCompare);
+			}
 		}
-		if (isset($filtros->parcelamento_comentarios)) {
-			$where = montaWhereSQL('`register_parcelamentos`.`parcelamento_comentarios`',$db->escape_string($filtros->parcelamento_comentarios),$where);
-		}
-		if (isset($filtros->parcelamento_data)) {
-			$where = montaWhereSQL('`register_parcelamentos`.`parcelamento_data`',$db->escape_string($filtros->parcelamento_data),$where);
-		}
-		if (isset($filtros->conta_id)) {
-			$where = montaWhereSQL('`register_parcelamentos`.`conta_id`',$db->escape_string($filtros->conta_id),$where);
-		}
-		
-
-		$sql_s = "SELECT `register_parcelamentos`.`parcelamento_id`, `parcelamento_data`,`parcelamento_valor_sjuros`,`parcelamento_comentarios`,
-		`register_contas`.`conta_id`,`conta_nome`,`conta_budget`,`conta_cartao` 
-		FROM `register_parcelamentos` 
-		JOIN `register_contas` ON `register_parcelamentos`.`conta_id` 
-		JOIN `register_diarios` ON `register_contas`.`diario_id` = `register_diarios`.`id` 
-		WHERE `register_diarios`.`uid` = '$diario_uid' AND $where;";
+		if (strlen($where) > 0)
+			$where = "AND " . $where;
+		$sql_s = "SELECT `register_transacoes`.`transacao_id`,`register_transacoes`.`transacao_data`,
+		`register_transacoes`.`transacao_sacado`,`register_transacoes`.`transacao_descricao`, `register_transacoes`.`transacao_valor`,
+		`register_transacoes`.`transacao_conciliada`,`register_transacoes`.`transacao_aprovada`,`register_transacoes`.`transacao_merged_to_id`,
+		`register_transacoes`.`conta_id`,`register_contas`.`conta_nome`,`register_diarios`.`uid` AS `diario_uid`,
+		`register_transacoes_itens`.`transacoes_item_id`,`register_transacoes_itens`.`transacoes_item_descricao`, `register_transacoes_itens`.`transacoes_item_valor`,
+		`register_transacoes_itens`.`transf_para_conta_id`,`register_categorias`.`categoria_id`,`register_categorias`.`categoria_nome`,
+		`register_subcategorias`.`subcategoria_id`,`register_subcategorias`.`subcategoria_nome` FROM `register_diarios`
+		JOIN `register_contas` ON `register_contas`.`diario_id` = `register_diarios`.`id`
+		JOIN `register_transacoes` ON `register_transacoes`.`conta_id` = `register_contas`.`conta_id`
+		LEFT JOIN `register_transacoes_itens` ON `register_transacoes_itens`.`transacao_id` = `register_transacoes`.`transacao_id`
+		LEFT JOIN `register_subcategorias` ON `register_subcategorias`.`subcategoria_id` = `register_transacoes_itens`.`subcategoria_id`
+		LEFT JOIN `register_categorias` ON `register_categorias`.`categoria_id` = `register_subcategorias`.`categoria_id`
+		WHERE `register_diarios`.`uid` = '$diario_uid' $where";
 		$rows = $db->select($sql_s);
 
 		if ($rows) {
@@ -2089,7 +2113,152 @@ $app->get('/transacao',function (Request $request) use ($app, $db) {
 	}
 });
 
+//rota para criar ou editar uma subtransação
+$app->post('/subtransacao',function (Request $request) use ($app, $db) {
+	global $user;
+	$data = json_decode($request->getContent(), true);
+	$user_id = 0;
+	$ip = $request->getClientIp();
+	$atualizacao = false;
 
+	if (isset($data['transacoes_item_id'])) {
+		$atualizacao = true;
+	} elseif(isset($data['transacao_id'])) {
+		$atualizacao = false;
+	} else {
+		return new Response('{"mensagem":"Sintaxe inválida"}', 400);
+	}
+
+	//agora, vamos verificar se a atualização ou criação pode ser realizada pelo usuário:
+	if ($atualizacao) {
+		$sql_verificacao = "SELECT `user_id` FROM `register_diarios` 
+							JOIN `register_contas` ON `register_diarios`.`id` = `register_contas`.`diario_id` 
+							JOIN `register_transacoes` ON `register_contas`.`conta_id` = `register_transacoes`.`conta_id` 
+							JOIN `register_transacoes_itens` ON `register_transacoes_itens`.`transacao_id` = `register_transacoes`.`transacao_id`
+							WHERE `register_transacoes_itens`.`transacoes_item_id` = '".$data['transacoes_item_id']."';";
+	} else
+		$sql_verificacao = "SELECT `user_id` FROM `register_diarios`
+							JOIN `register_contas` ON `register_diarios`.`id` = `register_contas`.`diario_id`
+							JOIN `register_transacoes` ON `register_transacoes`.`conta_id` = `register_contas`.`conta_id` 
+							WHERE `register_transacoes`.`transacao_id` = '".$data['transacao_id']."';";
+	$rows = $db->select($sql_verificacao);
+	if (!$rows) {
+		return new Response('{"mensagem":"Sintaxe inválida"}', 400);
+	} elseif ($rows[0]['user_id']!=$user['id'] && !$user['adm']) {
+		return new Response('{"mensagem":"Não autorizado!"}', 403);
+	}
+
+	$tabela_db = "register_transacoes_itens";
+	$colunasObrigatorias = "";
+	$colunasModificar = "";
+	$colunasWhere = "";
+	//agora, vamos definir quais colunas são obrigatórias e quais serão inseridas/atualizadas:
+	if ($atualizacao) {
+		$colunasObrigatorias 	= "transacoes_item_id,transacoes_item_valor";
+		$colunasModificar		= "transacoes_item_valor,transacoes_item_descricao,subcategoria_id,transf_para_conta_id";
+		$colunasWhere			= "transacoes_item_id";
+	} else {
+		$colunasObrigatorias	= "transacoes_item_valor,transacao_id";
+		$colunasModificar		= "transacoes_item_valor,transacoes_item_descricao,transacao_id,subcategoria_id,transf_para_conta_id";
+	}
+
+	//a partir de agora, não se modifica o template:
+	//primeiro, vamos verificar se as colunas obrigatórias foram fornecidas pelo usuario:
+	$colunasObrigatorias = explode(",",$colunasObrigatorias);
+	foreach ($colunasObrigatorias as $coluna) {
+		if (!isset($data[$coluna])) {
+			//não existe uma coluna obrigatória, encerramos por aqui:
+			return new Response('{"mensagem":"Faltando entradas obrigatórias"}', 400);
+		}
+	}
+
+	//agora, vamos montar a query:
+	$colunasModificar = explode(",",$colunasModificar);
+	if ($atualizacao) {
+		$sqlSet = "";
+		$sqlWhere = "";
+		foreach ($colunasModificar as $colunaModificar) {
+			if (isset($data[$colunaModificar])) {
+				if (strlen($sqlSet))
+					$sqlSet .= ",";
+				$sqlSet .= montaUpdateSQL($colunaModificar,$db->escape_string($data[$colunaModificar]));
+			}
+		}
+		$colunasWhere = explode(",",$colunasWhere);
+		foreach ($colunasWhere as $colunaWhere) {
+			if (strlen($sqlWhere))
+				$sqlWhere .= ",";
+			$sqlWhere .= montaWhereSQL($colunaWhere,$db->escape_string($data[$colunaWhere]));
+		}
+		//blz, montamos o rolê, vamos agora executar a query:
+		$sql = "UPDATE $tabela_db SET $sqlSet,`ModifiedIP`='$ip',`ModifiedDate`=CURDATE() WHERE $sqlWhere;";
+		$resultado = $db->query($sql);
+		if ($resultado) {
+			return new Response('{"mensagem":"Atualizado!"}', 200);
+		} else {
+			return new Response('{"mensagem":"Falha."}', 400);
+		}
+	} else {
+		$sqlCols = "";
+		$sqlSets = "";
+		foreach ($colunasModificar as $colunaModificar) {
+			if (isset($data[$colunaModificar])) {
+				if (strlen($sqlSets)) {
+					$sqlSets .= ",";
+					$sqlCols .= ",";
+				}
+				$sqlSets .= "'".$db->escape_string($data[$colunaModificar])."'";
+				$sqlCols .= "`".$colunaModificar."`";
+			}
+		}
+		$sql = "INSERT INTO `$tabela_db` ($sqlCols,`CreatedIP`,`ModifiedIP`,`CreatedDate`,`ModifiedDate`) VALUES ($sqlSets,'$ip','$ip',CURDATE(),CURDATE());";
+		$primary_key = $db->insert($sql);
+		if ($primary_key) {
+			return new Response('{"id":'.$primary_key.'}', 201);
+		} else {
+			return new Response('{"mensagem":"Falha."}', 400);
+		}
+	}	
+});
+
+//rota para deletar uma transação
+$app->post('/subtransacao/delete',function (Request $request) use ($app, $db) {
+	global $user;
+	$data = json_decode($request->getContent(), true);
+	$user_id = 0;
+
+	$tabela_db 	= "register_transacoes_itens";
+	$pk_db 		= "transacoes_item_id";
+	$pk_val 	= $data['transacoes_item_id'];
+
+	if (!is_array($pk_val))
+		return new Response('{"mensagem":"Sintaxe inválida: array esperada."}', 400);
+
+	$foreignColumns[0] = new ForeignRelationship('register_transacoes_itens',"transacoes_item_id","transacao_id");
+	$foreignColumns[1] = new ForeignRelationship('register_transacoes',"transacao_id","conta_id");
+	$foreignColumns[2] = new ForeignRelationship('register_contas',"conta_id","diario_id");
+	$foreignColumns[3] = new ForeignRelationship('register_diarios',"id",null);
+
+	$falha = false;
+	foreach ($pk_val as $value) {
+		$user_id = retrieveUserIdFromTables($foreignColumns,$pk_db,$value);
+		if (!$user['adm'] && $user['id'] != $user_id) {
+			$falha = true;
+		} else {
+			$sql_d = "DELETE FROM `$tabela_db` WHERE `$pk_db` = '$value'";
+			$res = $db->query($sql_d);
+			if (!$res) {
+				$falha = true;
+			}
+		}		
+	}
+	
+	if ($falha) {
+		return new Response('{"mensagem":"Houve falhas no processo, alguns itens podem não ter sido excluídos"}',403);	
+	} else {
+		return new Response('{"mensagem":"Itens excluídos com sucesso"}', 200);
+	}
+});
 
 /**
  * Retorna um par para incluir no SET
@@ -2116,11 +2285,11 @@ function montaUpdateSQL(string $column, string $value, string $sql = "") {
  * @param string $sql
  * @return string WHERE Clause
  */
-function montaWhereSQL(string $column, string $value, string $sql = "") {
+function montaWhereSQL(string $column, string $value, string $sql = "", string $tipoWhere = "=") {
 	if (strlen($sql) > 0) {
-		$sql = $sql . "AND $column = '$value'";
+		$sql = $sql . "AND $column $tipoWhere '$value'";
 	} else {
-		$sql = "$column = '$value'";
+		$sql = "$column $tipoWhere '$value'";
 	}
 	return $sql;
 }

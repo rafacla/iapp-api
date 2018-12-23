@@ -242,23 +242,6 @@ paths:
           description: Este usuário não existe
         '403':
           description: Você não tem permissão para isso
-    delete:
-      tags:
-        - users
-      summary: Deleta um usuário pelo id
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Usuário excluído com sucesso
-        '403':
-          description: 'Acesso negado: usuário não possui privilégios de administrador'
-        '404':
-          description: Este usuário não existe
   /cliente:
     get:
       tags:
@@ -325,23 +308,6 @@ paths:
             schema:
               $ref: '#/components/schemas/Cliente'
         required: true
-  /cliente/{id}:
-    delete:
-      tags:
-        - cliente
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Cliente excluído com sucesso
-        '403':
-          description: Você não tem permissão para isso
-        '404':
-          description: Cliente não encontrado
   /diario:
     get:
       tags:
@@ -716,77 +682,6 @@ paths:
             schema:
               $ref: '#/components/schemas/body_9'
   /transacao:
-    get:
-      tags:
-        - transações
-      summary: Lista todas as transações dado um diario_uid e filtros
-      parameters:
-        - name: diariouid
-          in: header
-          required: true
-          schema:
-            type: string
-        - name: filtros
-          in: header
-          required: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: array com as transacoes e subtransacoes
-          content:
-            '*/*':
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    transacao_id:
-                      type: integer
-                      description: ID interno da transacao
-                    transacao_nome:
-                      type: string
-                      description: Nome da transacao
-                    transacao_data:
-                      type: string
-                      description: Data da transacao
-                    transacao_sacado:
-                      type: string
-                      description: Sacado da transacao
-                    transacao_descricao:
-                      type: string
-                      description: Descricao da transacao
-                    transacao_valor:
-                      type: number
-                      description: Valor da transação
-                    transacao_conciliada:
-                      type: boolean
-                      description: Se a transação foi conciliada
-                    transacao_aprovada:
-                      type: boolean
-                      description: Se a transação já foi aprovada
-                    transacao_merged_to_id:
-                      type: integer
-                      description: >-
-                        Caso a transação tenha sido mesclada com outra, o id
-                        desta
-                    conta_id:
-                      type: integer
-                      description: O id da conta a qual esta transação pertence
-                    conta_nome:
-                      type: string
-                      description: O nome da conta a qual esta transação pertence
-                    diario_uid:
-                      type: string
-                      description: O UID do diario a qual esta transação pertence
-                    subtransacoes:
-                      type: array
-                      items:
-                        $ref: '#/components/schemas/transacao_subtransacoes'
-        '400':
-          description: sintaxe de entrada inválida
-        '403':
-          description: não autorizado
     post:
       tags:
         - transações
@@ -872,6 +767,107 @@ paths:
             schema:
               $ref: '#/components/schemas/body_transacao_concilia'
   /subtransacao:
+    get:
+      tags:
+        - transações
+      summary: Lista todas as transações e subtransações dado um diario_uid e filtros
+      parameters:
+        - name: diariouid
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: filtros
+          in: header
+          required: false
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                column_name:
+                  type: string
+                value:
+                  type: string
+                kindOfCompare:
+                  type: string
+                  enum: ['=','<>','>','>=','<','<=','like','between','in']
+      responses:
+        '200':
+          description: array com as transacoes e subtransacoes
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    transacao_id:
+                      type: integer
+                      description: ID interno da transacao
+                    transacao_nome:
+                      type: string
+                      description: Nome da transacao
+                    transacao_data:
+                      type: string
+                      description: Data da transacao
+                    transacao_sacado:
+                      type: string
+                      description: Sacado da transacao
+                    transacao_descricao:
+                      type: string
+                      description: Descricao da transacao
+                    transacao_valor:
+                      type: number
+                      description: Valor da transação
+                    transacao_conciliada:
+                      type: boolean
+                      description: Se a transação foi conciliada
+                    transacao_aprovada:
+                      type: boolean
+                      description: Se a transação já foi aprovada
+                    transacao_merged_to_id:
+                      type: integer
+                      description: >-
+                        Caso a transação tenha sido mesclada com outra, o id
+                        desta
+                    conta_id:
+                      type: integer
+                      description: O id da conta a qual esta transação pertence
+                    conta_nome:
+                      type: string
+                      description: O nome da conta a qual esta transação pertence
+                    diario_uid:
+                      type: string
+                      description: O UID do diario a qual esta transação pertence
+                    transacoes_item_id:
+                      type: integer
+                      description: ID interno da subtransacao
+                    transacoes_item_descricao:
+                      type: string
+                      description: Descricação da subtransacao
+                    transacoes_item_valor:
+                      type: number
+                      description: Valor da subtransação
+                    categoria_id:
+                      type: integer
+                      description: ID da categoria atribuída a esta transação
+                    categoria_nome:
+                      type: string
+                      description: Nome da categoria atribuída a esta transação
+                    subcategoria_id:
+                      type: integer
+                      description: ID da subcategoria atribuída a esta transação
+                    subcategoria_nome:
+                      type: string
+                      description: Nome da subcategoria atribuída a esta transação
+                    transf_para_conta_id:
+                      type: integer
+                      description: ID da conta se esta subtransação for uma transferência
+        '400':
+          description: sintaxe de entrada inválida
+        '403':
+          description: não autorizado
     post:
       tags:
         - transações
@@ -886,7 +882,7 @@ paths:
                 items:
                   type: object
                   properties:
-                    transacao_id:
+                    transacoes_item_id:
                       type: integer
         '400':
           description: sintaxe inválida
@@ -898,7 +894,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/body_14'
+              $ref: '#/components/schemas/subtransacoes_post_body'
   /subtransacao/delete:
     post:
       tags:
@@ -917,7 +913,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/body_15'
+              $ref: '#/components/schemas/subtransacoes_delete_body'
   /parcelamento:
     get:
       tags:
@@ -1363,15 +1359,15 @@ components:
           type: integer
     transacao_subtransacoes:
       properties:
-        subtransacao_id:
+        transacoes_item_id:
           type: integer
           description: ID interno da subtransacao
-        subtransacao_nome:
-          type: string
-          description: Nome da subtransacao
-        subtransacao_description:
+        transacoes_item_descricao:
           type: string
           description: Descricação da subtransacao
+        transacoes_item_valor:
+          type: number
+          description: Valor da subtransação
         categoria_id:
           type: integer
           description: ID da categoria atribuída a esta transação
@@ -1441,16 +1437,16 @@ components:
                 type: integer
               concilia:
                 type: boolean
-    body_14:
+    subtransacoes_post_body:
       type: object
       properties:
-        subtransacao_id:
+        transacoes_item_id:
           type: integer
         transacao_id:
           type: integer
-        subtransacao_valor:
+        transacoes_item_valor:
           type: number
-        subtransacao_descricao:
+        transacoes_item_descricao:
           type: string
         subcategoria_id:
           type: integer
@@ -1459,10 +1455,10 @@ components:
           description: >-
             se preenchido, a subtransacao passa a ser tratada como transferência
             e a subcategoria_id é ignorada
-    body_15:
+    subtransacoes_delete_body:
       type: object
       properties:
-        transacao_id:
+        transacoes_item_id:
           type: array
           items:
             type: integer
