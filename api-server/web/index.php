@@ -2050,19 +2050,34 @@ $app->get('/subtransacao',function (Request $request) use ($app, $db) {
 		return new Response('{"mensagem":"Sem autorização."}', 403);
 	}
 	if ($filtros_header == null) {
-		$sql_s = "SELECT `register_transacoes`.`transacao_id`,`register_transacoes`.`transacao_data`,
+		$sql_s = "(SELECT `register_transacoes`.`transacao_id`,`register_transacoes`.`transacao_data`,
 				`register_transacoes`.`transacao_sacado`,`register_transacoes`.`transacao_descricao`, `register_transacoes`.`transacao_valor`,
 				`register_transacoes`.`transacao_conciliada`,`register_transacoes`.`transacao_aprovada`,`register_transacoes`.`transacao_merged_to_id`,
 				`register_transacoes`.`conta_id`,`register_contas`.`conta_nome`,`register_diarios`.`uid` AS `diario_uid`,
 				`register_transacoes_itens`.`transacoes_item_id`,`register_transacoes_itens`.`transacoes_item_descricao`, `register_transacoes_itens`.`transacoes_item_valor`,
-				`register_transacoes_itens`.`transf_para_conta_id`,`register_categorias`.`categoria_id`,`register_categorias`.`categoria_nome`,
+				`register_transacoes_itens`.`transf_para_conta_id`,`contas2`.`conta_nome` AS `transf_para_conta_nome`,`register_categorias`.`categoria_id`,`register_categorias`.`categoria_nome`,
 				`register_subcategorias`.`subcategoria_id`,`register_subcategorias`.`subcategoria_nome` FROM `register_diarios`
 				JOIN `register_contas` ON `register_contas`.`diario_id` = `register_diarios`.`id`
 				JOIN `register_transacoes` ON `register_transacoes`.`conta_id` = `register_contas`.`conta_id`
 				LEFT JOIN `register_transacoes_itens` ON `register_transacoes_itens`.`transacao_id` = `register_transacoes`.`transacao_id`
 				LEFT JOIN `register_subcategorias` ON `register_subcategorias`.`subcategoria_id` = `register_transacoes_itens`.`subcategoria_id`
 				LEFT JOIN `register_categorias` ON `register_categorias`.`categoria_id` = `register_subcategorias`.`categoria_id`
-				WHERE `register_diarios`.`uid` = '$diario_uid'";
+				LEFT JOIN `register_contas` `contas2` ON `register_transacoes_itens`.`transf_para_conta_id` = `register_contas`.`conta_id`
+				WHERE `register_diarios`.`uid` = '$diario_uid')
+				UNION
+				(SELECT `register_transacoes`.`transacao_id`,`register_transacoes`.`transacao_data`,
+				`register_transacoes`.`transacao_sacado`,`register_transacoes`.`transacao_descricao`, -`register_transacoes_itens`.`transacoes_item_valor` AS `transacao_valor`, `register_transacoes`.`transacao_conciliada`,`register_transacoes`.`transacao_aprovada`,`register_transacoes`.`transacao_merged_to_id`,
+				`register_transacoes_itens`.`transf_para_conta_id` AS `conta_id`,`contas2`.`conta_nome` AS `conta_nome`,`register_diarios`.`uid` AS `diario_uid`,
+				`register_transacoes_itens`.`transacoes_item_id`,`register_transacoes_itens`.`transacoes_item_descricao`, -`register_transacoes_itens`.`transacoes_item_valor` AS `transacoes_item_valor`,
+				`register_transacoes`.`conta_id` AS `transf_para_conta_id`,`register_contas`.`conta_nome` AS `transf_para_conta_nome`,`register_categorias`.`categoria_id`,`register_categorias`.`categoria_nome`,
+				`register_subcategorias`.`subcategoria_id`,`register_subcategorias`.`subcategoria_nome` FROM `register_diarios`
+				JOIN `register_contas` ON `register_contas`.`diario_id` = `register_diarios`.`id`
+				JOIN `register_transacoes` ON `register_transacoes`.`conta_id` = `register_contas`.`conta_id`
+				LEFT JOIN `register_transacoes_itens` ON `register_transacoes_itens`.`transacao_id` = `register_transacoes`.`transacao_id`
+				LEFT JOIN `register_subcategorias` ON `register_subcategorias`.`subcategoria_id` = `register_transacoes_itens`.`subcategoria_id`
+				LEFT JOIN `register_categorias` ON `register_categorias`.`categoria_id` = `register_subcategorias`.`categoria_id`
+				LEFT JOIN `register_contas` `contas2` ON `register_transacoes_itens`.`transf_para_conta_id` = `register_contas`.`conta_id`
+                WHERE `register_transacoes_itens`.`transf_para_conta_id` IS NOT NULL AND `register_diarios`.`uid` = '$diario_uid');";
 		$rows = $db->select($sql_s);
 
 		if ($rows) {
@@ -2090,19 +2105,33 @@ $app->get('/subtransacao',function (Request $request) use ($app, $db) {
 		}
 		if (strlen($where) > 0)
 			$where = "AND " . $where;
-		$sql_s = "SELECT `register_transacoes`.`transacao_id`,`register_transacoes`.`transacao_data`,
-		`register_transacoes`.`transacao_sacado`,`register_transacoes`.`transacao_descricao`, `register_transacoes`.`transacao_valor`,
-		`register_transacoes`.`transacao_conciliada`,`register_transacoes`.`transacao_aprovada`,`register_transacoes`.`transacao_merged_to_id`,
-		`register_transacoes`.`conta_id`,`register_contas`.`conta_nome`,`register_diarios`.`uid` AS `diario_uid`,
-		`register_transacoes_itens`.`transacoes_item_id`,`register_transacoes_itens`.`transacoes_item_descricao`, `register_transacoes_itens`.`transacoes_item_valor`,
-		`register_transacoes_itens`.`transf_para_conta_id`,`register_categorias`.`categoria_id`,`register_categorias`.`categoria_nome`,
-		`register_subcategorias`.`subcategoria_id`,`register_subcategorias`.`subcategoria_nome` FROM `register_diarios`
-		JOIN `register_contas` ON `register_contas`.`diario_id` = `register_diarios`.`id`
-		JOIN `register_transacoes` ON `register_transacoes`.`conta_id` = `register_contas`.`conta_id`
-		LEFT JOIN `register_transacoes_itens` ON `register_transacoes_itens`.`transacao_id` = `register_transacoes`.`transacao_id`
-		LEFT JOIN `register_subcategorias` ON `register_subcategorias`.`subcategoria_id` = `register_transacoes_itens`.`subcategoria_id`
-		LEFT JOIN `register_categorias` ON `register_categorias`.`categoria_id` = `register_subcategorias`.`categoria_id`
-		WHERE `register_diarios`.`uid` = '$diario_uid' $where";
+			$sql_s = "(SELECT `register_transacoes`.`transacao_id`,`register_transacoes`.`transacao_data`,
+						`register_transacoes`.`transacao_sacado`,`register_transacoes`.`transacao_descricao`, `register_transacoes`.`transacao_valor`,
+						`register_transacoes`.`transacao_conciliada`,`register_transacoes`.`transacao_aprovada`,`register_transacoes`.`transacao_merged_to_id`,
+						`register_transacoes`.`conta_id`,`register_contas`.`conta_nome`,`register_diarios`.`uid` AS `diario_uid`,
+						`register_transacoes_itens`.`transacoes_item_id`,`register_transacoes_itens`.`transacoes_item_descricao`, `register_transacoes_itens`.`transacoes_item_valor`,
+						`register_transacoes_itens`.`transf_para_conta_id`,`register_categorias`.`categoria_id`,`register_categorias`.`categoria_nome`,
+						`register_subcategorias`.`subcategoria_id`,`register_subcategorias`.`subcategoria_nome` FROM `register_diarios`
+						JOIN `register_contas` ON `register_contas`.`diario_id` = `register_diarios`.`id`
+						JOIN `register_transacoes` ON `register_transacoes`.`conta_id` = `register_contas`.`conta_id`
+						LEFT JOIN `register_transacoes_itens` ON `register_transacoes_itens`.`transacao_id` = `register_transacoes`.`transacao_id`
+						LEFT JOIN `register_subcategorias` ON `register_subcategorias`.`subcategoria_id` = `register_transacoes_itens`.`subcategoria_id`
+						LEFT JOIN `register_categorias` ON `register_categorias`.`categoria_id` = `register_subcategorias`.`categoria_id`
+						WHERE `register_diarios`.`uid` = '$diario_uid' $where)
+					UNION
+					(SELECT `register_transacoes`.`transacao_id`,`register_transacoes`.`transacao_data`,
+							`register_transacoes`.`transacao_sacado`,`register_transacoes`.`transacao_descricao`, -`register_transacoes_itens`.`transacoes_item_valor` AS `transacao_valor`, `register_transacoes`.`transacao_conciliada`,`register_transacoes`.`transacao_aprovada`,`register_transacoes`.`transacao_merged_to_id`,
+							`register_transacoes_itens`.`transf_para_conta_id` AS `conta_id`,`contas2`.`conta_nome` AS `conta_nome`,`register_diarios`.`uid` AS `diario_uid`,
+							`register_transacoes_itens`.`transacoes_item_id`,`register_transacoes_itens`.`transacoes_item_descricao`, -`register_transacoes_itens`.`transacoes_item_valor` AS `transacoes_item_valor`,
+							`register_transacoes`.`conta_id` AS `transf_para_conta_id`,`register_contas`.`conta_nome` AS `transf_para_conta_nome`,`register_categorias`.`categoria_id`,`register_categorias`.`categoria_nome`,
+							`register_subcategorias`.`subcategoria_id`,`register_subcategorias`.`subcategoria_nome` FROM `register_diarios`
+							JOIN `register_contas` ON `register_contas`.`diario_id` = `register_diarios`.`id`
+							JOIN `register_transacoes` ON `register_transacoes`.`conta_id` = `register_contas`.`conta_id`
+							LEFT JOIN `register_transacoes_itens` ON `register_transacoes_itens`.`transacao_id` = `register_transacoes`.`transacao_id`
+							LEFT JOIN `register_subcategorias` ON `register_subcategorias`.`subcategoria_id` = `register_transacoes_itens`.`subcategoria_id`
+							LEFT JOIN `register_categorias` ON `register_categorias`.`categoria_id` = `register_subcategorias`.`categoria_id`
+							LEFT JOIN `register_contas` `contas2` ON `register_transacoes_itens`.`transf_para_conta_id` = `register_contas`.`conta_id`
+							WHERE `register_transacoes_itens`.`transf_para_conta_id` IS NOT NULL AND `register_diarios`.`uid` = '$diario_uid' $where);";
 		$rows = $db->select($sql_s);
 
 		if ($rows) {
