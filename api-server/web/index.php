@@ -2076,7 +2076,7 @@ $app->get('/subtransacao',function (Request $request) use ($app, $db) {
 				LEFT JOIN `register_transacoes_itens` ON `register_transacoes_itens`.`transacao_id` = `register_transacoes`.`transacao_id`
 				LEFT JOIN `register_subcategorias` ON `register_subcategorias`.`subcategoria_id` = `register_transacoes_itens`.`subcategoria_id`
 				LEFT JOIN `register_categorias` ON `register_categorias`.`categoria_id` = `register_subcategorias`.`categoria_id`
-				LEFT JOIN `register_contas` `contas2` ON `register_transacoes_itens`.`transf_para_conta_id` = `register_contas`.`conta_id`
+				LEFT JOIN `register_contas` `contas2` ON `register_transacoes_itens`.`transf_para_conta_id` = `contas2`.`conta_id`
                 WHERE `register_transacoes_itens`.`transf_para_conta_id` IS NOT NULL AND `register_diarios`.`uid` = '$diario_uid');";
 		$rows = $db->select($sql_s);
 
@@ -2130,7 +2130,7 @@ $app->get('/subtransacao',function (Request $request) use ($app, $db) {
 							LEFT JOIN `register_transacoes_itens` ON `register_transacoes_itens`.`transacao_id` = `register_transacoes`.`transacao_id`
 							LEFT JOIN `register_subcategorias` ON `register_subcategorias`.`subcategoria_id` = `register_transacoes_itens`.`subcategoria_id`
 							LEFT JOIN `register_categorias` ON `register_categorias`.`categoria_id` = `register_subcategorias`.`categoria_id`
-							LEFT JOIN `register_contas` `contas2` ON `register_transacoes_itens`.`transf_para_conta_id` = `register_contas`.`conta_id`
+							LEFT JOIN `register_contas` `contas2` ON `register_transacoes_itens`.`transf_para_conta_id` = `contas2`.`conta_id`
 							WHERE `register_transacoes_itens`.`transf_para_conta_id` IS NOT NULL AND `register_diarios`.`uid` = '$diario_uid' $where);";
 		$rows = $db->select($sql_s);
 
