@@ -2055,7 +2055,8 @@ $app->get('/subtransacao',function (Request $request) use ($app, $db) {
 				`register_transacoes`.`transacao_conciliada`,`register_transacoes`.`transacao_aprovada`,`register_transacoes`.`transacao_merged_to_id`,
 				`register_transacoes`.`conta_id`,`register_contas`.`conta_nome`,`register_diarios`.`uid` AS `diario_uid`,
 				`register_transacoes_itens`.`transacoes_item_id`,`register_transacoes_itens`.`transacoes_item_descricao`, `register_transacoes_itens`.`transacoes_item_valor`,
-				`register_transacoes_itens`.`transf_para_conta_id`,`contas2`.`conta_nome` AS `transf_para_conta_nome`,`register_categorias`.`categoria_id`,`register_categorias`.`categoria_nome`,
+				`register_transacoes_itens`.`transf_para_conta_id`,`contas2`.`conta_nome` AS `transf_para_conta_nome`, IF(`register_transacoes_itens`.`transf_para_conta_id` IS NOT NULL, 'Origem','Nao-Transferencia') AS `transf_para_tipo`,
+				`register_categorias`.`categoria_id`,`register_categorias`.`categoria_nome`,
 				`register_subcategorias`.`subcategoria_id`,`register_subcategorias`.`subcategoria_nome` FROM `register_diarios`
 				JOIN `register_contas` ON `register_contas`.`diario_id` = `register_diarios`.`id`
 				JOIN `register_transacoes` ON `register_transacoes`.`conta_id` = `register_contas`.`conta_id`
@@ -2069,7 +2070,8 @@ $app->get('/subtransacao',function (Request $request) use ($app, $db) {
 				`register_transacoes`.`transacao_sacado`,`register_transacoes`.`transacao_descricao`, -`register_transacoes_itens`.`transacoes_item_valor` AS `transacao_valor`, `register_transacoes`.`transacao_conciliada`,`register_transacoes`.`transacao_aprovada`,`register_transacoes`.`transacao_merged_to_id`,
 				`register_transacoes_itens`.`transf_para_conta_id` AS `conta_id`,`contas2`.`conta_nome` AS `conta_nome`,`register_diarios`.`uid` AS `diario_uid`,
 				`register_transacoes_itens`.`transacoes_item_id`,`register_transacoes_itens`.`transacoes_item_descricao`, -`register_transacoes_itens`.`transacoes_item_valor` AS `transacoes_item_valor`,
-				`register_transacoes`.`conta_id` AS `transf_para_conta_id`,`register_contas`.`conta_nome` AS `transf_para_conta_nome`,`register_categorias`.`categoria_id`,`register_categorias`.`categoria_nome`,
+				`register_transacoes`.`conta_id` AS `transf_para_conta_id`,`register_contas`.`conta_nome` AS `transf_para_conta_nome`, 'Replica' AS `transf_para_tipo`,
+				`register_categorias`.`categoria_id`,`register_categorias`.`categoria_nome`,
 				`register_subcategorias`.`subcategoria_id`,`register_subcategorias`.`subcategoria_nome` FROM `register_diarios`
 				JOIN `register_contas` ON `register_contas`.`diario_id` = `register_diarios`.`id`
 				JOIN `register_transacoes` ON `register_transacoes`.`conta_id` = `register_contas`.`conta_id`
