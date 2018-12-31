@@ -1838,7 +1838,7 @@ $app->post('/transacao',function (Request $request) use ($app, $db) {
 	$colunasWhere = "";
 	//agora, vamos definir quais colunas são obrigatórias e quais serão inseridas/atualizadas:
 	if ($atualizacao) {
-		$colunasObrigatorias 	= "transacao_id,transacao_data,transacao_sacado,transacao_valor";
+		$colunasObrigatorias 	= "transacao_id";
 		$colunasModificar		= "transacao_numero,transacao_data,transacao_sacado,transacao_descricao,transacao_valor,transacao_conciliada,transacao_conciliada,transacao_merged_to_id,transacao_fatura_data,parcelamento_id";
 		$colunasWhere			= "transacao_id";
 	} else {
@@ -2185,7 +2185,7 @@ $app->post('/subtransacao',function (Request $request) use ($app, $db) {
 	$colunasWhere = "";
 	//agora, vamos definir quais colunas são obrigatórias e quais serão inseridas/atualizadas:
 	if ($atualizacao) {
-		$colunasObrigatorias 	= "transacoes_item_id,transacoes_item_valor";
+		$colunasObrigatorias 	= "transacoes_item_id";
 		$colunasModificar		= "transacoes_item_valor,transacoes_item_descricao,subcategoria_id,transf_para_conta_id";
 		$colunasWhere			= "transacoes_item_id";
 	} else {
