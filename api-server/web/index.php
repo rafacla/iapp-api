@@ -2079,7 +2079,8 @@ $app->get('/subtransacao',function (Request $request) use ($app, $db) {
 				LEFT JOIN `register_subcategorias` ON `register_subcategorias`.`subcategoria_id` = `register_transacoes_itens`.`subcategoria_id`
 				LEFT JOIN `register_categorias` ON `register_categorias`.`categoria_id` = `register_subcategorias`.`categoria_id`
 				LEFT JOIN `register_contas` `contas2` ON `register_transacoes_itens`.`transf_para_conta_id` = `contas2`.`conta_id`
-                WHERE `register_transacoes_itens`.`transf_para_conta_id` IS NOT NULL AND `register_diarios`.`uid` = '$diario_uid');";
+				WHERE `register_transacoes_itens`.`transf_para_conta_id` IS NOT NULL AND `register_diarios`.`uid` = '$diario_uid')
+				ORDER BY `transacao_data` ASC;";
 		$rows = $db->select($sql_s);
 
 		if ($rows) {
