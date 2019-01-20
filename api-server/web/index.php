@@ -2073,7 +2073,7 @@ $app->get('/subtransacao',function (Request $request) use ($app, $db) {
 				`register_transacoes_itens`.`transacoes_item_id`,`register_transacoes_itens`.`transacoes_item_descricao`, -`register_transacoes_itens`.`transacoes_item_valor` AS `transacoes_item_valor`,
 				`register_transacoes`.`conta_id` AS `transf_para_conta_id`,`register_contas`.`conta_nome` AS `transf_para_conta_nome`, 'Replica' AS `transf_para_tipo`,
 				`register_categorias`.`categoria_id`,`register_categorias`.`categoria_nome`,
-				`register_subcategorias`.`subcategoria_id`,`register_subcategorias`.`subcategoria_nome`.
+				`register_subcategorias`.`subcategoria_id`,`register_subcategorias`.`subcategoria_nome`,
 				`register_transacoes`.`transacao_fatura_data` FROM `register_diarios`
 				JOIN `register_contas` ON `register_contas`.`diario_id` = `register_diarios`.`id`
 				JOIN `register_transacoes` ON `register_transacoes`.`conta_id` = `register_contas`.`conta_id`
