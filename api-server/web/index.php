@@ -1839,7 +1839,7 @@ $app->post('/transacao',function (Request $request) use ($app, $db) {
 	//agora, vamos definir quais colunas são obrigatórias e quais serão inseridas/atualizadas:
 	if ($atualizacao) {
 		$colunasObrigatorias 	= "transacao_id";
-		$colunasModificar		= "transacao_numero,transacao_data,transacao_sacado,transacao_descricao,transacao_valor,transacao_conciliada,transacao_conciliada,transacao_merged_to_id,transacao_fatura_data,parcelamento_id";
+		$colunasModificar		= "conta_id,transacao_numero,transacao_data,transacao_sacado,transacao_descricao,transacao_valor,transacao_conciliada,transacao_conciliada,transacao_merged_to_id,transacao_fatura_data,parcelamento_id";
 		$colunasWhere			= "transacao_id";
 	} else {
 		$colunasObrigatorias	= "transacao_data,transacao_sacado,transacao_valor,conta_id";
@@ -2053,7 +2053,7 @@ $app->get('/subtransacao',function (Request $request) use ($app, $db) {
 		$sql_s = "(SELECT `register_transacoes`.`transacao_id`,`register_transacoes`.`transacao_data`,
 				`register_transacoes`.`transacao_sacado`,`register_transacoes`.`transacao_descricao`, `register_transacoes`.`transacao_valor`,
 				`register_transacoes`.`transacao_conciliada`,`register_transacoes`.`transacao_aprovada`,`register_transacoes`.`transacao_merged_to_id`,
-				`register_transacoes`.`conta_id`,`register_contas`.`conta_nome`,`register_diarios`.`uid` AS `diario_uid`,
+				`register_transacoes`.`conta_id`,`register_transacoes`.`transacao_numero`,`register_contas`.`conta_nome`,`register_contas`.`conta_cartao`,`register_diarios`.`uid` AS `diario_uid`,
 				`register_transacoes_itens`.`transacoes_item_id`,`register_transacoes_itens`.`transacoes_item_descricao`, `register_transacoes_itens`.`transacoes_item_valor`,
 				`register_transacoes_itens`.`transf_para_conta_id`,`contas2`.`conta_nome` AS `transf_para_conta_nome`, IF(`register_transacoes_itens`.`transf_para_conta_id` IS NOT NULL, 'Origem','Nao-Transferencia') AS `transf_para_tipo`,
 				`register_categorias`.`categoria_id`,`register_categorias`.`categoria_nome`,
@@ -2068,7 +2068,7 @@ $app->get('/subtransacao',function (Request $request) use ($app, $db) {
 				UNION
 				(SELECT `register_transacoes`.`transacao_id`,`register_transacoes`.`transacao_data`,
 				`register_transacoes`.`transacao_sacado`,`register_transacoes`.`transacao_descricao`, -`register_transacoes_itens`.`transacoes_item_valor` AS `transacao_valor`, `register_transacoes`.`transacao_conciliada`,`register_transacoes`.`transacao_aprovada`,`register_transacoes`.`transacao_merged_to_id`,
-				`register_transacoes_itens`.`transf_para_conta_id` AS `conta_id`,`contas2`.`conta_nome` AS `conta_nome`,`register_diarios`.`uid` AS `diario_uid`,
+				`register_transacoes_itens`.`transf_para_conta_id` AS `conta_id`,`register_transacoes`.`transacao_numero`,`contas2`.`conta_nome` AS `conta_nome`,`contas2`.`conta_cartao` AS `conta_cartao`,`register_diarios`.`uid` AS `diario_uid`,
 				`register_transacoes_itens`.`transacoes_item_id`,`register_transacoes_itens`.`transacoes_item_descricao`, -`register_transacoes_itens`.`transacoes_item_valor` AS `transacoes_item_valor`,
 				`register_transacoes`.`conta_id` AS `transf_para_conta_id`,`register_contas`.`conta_nome` AS `transf_para_conta_nome`, 'Replica' AS `transf_para_tipo`,
 				`register_categorias`.`categoria_id`,`register_categorias`.`categoria_nome`,

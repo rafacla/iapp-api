@@ -837,6 +837,9 @@ paths:
                     conta_nome:
                       type: string
                       description: O nome da conta a qual esta transação pertence
+                    conta_cartao:
+                      type: boolean
+                      description: indica se a transação pertence a um cartão de crédito
                     diario_uid:
                       type: string
                       description: O UID do diario a qual esta transação pertence
