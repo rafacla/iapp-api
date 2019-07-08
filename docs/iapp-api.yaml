@@ -1133,6 +1133,8 @@ paths:
                     type: number
                   conta_img:
                     type: string
+                  conta_saldo:
+                    type: number
   /conta:
     post:
       tags:

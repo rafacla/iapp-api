@@ -1423,7 +1423,7 @@ $app->get('/contas/{diariouid}', function (Request $request, $diariouid) use ($a
 			if ($rows) {
 				$resultado = [];
 				foreach ($rows as $row) {
-					$row['saldo'] = getSaldoContaID($row['conta_id']);
+					$row['conta_saldo'] = getSaldoContaID($row['conta_id']);
 					array_push($resultado,$row);
 				}
 				return new Response(json_encode($resultado),200);
