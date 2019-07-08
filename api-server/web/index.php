@@ -107,6 +107,34 @@ function randomPassword() {
     return implode($pass); //turn the array into a string
 }
 
+function getSaldoContaID($contaID) {
+	global $db;
+	$sql_s = "SELECT SUM(`transacao_valor`) AS saldoConta FROM
+	(SELECT `register_transacoes`.`transacao_valor` FROM `register_diarios`
+	JOIN `register_contas` ON `register_contas`.`diario_id` = `register_diarios`.`id`
+	JOIN `register_transacoes` ON `register_transacoes`.`conta_id` = `register_contas`.`conta_id`
+	LEFT JOIN `register_transacoes_itens` ON `register_transacoes_itens`.`transacao_id` = `register_transacoes`.`transacao_id`
+	LEFT JOIN `register_subcategorias` ON `register_subcategorias`.`subcategoria_id` = `register_transacoes_itens`.`subcategoria_id`
+	LEFT JOIN `register_categorias` ON `register_categorias`.`categoria_id` = `register_subcategorias`.`categoria_id`
+	LEFT JOIN `register_contas` `contas2` ON `register_transacoes_itens`.`transf_para_conta_id` = `contas2`.`conta_id`
+	WHERE `register_transacoes`.`conta_id` = '$contaID'
+	UNION
+	SELECT -`register_transacoes_itens`.`transacoes_item_valor` AS `transacao_valor` FROM `register_diarios`
+	JOIN `register_contas` ON `register_contas`.`diario_id` = `register_diarios`.`id`
+	JOIN `register_transacoes` ON `register_transacoes`.`conta_id` = `register_contas`.`conta_id`
+	LEFT JOIN `register_transacoes_itens` ON `register_transacoes_itens`.`transacao_id` = `register_transacoes`.`transacao_id`
+	LEFT JOIN `register_subcategorias` ON `register_subcategorias`.`subcategoria_id` = `register_transacoes_itens`.`subcategoria_id`
+	LEFT JOIN `register_categorias` ON `register_categorias`.`categoria_id` = `register_subcategorias`.`categoria_id`
+	LEFT JOIN `register_contas` `contas2` ON `register_transacoes_itens`.`transf_para_conta_id` = `contas2`.`conta_id`
+	WHERE `register_transacoes_itens`.`transf_para_conta_id` IS NOT NULL AND `register_transacoes_itens`.`transf_para_conta_id` = '$contaID') AS TT2;";
+	$rows = $db->select($sql_s);
+	if ($rows) {
+		return $rows[0]['saldoConta'];
+	} else {
+		return 0;
+	}
+}
+
 function getDiarioID($diariouid) {
 	global $db;
 	$duid = $db->escape_string($diariouid);
@@ -1393,7 +1421,12 @@ $app->get('/contas/{diariouid}', function (Request $request, $diariouid) use ($a
 				`register_contas` WHERE `diario_id` = '%s' ORDER BY `conta_nome`",$diarioID);
 			$rows = $db ->select($sql);
 			if ($rows) {
-				return new Response(json_encode($rows),200);
+				$resultado = [];
+				foreach ($rows as $row) {
+					$row['saldo'] = getSaldoContaID($row['conta_id']);
+					array_push($resultado,$row);
+				}
+				return new Response(json_encode($resultado),200);
 			} else {
 				return new Response('{"mensagem":"Nenhuma conta encontrada para este diário"}', 404);
 			}
