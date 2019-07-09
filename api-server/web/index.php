@@ -118,7 +118,7 @@ function getSaldoContaID($contaID) {
 	LEFT JOIN `register_categorias` ON `register_categorias`.`categoria_id` = `register_subcategorias`.`categoria_id`
 	LEFT JOIN `register_contas` `contas2` ON `register_transacoes_itens`.`transf_para_conta_id` = `contas2`.`conta_id`
 	WHERE `register_transacoes`.`conta_id` = '$contaID'
-	UNION
+	UNION ALL
 	SELECT -`register_transacoes_itens`.`transacoes_item_valor` AS `transacao_valor` FROM `register_diarios`
 	JOIN `register_contas` ON `register_contas`.`diario_id` = `register_diarios`.`id`
 	JOIN `register_transacoes` ON `register_transacoes`.`conta_id` = `register_contas`.`conta_id`
