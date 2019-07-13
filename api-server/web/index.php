@@ -2329,6 +2329,110 @@ $app->post('/subtransacao/delete',function (Request $request) use ($app, $db) {
 	}
 });
 
+//rota para criar um orçamento
+$app->post('/orcamento',function (Request $request) use ($app, $db) {
+	global $user;
+	$data = json_decode($request->getContent(), true);
+	$user_id = 0;
+	$ip = $request->getClientIp();
+	$atualizacao = false;
+
+	if (isset($data['budget_id'])) {
+		$atualizacao = true;
+	} elseif(isset($data['diario_id'])) {
+		$atualizacao = false;
+	} else {
+		return new Response('{"mensagem":"Sintaxe inválida"}', 400);
+	}
+
+	//agora, vamos verificar se a atualização ou criação pode ser realizada pelo usuário:
+	if ($atualizacao) {
+		$sql_verificacao = "SELECT `user_id` FROM `register_diarios` 
+							JOIN `register_budgets` ON `register_diarios`.`id` = `register_budgets`.`diario_id` 
+							WHERE `register_budgets`.`budget_id` = '".$data['budget_id']."';";
+	} else
+		$sql_verificacao = "SELECT `user_id` FROM `register_diarios`
+							WHERE `register_diarios`.`id` = '".$data['diario_id']."';";
+	$rows = $db->select($sql_verificacao);
+	if (!$rows) {
+		return new Response('{"mensagem":"Sintaxe inválida"}', 400);
+	} elseif ($rows[0]['user_id']!=$user['id'] && !$user['adm']) {
+		return new Response('{"mensagem":"Não autorizado!"}', 403);
+	}
+
+	$tabela_db = "register_budgets";
+	$colunasObrigatorias = "";
+	$colunasModificar = "";
+	$colunasWhere = "";
+	//agora, vamos definir quais colunas são obrigatórias e quais serão inseridas/atualizadas:
+	if ($atualizacao) {
+		$colunasObrigatorias 	= "budget_id";
+		$colunasModificar		= "budget_date,budget_valor,subcategoria_id";
+		$colunasWhere			= "budget_id";
+	} else {
+		$colunasObrigatorias	= "budget_date,budget_valor,diario_id,subcategoria_id";
+		$colunasModificar		= "budget_date,budget_valor,diario_id,subcategoria_id";
+	}
+
+	//a partir de agora, não se modifica o template:
+	//primeiro, vamos verificar se as colunas obrigatórias foram fornecidas pelo usuario:
+	$colunasObrigatorias = explode(",",$colunasObrigatorias);
+	foreach ($colunasObrigatorias as $coluna) {
+		if (!isset($data[$coluna])) {
+			//não existe uma coluna obrigatória, encerramos por aqui:
+			return new Response('{"mensagem":"Faltando entradas obrigatórias"}', 400);
+		}
+	}
+
+	//agora, vamos montar a query:
+	$colunasModificar = explode(",",$colunasModificar);
+	if ($atualizacao) {
+		$sqlSet = "";
+		$sqlWhere = "";
+		foreach ($colunasModificar as $colunaModificar) {
+			if (isset($data[$colunaModificar])) {
+				if (strlen($sqlSet))
+					$sqlSet .= ",";
+				$sqlSet .= montaUpdateSQL($colunaModificar,$db->escape_string($data[$colunaModificar]));
+			}
+		}
+		$colunasWhere = explode(",",$colunasWhere);
+		foreach ($colunasWhere as $colunaWhere) {
+			if (strlen($sqlWhere))
+				$sqlWhere .= ",";
+			$sqlWhere .= montaWhereSQL($colunaWhere,$db->escape_string($data[$colunaWhere]));
+		}
+		//blz, montamos o rolê, vamos agora executar a query:
+		$sql = "UPDATE $tabela_db SET $sqlSet,`ModifiedIP`='$ip',`ModifiedDate`=CURDATE() WHERE $sqlWhere;";
+		$resultado = $db->query($sql);
+		if ($resultado) {
+			return new Response('{"mensagem":"Atualizado!"}', 200);
+		} else {
+			return new Response('{"mensagem":"Falha."}', 400);
+		}
+	} else {
+		$sqlCols = "";
+		$sqlSets = "";
+		foreach ($colunasModificar as $colunaModificar) {
+			if (isset($data[$colunaModificar])) {
+				if (strlen($sqlSets)) {
+					$sqlSets .= ",";
+					$sqlCols .= ",";
+				}
+				$sqlSets .= "'".$db->escape_string($data[$colunaModificar])."'";
+				$sqlCols .= "`".$colunaModificar."`";
+			}
+		}
+		$sql = "INSERT INTO `$tabela_db` ($sqlCols,`CreatedIP`,`ModifiedIP`,`CreatedDate`,`ModifiedDate`) VALUES ($sqlSets,'$ip','$ip',CURDATE(),CURDATE());";
+		$primary_key = $db->insert($sql);
+		if ($primary_key) {
+			return new Response('{"id":'.$primary_key.'}', 201);
+		} else {
+			return new Response('{"mensagem":"Falha."}', 400);
+		}
+	}	
+});
+
 /**
  * Retorna um par para incluir no SET
  *
@@ -2414,5 +2518,7 @@ function retrieveUserIdFromTables(array $foreignColumns, string $whereColumn, st
 		return false;
 	}
 }
+
+
 
 $app->run();

@@ -1025,6 +1025,30 @@ paths:
                   type: number
         required: true
   /orcamento:
+    post:
+      tags:
+        - orçamentos
+      summary: Cria ou Altera um orçamento dado seu budget_id ou diario_id
+      responses:
+        '201':
+          description: criado
+          content:
+            '*/*':
+              schema:
+                type: object
+                properties:
+                  budget_id:
+                    type: string
+                    description: budget_id criado
+        '200':
+          description: atualizado!
+        '400':
+          description: sintaxe de entrada inválida
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/orcamento_post'
     get:
       tags:
         - orçamentos
@@ -1467,6 +1491,19 @@ components:
           type: array
           items:
             type: integer
+    orcamento_post:
+      type: object
+      properties:
+        budget_id:
+          type: string
+        budget_date:
+          type: string
+        budget_valor:
+          type: number
+        diario_id:
+          type: number
+        subcategoria_id:
+          type: number
     body_conta:
       type: object
       properties:
