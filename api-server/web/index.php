@@ -2433,6 +2433,11 @@ $app->post('/orcamento',function (Request $request) use ($app, $db) {
 	}	
 });
 
+//rota para recuperar os orçamentos dado um mês e ano e diarioid
+$app->get('/orcamento',function (Request $request) use ($app, $db) {
+
+});
+
 /**
  * Retorna um par para incluir no SET
  *
