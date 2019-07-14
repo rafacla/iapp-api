@@ -2435,6 +2435,105 @@ $app->post('/orcamento',function (Request $request) use ($app, $db) {
 
 //rota para recuperar os orçamentos dado um mês e ano e diarioid
 $app->get('/orcamento',function (Request $request) use ($app, $db) {
+	global $user;
+	
+	$diario_uid 	= $db->escape_string($request->headers->get("diariouid"));
+	$ano		 	= $db->escape_string($request->headers->get("ano"));
+	$mes 			= $db->escape_string($request->headers->get("mes"));
+
+	$foreignColumns[0] = new ForeignRelationship('register_diarios',"id",null);
+
+	if (!$request->headers->get("diariouid") || !$request->headers->get("mes") || !$request->headers->get("ano")) {
+		return new Response('{"mensagem":"Você deve informar um UniqueID de Diário e/ou mes e/ou ano"}', 400);
+	}
+
+	$user_id = retrieveUserIdFromTables($foreignColumns,'uid',$diario_uid);
+	if (!$user['adm'] && $user['id'] != $user_id) {
+		return new Response('{"mensagem":"Sem autorização."}', 403);
+	}
+
+	//beleza, feitas as verificações de praxe, vamos começar o show:
+	$sql_categorias = 
+	"SELECT `register_categorias`.`categoria_id`, `register_categorias`.`categoria_nome`, `register_categorias`.`categoria_description`,
+			`register_categorias`.`categoria_ordem`,`register_categorias`.`diario_id`, `register_diarios`.`uid` AS `diario_uid`,
+			`register_subcategorias`.`subcategoria_id`, `register_subcategorias`.`subcategoria_nome`,`register_subcategorias`.`subcategoria_description`,
+			`register_subcategorias`.`subcategoria_carry`,`register_subcategorias`.`subcategoria_ordem`
+	 FROM `register_categorias` 
+	 INNER JOIN `register_subcategorias` ON `register_categorias`.`categoria_id` = `register_subcategorias`.`categoria_id`
+     INNER JOIN `register_diarios` ON `register_categorias`.`diario_id` = `register_diarios`.`id`
+	 WHERE `register_diarios`.`uid` = '$diario_uid';";
+
+	$categorias = $db->select($sql_categorias);
+	if (!$categorias) {
+		return new Response('{"mensagem":"Nenhum resultado."}', 404);
+	}
+
+	$sql_orcamentos = 
+	"SELECT 
+		`register_orcamentos`.`orcamento_id`, MONTH(`register_orcamentos`.`orcamento_date`) AS `orcamento_mes`, YEAR(`register_orcamentos`.`orcamento_date`) AS `orcamento_ano`, 
+		`register_orcamentos`.`orcamento_valor`, 
+		`register_orcamentos`.`subcategoria_id`, `register_orcamentos`.`diario_id`, `register_diarios`.`uid` AS `diario_uid`
+	FROM `register_orcamentos`
+	INNER JOIN `register_diarios` ON `register_orcamentos`.`diario_id` = `register_diarios`.`id`
+	WHERE `register_diarios`.`uid` = '$diario_uid'
+	HAVING `orcamento_mes` = '$mes' AND `orcamento_ano` = '$ano';";
+	
+	$orcamentos = $db->select($sql_orcamentos);
+	
+	$sql_transacoes =
+	"SELECT 
+		`register_subcategorias`.`subcategoria_id`, MONTH(`register_transacoes`.`transacao_data`) AS `transacoes_mes`, 
+		YEAR(`register_transacoes`.`transacao_data`) AS `transacoes_ano`, 
+		SUM(`register_transacoes_itens`.`transacoes_item_valor`) AS `transacoes_valor`
+	FROM `register_transacoes_itens`
+	INNER JOIN `register_transacoes` ON `register_transacoes_itens`.`transacao_id` = `register_transacoes`.`transacao_id`
+	INNER JOIN `register_subcategorias` ON `register_transacoes_itens`.`subcategoria_id` = `register_subcategorias`.`subcategoria_id`
+	INNER JOIN `register_categorias` ON `register_subcategorias`.`categoria_id` = `register_categorias`.`categoria_id`
+	INNER JOIN `register_diarios` ON `register_categorias`.`diario_id` = `register_diarios`.`id`
+	WHERE `register_diarios`.`uid` = '$diario_uid'
+	GROUP BY `register_subcategorias`.`subcategoria_id`, MONTH(`register_transacoes`.`transacao_data`), YEAR(`register_transacoes`.`transacao_data`)
+	HAVING `transacoes_mes` = '$mes' AND `transacoes_ano` = '$ano'";
+
+	$transacoes = $db->select($sql_transacoes);
+	$lista_orcamentos = [];
+	foreach ($categorias as $categoria) {
+		$objeto =	[];
+		$orcamento_valor = 0;
+
+		//Aqui calcularemos o valor acumulado do orçamento se positivo, se negativo, dependerá do carry.
+		//TBD: implementar a funcção de acumulação
+		foreach ($orcamentos as $orcamento) {
+			if ($orcamento["subcategoria_id"] == $categoria["subcategoria_id"]) {
+				$orcamento_valor += $orcamento["orcamento_valor"];
+			}
+		}
+
+		$transacoes_valor = 0;
+		//Aqui calculamos o valor acumulado das transações classificadas:
+		foreach ($transacoes as $transacao) {
+			if ($transacao["subcategoria_id"] == $categoria["subcategoria_id"]) {
+				$transacoes_valor += $transacao["transacoes_valor"];
+			}
+		}
+
+		array_push($objeto, array(
+			"categoria_id" 				=> $categoria["categoria_id"],
+			"categoria_nome" 			=> $categoria["categoria_nome"],
+			"categoria_description" 	=> $categoria["categoria_description"],
+			"categoria_ordem" 			=> $categoria["categoria_ordem"],
+			"subcategoria_id" 			=> $categoria["subcategoria_id"],
+			"subcategoria_nome" 		=> $categoria["subcategoria_nome"],
+			"subcategoria_description" 	=> $categoria["subcategoria_description"],
+			"subcategoria_carry" 		=> $categoria["subcategoria_carry"],
+			"subcategoria_ordem" 		=> $categoria["subcategoria_ordem"],
+			"orcamento_valor"			=> $orcamento_valor,
+			"transacoes_valor"			=> $transacoes_valor,
+			)
+		);
+		array_push($lista_orcamentos,$objeto);
+	}
+	
+	return new Response(json_encode($lista_orcamentos),200);
 
 });
 
