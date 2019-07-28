@@ -2516,7 +2516,7 @@ $app->get('/orcamento',function (Request $request) use ($app, $db) {
 			}
 		}
 
-		array_push($objeto, array(
+		$objeto = array(
 			"categoria_id" 				=> $categoria["categoria_id"],
 			"categoria_nome" 			=> $categoria["categoria_nome"],
 			"categoria_description" 	=> $categoria["categoria_description"],
@@ -2528,12 +2528,12 @@ $app->get('/orcamento',function (Request $request) use ($app, $db) {
 			"subcategoria_ordem" 		=> $categoria["subcategoria_ordem"],
 			"orcamento_valor"			=> $orcamento_valor,
 			"transacoes_valor"			=> $transacoes_valor,
-			)
 		);
 		array_push($lista_orcamentos,$objeto);
 	}
 	
-	return new Response(json_encode($lista_orcamentos),200);
+	$resposta = array("lista_orcamentos" => $lista_orcamentos);
+	return new Response(json_encode($resposta),200);
 
 });
 
