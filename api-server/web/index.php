@@ -2461,7 +2461,8 @@ $app->get('/orcamento',function (Request $request) use ($app, $db) {
 	 FROM `register_categorias` 
 	 INNER JOIN `register_subcategorias` ON `register_categorias`.`categoria_id` = `register_subcategorias`.`categoria_id`
      INNER JOIN `register_diarios` ON `register_categorias`.`diario_id` = `register_diarios`.`id`
-	 WHERE `register_diarios`.`uid` = '$diario_uid';";
+	 WHERE `register_diarios`.`uid` = '$diario_uid'
+	 ORDER BY `register_subcategorias`.`categoria_id`;";
 
 	$categorias = $db->select($sql_categorias);
 	if (!$categorias) {
@@ -2496,10 +2497,22 @@ $app->get('/orcamento',function (Request $request) use ($app, $db) {
 
 	$transacoes = $db->select($sql_transacoes);
 	$lista_orcamentos = [];
+	$categoria_antiga = 0;
 	foreach ($categorias as $categoria) {
 		$objeto =	[];
 		$orcamento_valor = 0;
-
+		if ($categoria_antiga <> $categoria["categoria_id"]) {
+			//se é a primeira vez que esta categoria aparece, vamos criar a linha de cabeçalho
+			$objeto_header = array(
+				"categoria_id" 				=> $categoria["categoria_id"],
+				"categoria_nome" 			=> $categoria["categoria_nome"],
+				"categoria_description" 	=> $categoria["categoria_description"],
+				"categoria_ordem" 			=> $categoria["categoria_ordem"],
+				"subcategoria_is"			=> false,
+			);
+			array_push($lista_orcamentos,$objeto_header);
+			$categoria_antiga = $categoria["categoria_id"];
+		}
 		//Aqui calcularemos o valor acumulado do orçamento se positivo, se negativo, dependerá do carry.
 		//TBD: implementar a funcção de acumulação
 		foreach ($orcamentos as $orcamento) {
@@ -2521,6 +2534,7 @@ $app->get('/orcamento',function (Request $request) use ($app, $db) {
 			"categoria_nome" 			=> $categoria["categoria_nome"],
 			"categoria_description" 	=> $categoria["categoria_description"],
 			"categoria_ordem" 			=> $categoria["categoria_ordem"],
+			"subcategoria_is"			=> true,
 			"subcategoria_id" 			=> $categoria["subcategoria_id"],
 			"subcategoria_nome" 		=> $categoria["subcategoria_nome"],
 			"subcategoria_description" 	=> $categoria["subcategoria_description"],
