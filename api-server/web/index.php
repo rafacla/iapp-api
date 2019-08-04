@@ -892,7 +892,7 @@ $app->get('/categoriatabular/{diariouid}', function (Request $request, $diarioui
 	if ($diario) {
 		if ($user['adm'] || $user['id']==$diario['user_id']) {
 			$diarioID = $diario['diario_id'];
-			$sql = sprintf("SELECT `categoria_id`, `categoria_nome`, `categoria_description`, `categoria_ordem` from `register_categorias` WHERE (`diario_id` = '%s' OR `diario_id` IS NULL) ORDER BY `categoria_ordem`",$diarioID);
+			$sql = sprintf("SELECT `categoria_id`, `categoria_nome`, `categoria_description`, `categoria_ordem`, `diario_id` from `register_categorias` WHERE (`diario_id` = '%s' OR `diario_id` IS NULL) ORDER BY `categoria_ordem`",$diarioID);
 			$rows = $db ->select($sql);
 			if ($rows) {
 				$i = 0;
