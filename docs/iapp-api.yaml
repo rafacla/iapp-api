@@ -1028,7 +1028,7 @@ paths:
     post:
       tags:
         - orçamentos
-      summary: Cria ou Altera um orçamento dado seu budget_id ou diario_id
+      summary: Cria ou Altera um orçamento dado seu diario_id, orcamento_date e subcategoria_id
       responses:
         '201':
           description: criado
@@ -1039,7 +1039,7 @@ paths:
                 properties:
                   budget_id:
                     type: string
-                    description: budget_id criado
+                    description: orcamento_id criado
         '200':
           description: atualizado!
         '400':
@@ -1494,14 +1494,12 @@ components:
     orcamento_post:
       type: object
       properties:
-        budget_id:
+        orcamento_date:
           type: string
-        budget_date:
+        orcamento_valor:
+          type: number
+        diario_uid:
           type: string
-        budget_valor:
-          type: number
-        diario_id:
-          type: number
         subcategoria_id:
           type: number
     body_conta:

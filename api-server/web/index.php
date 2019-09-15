@@ -2337,9 +2337,15 @@ $app->post('/orcamento',function (Request $request) use ($app, $db) {
 	$ip = $request->getClientIp();
 	$atualizacao = false;
 
-	if (isset($data['budget_id'])) {
+	$sql_verificacao = "SELECT `orcamento_id` FROM `register_orcamentos` WHERE `subcategoria_id`='".$data['subcategoria_id']."' && `orcamento_date` = '".$data['orcamento_date']."';";
+	$rows = $db->select($sql_verificacao);
+	if ($rows) {
+		$data['orcamento_id'] = $rows[0]['orcamento_id'];
+	}
+
+	if (isset($data['orcamento_id'])) {
 		$atualizacao = true;
-	} elseif(isset($data['diario_id'])) {
+	} elseif(isset($data['diario_uid'])) {
 		$atualizacao = false;
 	} else {
 		return new Response('{"mensagem":"Sintaxe inválida"}', 400);
@@ -2347,31 +2353,33 @@ $app->post('/orcamento',function (Request $request) use ($app, $db) {
 
 	//agora, vamos verificar se a atualização ou criação pode ser realizada pelo usuário:
 	if ($atualizacao) {
-		$sql_verificacao = "SELECT `user_id` FROM `register_diarios` 
-							JOIN `register_budgets` ON `register_diarios`.`id` = `register_budgets`.`diario_id` 
-							WHERE `register_budgets`.`budget_id` = '".$data['budget_id']."';";
+		$sql_verificacao = "SELECT `user_id`, `id` FROM `register_diarios` 
+							JOIN `register_orcamentos` ON `register_diarios`.`id` = `register_orcamentos`.`diario_id` 
+							WHERE `register_orcamentos`.`orcamento_id` = '".$data['orcamento_id']."';";
 	} else
-		$sql_verificacao = "SELECT `user_id` FROM `register_diarios`
-							WHERE `register_diarios`.`id` = '".$data['diario_id']."';";
+		$sql_verificacao = "SELECT `user_id`, `id` FROM `register_diarios`
+							WHERE `register_diarios`.`uid` = '".$data['diario_uid']."';";
 	$rows = $db->select($sql_verificacao);
 	if (!$rows) {
 		return new Response('{"mensagem":"Sintaxe inválida"}', 400);
 	} elseif ($rows[0]['user_id']!=$user['id'] && !$user['adm']) {
 		return new Response('{"mensagem":"Não autorizado!"}', 403);
+	} else {
+		$data['diario_id'] = $rows[0]['id'];
 	}
 
-	$tabela_db = "register_budgets";
+	$tabela_db = "register_orcamentos";
 	$colunasObrigatorias = "";
 	$colunasModificar = "";
 	$colunasWhere = "";
 	//agora, vamos definir quais colunas são obrigatórias e quais serão inseridas/atualizadas:
 	if ($atualizacao) {
-		$colunasObrigatorias 	= "budget_id";
-		$colunasModificar		= "budget_date,budget_valor,subcategoria_id";
-		$colunasWhere			= "budget_id";
+		$colunasObrigatorias 	= "orcamento_id";
+		$colunasModificar		= "orcamento_date,orcamento_valor,subcategoria_id";
+		$colunasWhere			= "orcamento_id";
 	} else {
-		$colunasObrigatorias	= "budget_date,budget_valor,diario_id,subcategoria_id";
-		$colunasModificar		= "budget_date,budget_valor,diario_id,subcategoria_id";
+		$colunasObrigatorias	= "orcamento_date,orcamento_valor,diario_id,subcategoria_id";
+		$colunasModificar		= "orcamento_date,orcamento_valor,diario_id,subcategoria_id";
 	}
 
 	//a partir de agora, não se modifica o template:
@@ -2438,8 +2446,8 @@ $app->get('/orcamento',function (Request $request) use ($app, $db) {
 	global $user;
 	
 	$diario_uid 	= $db->escape_string($request->headers->get("diariouid"));
-	$ano		 	= $db->escape_string($request->headers->get("ano"));
-	$mes 			= $db->escape_string($request->headers->get("mes"));
+	$anoAtual	 	= $db->escape_string($request->headers->get("ano"));
+	$mesAtual 			= $db->escape_string($request->headers->get("mes"));
 
 	$foreignColumns[0] = new ForeignRelationship('register_diarios',"id",null);
 
@@ -2462,7 +2470,7 @@ $app->get('/orcamento',function (Request $request) use ($app, $db) {
 	 INNER JOIN `register_subcategorias` ON `register_categorias`.`categoria_id` = `register_subcategorias`.`categoria_id`
      INNER JOIN `register_diarios` ON `register_categorias`.`diario_id` = `register_diarios`.`id`
 	 WHERE `register_diarios`.`uid` = '$diario_uid'
-	 ORDER BY `register_subcategorias`.`categoria_id`;";
+	 ORDER BY `register_categorias`.`categoria_ordem`, `register_subcategorias`.`subcategoria_ordem`;";
 
 	$categorias = $db->select($sql_categorias);
 	if (!$categorias) {
@@ -2476,8 +2484,8 @@ $app->get('/orcamento',function (Request $request) use ($app, $db) {
 		`register_orcamentos`.`subcategoria_id`, `register_orcamentos`.`diario_id`, `register_diarios`.`uid` AS `diario_uid`
 	FROM `register_orcamentos`
 	INNER JOIN `register_diarios` ON `register_orcamentos`.`diario_id` = `register_diarios`.`id`
-	WHERE `register_diarios`.`uid` = '$diario_uid'
-	HAVING `orcamento_mes` = '$mes' AND `orcamento_ano` = '$ano';";
+	WHERE `register_diarios`.`uid` = '$diario_uid' AND
+		  `register_orcamentos`.`orcamento_date` <= '$anoAtual-$mesAtual-01';";
 	
 	$orcamentos = $db->select($sql_orcamentos);
 	
@@ -2490,17 +2498,55 @@ $app->get('/orcamento',function (Request $request) use ($app, $db) {
 	INNER JOIN `register_transacoes` ON `register_transacoes_itens`.`transacao_id` = `register_transacoes`.`transacao_id`
 	INNER JOIN `register_subcategorias` ON `register_transacoes_itens`.`subcategoria_id` = `register_subcategorias`.`subcategoria_id`
 	INNER JOIN `register_categorias` ON `register_subcategorias`.`categoria_id` = `register_categorias`.`categoria_id`
-	INNER JOIN `register_diarios` ON `register_categorias`.`diario_id` = `register_diarios`.`id`
+	INNER JOIN `register_contas` ON `register_transacoes`.`conta_id` = `register_contas`.`conta_id`
+	INNER JOIN `register_diarios` ON `register_contas`.`diario_id` = `register_diarios`.`id`
 	WHERE `register_diarios`.`uid` = '$diario_uid'
-	GROUP BY `register_subcategorias`.`subcategoria_id`, MONTH(`register_transacoes`.`transacao_data`), YEAR(`register_transacoes`.`transacao_data`)
-	HAVING `transacoes_mes` = '$mes' AND `transacoes_ano` = '$ano'";
+		  AND `register_transacoes`.`transacao_data` <= LAST_DAY('$anoAtual-$mesAtual-01')
+	GROUP BY `register_subcategorias`.`subcategoria_id`, MONTH(`register_transacoes`.`transacao_data`), YEAR(`register_transacoes`.`transacao_data`);";
 
 	$transacoes = $db->select($sql_transacoes);
+
+	$receitas = 0;
+	$receita_acum_m_1 = 0;
+	foreach ($transacoes as $transacao) {
+		//subcategoria_id:
+			//1 = Fundos para este mês M
+			//2 = Fundos para o próximo mês M+1
+		$mes = 0;
+		$ano = 0;
+		if ($transacao["subcategoria_id"] == 1) {
+			//Este mês
+			$mes = $transacao["transacoes_mes"]*1;
+			$ano = $transacao["transacoes_ano"]*1;
+		} elseif ($transacao["subcategoria_id"] == 2) {
+			//Próximo mês
+			if (($transacao["transacoes_mes"]*1)==12) {
+				$mes = 1;
+				$ano = $transacao["transacoes_ano"]*1+1;
+			} else {
+				$mes = $transacao["transacoes_mes"]*1+1;
+				$ano = $transacao["transacoes_ano"]*1;
+			}
+		}
+		if ($mes <> 0 && $ano <> 0) {
+			if ($mes + $ano*100 <= $mesAtual+$anoAtual*100) {
+				$receitas += $transacao["transacoes_valor"];
+			} 
+			if ($mes + $ano*100 < $mesAtual+$anoAtual*100) {
+				$receita_acum_m_1 += $transacao["transacoes_valor"];
+			}
+		}
+	}
+
+	
+
 	$lista_orcamentos = [];
 	$categoria_antiga = 0;
+	$carry_neg = 0;
+	$orcado_acum_m_1 = 0; 
+	$orcado_acum = 0;
 	foreach ($categorias as $categoria) {
 		$objeto =	[];
-		$orcamento_valor = 0;
 		if ($categoria_antiga <> $categoria["categoria_id"]) {
 			//se é a primeira vez que esta categoria aparece, vamos criar a linha de cabeçalho
 			$objeto_header = array(
@@ -2513,20 +2559,102 @@ $app->get('/orcamento',function (Request $request) use ($app, $db) {
 			array_push($lista_orcamentos,$objeto_header);
 			$categoria_antiga = $categoria["categoria_id"];
 		}
-		//Aqui calcularemos o valor acumulado do orçamento se positivo, se negativo, dependerá do carry.
-		//TBD: implementar a funcção de acumulação
+		//Aqui calcularemos o valor orçado do mês
+		$acumulado_w_carry = 0;
+		$acumulado_wo_carry = [];
+		$orcamento_valor = 0;
 		foreach ($orcamentos as $orcamento) {
-			if ($orcamento["subcategoria_id"] == $categoria["subcategoria_id"]) {
+			if ($orcamento["subcategoria_id"] == $categoria["subcategoria_id"] 
+			&& (int)$orcamento["orcamento_mes"] == (int)$mesAtual && (int)$orcamento["orcamento_ano"] == (int)$anoAtual) {
 				$orcamento_valor += $orcamento["orcamento_valor"];
+			}
+			if ($orcamento["subcategoria_id"] == $categoria["subcategoria_id"] 
+			&& (int)$orcamento["orcamento_mes"]+$orcamento["orcamento_ano"]*100 < (int)$mesAtual + 100*(int)$anoAtual) { 
+				$orcado_acum_m_1 += $orcamento["orcamento_valor"];
+			}
+			if ($orcamento["subcategoria_id"] == $categoria["subcategoria_id"] 
+			&& (int)$orcamento["orcamento_mes"]+$orcamento["orcamento_ano"]*100 <= (int)$mesAtual + 100*(int)$anoAtual) { 
+				$orcado_acum += $orcamento["orcamento_valor"];
+			}
+			if ($orcamento["subcategoria_id"] == $categoria["subcategoria_id"])  {
+				if ($categoria['subcategoria_carry']=="1") {
+					$acumulado_w_carry += $orcamento["orcamento_valor"];
+				} else {
+					if (!isset($acumulado_wo_carry[(int)$orcamento["orcamento_mes"]+$orcamento["orcamento_ano"]*100])) {
+						$acumulado_wo_carry[(int)$orcamento["orcamento_mes"]+$orcamento["orcamento_ano"]*100] = 0;
+					}
+					$acumulado_wo_carry[(int)$orcamento["orcamento_mes"]+$orcamento["orcamento_ano"]*100] += $orcamento["orcamento_valor"];
+				}
+				/*
+				if ($acumulado_wo_carry < 0) {
+					if ($categoria["subcategoria_carry"]=="0" &&
+					(int)$orcamento["orcamento_mes"]+$orcamento["orcamento_ano"]*100 < (int)$mesAtual + 100*(int)$anoAtual) {
+						$carry_neg += $acumulado_wo_carry;
+					}
+					if ((int)$orcamento["orcamento_mes"]+$orcamento["orcamento_ano"]*100 < (int)$mesAtual + 100*(int)$anoAtual) {
+						$acumulado_wo_carry = 0;
+					}
+				}
+				*/
 			}
 		}
 
 		$transacoes_valor = 0;
 		//Aqui calculamos o valor acumulado das transações classificadas:
 		foreach ($transacoes as $transacao) {
-			if ($transacao["subcategoria_id"] == $categoria["subcategoria_id"]) {
+			if ($transacao["subcategoria_id"] == $categoria["subcategoria_id"]
+			&& (int)$transacao["transacoes_mes"] == (int)$mesAtual && (int)$transacao["transacoes_ano"] == (int)$anoAtual) {
 				$transacoes_valor += $transacao["transacoes_valor"];
 			}
+			if ($transacao["subcategoria_id"] == $categoria["subcategoria_id"]) {
+				if ($categoria['subcategoria_carry']=="1") {
+					$acumulado_w_carry += $transacao["transacoes_valor"];
+				} else {
+					if (!isset($acumulado_wo_carry[(int)$transacao["transacoes_mes"]+$transacao["transacoes_ano"]*100])) {
+						$acumulado_wo_carry[(int)$transacao["transacoes_mes"]+$transacao["transacoes_ano"]*100] = 0;
+					}
+					$acumulado_wo_carry[(int)$transacao["transacoes_mes"]+$transacao["transacoes_ano"]*100] += $transacao["transacoes_valor"];
+				}
+				/*
+				if ($acumulado_wo_carry < 0) {
+					if ($categoria["subcategoria_carry"]=="0" &&
+					(int)$orcamento["orcamento_mes"]+$orcamento["orcamento_ano"]*100 < (int)$mesAtual + 100*(int)$anoAtual) {
+						$carry_neg += $acumulado_wo_carry;
+					}
+					if ((int)$transacao["transacoes_mes"]+$transacao["transacoes_ano"]*100 < (int)$mesAtual + 100*(int)$anoAtual) {
+						$acumulado_wo_carry = 0;
+					}
+				}*/
+			}
+		}
+		$acumulado_wo_carry_val = 0;
+		foreach($acumulado_wo_carry as $data => $acumulado_wo_carry_mes) {
+			if ($data < $mesAtual+$anoAtual*100) {
+				if ($acumulado_wo_carry_mes >= 0) {
+					$acumulado_wo_carry_val += $acumulado_wo_carry_mes;
+				} else {
+					$acumulado_wo_carry_val = 0;
+					if ($mesAtual*1 == 1) {
+						$anoMesAnterior = 12+($anoAtual-1)*100;
+						if ($data == $anoMesAnterior) {
+							$carry_neg += $acumulado_wo_carry_mes;
+						}
+					} else {
+						$anoMesAnterior = ($mesAtual-1)+($anoAtual)*100;
+						if ($data == $anoMesAnterior) {
+							$carry_neg += $acumulado_wo_carry_mes;
+						}
+					}
+				}
+			} else {
+				$acumulado_wo_carry_val += $acumulado_wo_carry_mes;
+			}
+		}
+		$disponivel = 0;
+		if ($categoria["subcategoria_carry"]=="1") {
+			$disponivel = $acumulado_w_carry;
+		} else {
+			$disponivel = $acumulado_wo_carry_val;
 		}
 
 		$objeto = array(
@@ -2542,11 +2670,21 @@ $app->get('/orcamento',function (Request $request) use ($app, $db) {
 			"subcategoria_ordem" 		=> $categoria["subcategoria_ordem"],
 			"orcamento_valor"			=> $orcamento_valor,
 			"transacoes_valor"			=> $transacoes_valor,
+			"disponivel_valor"			=> $disponivel,
 		);
 		array_push($lista_orcamentos,$objeto);
 	}
-	
-	$resposta = array("lista_orcamentos" => $lista_orcamentos);
+	$sobreorcado = 0;
+	if ($orcado_acum_m_1 > $receita_acum_m_1) {
+		$sobreorcado = $orcado_acum_m_1 - $receita_acum_m_1;
+	}
+	$resposta = array("lista_orcamentos" => $lista_orcamentos, 
+					"receita_acum" 	=> $receitas, 
+					"receita_mes" 	=> ($receitas-$receita_acum_m_1), 
+					"orcado_acum" 	=> $orcado_acum,
+					"orcado_mes"	=> ($orcado_acum-$orcado_acum_m_1),
+					"sobregasto" 	=> (-1)*$carry_neg, 
+					"sobreorcado" 	=> $sobreorcado);
 	return new Response(json_encode($resposta),200);
 
 });
