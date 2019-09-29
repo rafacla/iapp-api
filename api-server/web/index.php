@@ -1535,7 +1535,17 @@ $app->post('/conta',function (Request $request) use ($app, $db) {
 				$resposta['conta_id'] = $inserido;
 				$resposta['conta_nome'] = $conta_nome;
 				$resposta['diario_id'] = $diario_id;
+
+				$transacao_numero = 'Saldo Inicial';
+				$transacao_sacado = $transacao_numero;
 				
+				$sql_i_t = "INSERT INTO `register_transacoes` 
+				(`transacao_numero`,`transacao_data`,`transacao_sacado`,`transacao_valor`,`transacao_conciliada`,`conta_id`,`CreatedIP`,`ModifiedIP`,`CreatedDate`,`ModifiedDate`)
+				VALUES
+				('$transacao_numero','$conta_reconciliado_data','$transacao_sacado','$conta_reconciliado_valor','1',$inserido,'$ip','$ip',CURDATE(),CURDATE());";
+				
+				$transacao_inicial = $db->insert($sql_i_t);
+
 				return new Response(json_encode($resposta),201);
 			} else 
 			{
