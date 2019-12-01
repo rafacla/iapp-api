@@ -595,11 +595,101 @@ $app->get('/cartoes', function (Request $request) use ($app, $db) {
 
 	$diario_uid = $db->escape_string($request->headers->get("diariouid"));
 	if ($request->headers->get("diariouid")!=null) {
-		$sql_s = "SELECT `register_diarios`.`user_id` FROM `register_diarios` WHERE `register_diarios`.`uid` = '".$diario_uid."'";
-		$rows = $db ->select($sql_s);
-		if ($rows) {
-			if ($rows[0]['user_id'] == $user['id']) //eba existe e tá ativo, vamos retornar um ok!
-				return new Response('{"mensagem":"ok"}',200);
+		$sql_s = "SELECT `register_diarios`.`user_id`, `register_diarios`.`id` FROM `register_diarios` WHERE `register_diarios`.`uid` = '".$diario_uid."'";
+		$diarios = $db ->select($sql_s);
+		if ($diarios) {
+			if ($diarios[0]['user_id'] == $user['id']) {//eba, usuario está tentando recuperar o que é seu:
+				$sql_s = "SELECT `conta_id`, `conta_nome`, `conta_descricao`, `conta_reconciliado_valor`, 
+				`conta_reconciliado_data`, `conta_budget`, `conta_cartao`, `conta_cartao_data_fechamento`, 
+				`conta_cartao_data_vencimento`, `diario_id`, `bank_id`, `conta_img` 
+				FROM `register_contas` WHERE `conta_cartao` = '1' AND `diario_id`='".$diarios[0]['id']."'";
+				$cartoes = $db ->select($sql_s);
+
+				if ($cartoes)
+					return new Response(json_encode($cartoes),200);
+				else
+					return new Response('{"mensagem":"Não encontrado"}',404);
+			}
+			else //vixe, tentando obter os cartões de outra pessoa? Nem vamos avisar que foi descoberto:
+				return new Response('{"mensagem":"Não encontrado"}',404);
+		} else {
+			return new Response('{"mensagem":"Não encontrado"}', 404);
+		}
+	} else {
+		return new Response('{"mensagem":"Sintaxe invalida"}',400);
+	}
+});
+
+//Rota para pegar as transacoes da fatura
+$app->get('/cartoes/fatura/{fatura_data}', function (Request $request, $fatura_data) use ($app, $db) {
+	global $user;
+
+	$cartao_id = $db->escape_string($request->headers->get("cartaoid"));
+	$fatura_data = $db->escape_string($fatura_data);
+	if ($request->headers->get("cartaoid")!=null && $fatura_data!=null) {
+		$sql_s = "SELECT `register_diarios`.`user_id`, `register_diarios`.`id` FROM `register_contas` JOIN `register_diarios` ON `register_contas`.`diario_id` = `register_diarios`.`id` WHERE `register_contas`.`conta_id` = '".$cartao_id."'";
+		$diarios = $db ->select($sql_s);
+		if ($diarios) {
+			if ($diarios[0]['user_id'] == $user['id']) {//eba, usuario está tentando recuperar o que é seu:
+				$sql_s = 
+				"SELECT 
+					DATE_FORMAT(`register_transacoes`.`transacao_fatura_data`,'%Y-%m-01') AS `fatura_data`, 
+					`register_transacoes`.`transacao_data`, 
+					`register_transacoes`.`transacao_sacado`,
+					`register_transacoes`.`transacao_descricao`,
+					-transacao_valor
+				FROM 
+					`register_transacoes` 
+				JOIN 
+					`register_contas` 
+						ON `register_contas`.`conta_id` = `register_transacoes`.`conta_id`
+				WHERE 
+					`register_contas`.`conta_id` = '".$cartao_id."' 
+					AND 
+					`register_contas`.`conta_cartao` = '1'
+					AND
+					DATE_FORMAT(`register_transacoes`.`transacao_fatura_data`,'%Y-%m-01') = '".$fatura_data."'";
+				$fatura_itens = $db->select($sql_s);
+				if ($fatura_itens)
+					return new Response(json_encode($fatura_itens),200);
+				else
+					return new Response('{"mensagem":"Não encontrado"}',404);
+			}
+			else //vixe, tentando obter os cartões de outra pessoa? Nem vamos avisar que foi descoberto:
+				return new Response('{"mensagem":"Não encontrado"}',404);
+		} else {
+			return new Response('{"mensagem":"Não encontrado"}', 404);
+		}
+	} else {
+		return new Response('{"mensagem":"Sintaxe invalida"}',400);
+	}
+});
+
+//Rota para pegar a lista de faturas dado um cartao_id
+$app->get('/cartoes/fatura', function (Request $request) use ($app, $db) {
+	global $user;
+
+	$cartao_id = $db->escape_string($request->headers->get("cartaoid"));
+	if ($request->headers->get("cartaoid")!=null) {
+		$sql_s = "SELECT `register_diarios`.`user_id`, `register_diarios`.`id` FROM `register_contas` JOIN `register_diarios` ON `register_contas`.`diario_id` = `register_diarios`.`id` WHERE `register_contas`.`conta_id` = '".$cartao_id."'";
+		$diarios = $db ->select($sql_s);
+		if ($diarios) {
+			if ($diarios[0]['user_id'] == $user['id']) {//eba, usuario está tentando recuperar o que é seu:
+				$sql_s = 
+				"SELECT `table1`.`fatura_data`, `table1`.`fatura_valor`, `table2`.`fatura_valor_pago` FROM
+					( SELECT DATE_FORMAT(`register_transacoes`.`transacao_fatura_data`,'%Y-%m-01') AS `fatura_data`, SUM(transacao_valor) AS `fatura_valor` FROM `register_transacoes` JOIN `register_contas` ON `register_contas`.`conta_id` = `register_transacoes`.`conta_id` WHERE `register_contas`.`conta_id` = '".$cartao_id."' AND `register_contas`.`conta_cartao` = '1' GROUP BY (`fatura_data`)
+				) `table1`
+				LEFT JOIN 
+					( SELECT DATE_FORMAT(IFNULL(`register_transacoes`.`transacao_fatura_data`, `register_transacoes`.`transacao_data`),'%Y-%m-01') AS `fatura_data`, -SUM(`register_transacoes_itens`.`transacoes_item_valor`) AS `fatura_valor_pago` FROM `register_transacoes_itens` JOIN `register_transacoes` ON `register_transacoes`.`transacao_id` = `register_transacoes_itens`.`transacao_id` WHERE `register_transacoes_itens`.`transf_para_conta_id` = '".$cartao_id."' AND `register_transacoes_itens`.`transacoes_item_valor` < 0 GROUP BY (`fatura_data`)
+				) `table2`
+				ON
+				`table1`.`fatura_data` = `table2`.`fatura_data` ORDER BY (`table1`.`fatura_data`)";
+				$faturas = $db->select($sql_s);
+				if ($faturas)
+					return new Response(json_encode($faturas),200);
+				else
+					return new Response('{"mensagem":"Não encontrado"}',404);
+			}
 			else //vixe, tentando obter os cartões de outra pessoa? Nem vamos avisar que foi descoberto:
 				return new Response('{"mensagem":"Não encontrado"}',404);
 		} else {

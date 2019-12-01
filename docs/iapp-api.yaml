@@ -49,6 +49,43 @@ paths:
           description: Respostas
         '404':
           description: Diario não existe
+  /cartoes/fatura:
+    get:
+      tags:
+        - cartoes
+      summary: Lista todas as faturas dado um id de cartão
+      parameters:
+        - name: cartaoid
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Respostas
+        '404':
+          description: Cartão não existe
+  /cartoes/fatura/{data}:
+    get:
+      tags:
+        - cartoes
+      summary: Lista todas as faturas dado um id de cartão
+      parameters:
+        - name: cartaoid
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: data
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Respostas
+        '404':
+          description: Cartão não existe
   /activate/{actcode}:
     get:
       tags:
