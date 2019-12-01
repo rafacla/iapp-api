@@ -27,10 +27,28 @@ tags:
     description: 'Permite listar, adicionar ou remover orçamentos mensais'
   - name: contas
     description: 'Permite listar, adicionar ou remover contas bancárias (e cartões)'
+  - name: cartoes
+    description: 'Pemite listar cartões de crédito, ver faturas'
 security:
   - application:
       - user
 paths:
+  /cartoes:
+    get:
+      tags:
+        - cartoes
+      summary: Lista todos os cartões do diario selecionado
+      parameters:
+        - name: diariouid
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Respostas
+        '404':
+          description: Diario não existe
   /activate/{actcode}:
     get:
       tags:

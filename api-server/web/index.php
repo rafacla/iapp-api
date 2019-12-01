@@ -589,6 +589,27 @@ $app->get('/users/{id}', function (Request $request, $id) use ($app, $db) {
 	}
 });
 
+//Rota para recuperar cartões do diariouid:
+$app->get('/cartoes', function (Request $request) use ($app, $db) {
+	global $user;
+
+	$diario_uid = $db->escape_string($request->headers->get("diariouid"));
+	if ($request->headers->get("diariouid")!=null) {
+		$sql_s = "SELECT `register_diarios`.`user_id` FROM `register_diarios` WHERE `register_diarios`.`uid` = '".$diario_uid."'";
+		$rows = $db ->select($sql_s);
+		if ($rows) {
+			if ($rows[0]['user_id'] == $user['id']) //eba existe e tá ativo, vamos retornar um ok!
+				return new Response('{"mensagem":"ok"}',200);
+			else //vixe, tentando obter os cartões de outra pessoa? Nem vamos avisar que foi descoberto:
+				return new Response('{"mensagem":"Não encontrado"}',404);
+		} else {
+			return new Response('{"mensagem":"Não encontrado"}', 404);
+		}
+	} else {
+		return new Response('{"mensagem":"Sintaxe invalida"}',400);
+	}
+});
+
 //Rota para verificar se um cliente existe
 $app->get('/cliente', function (Request $request) use ($app, $db) {
 	$client_id = $db->escape_string($request->headers->get("clientid"));
