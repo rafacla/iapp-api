@@ -723,7 +723,7 @@ $app->get('/cartoes/fatura', function (Request $request) use ($app, $db) {
 								"fatura_index" => $curIndex,
 								"fatura_data" => $value["fatura_data"],
 								"fatura_valor" => $value["fatura_valor"],
-								"fatura_valor_pago" => $value["fatura_valor_pago"],
+								"fatura_valor_pago" => -$value["fatura_valor_pago"],
 								"conta_id" => $cartao_id,
 								"conta_nome" => $diarios[0]['conta_nome']
 							);
