@@ -69,7 +69,7 @@ paths:
     get:
       tags:
         - cartoes
-      summary: Lista todas as faturas dado um id de cartão
+      summary: Lista todas as transacoes de uma fatura dado um id de cartão e a data
       parameters:
         - name: cartaoid
           in: header
