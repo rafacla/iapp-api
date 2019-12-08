@@ -605,8 +605,9 @@ $app->get('/cartoes', function (Request $request) use ($app, $db) {
 				FROM `register_contas` WHERE `conta_cartao` = '1' AND `diario_id`='".$diarios[0]['id']."'";
 				$cartoes = $db ->select($sql_s);
 
-				if ($cartoes)
+				if ($cartoes) {
 					return new Response(json_encode($cartoes),200);
+				}
 				else
 					return new Response('{"mensagem":"Não encontrado"}',404);
 			}
@@ -685,8 +686,48 @@ $app->get('/cartoes/fatura', function (Request $request) use ($app, $db) {
 				ON
 				`table1`.`fatura_data` = `table2`.`fatura_data` ORDER BY (`table1`.`fatura_data`)";
 				$faturas = $db->select($sql_s);
-				if ($faturas)
-					return new Response(json_encode($faturas),200);
+				if ($faturas) {
+					$faturasList = [];
+					//vamos calcular a quantidade de faturas e zerar antes de distribuir:
+					$minDate = min(array_diff(array_column($faturas,'fatura_data'),array(null)));
+					$maxDate = max(array_column($faturas,'fatura_data'));
+					$maxLen = date_create($maxDate)->format("m")-date_create($minDate)->format("m")+12*(date_create($maxDate)->format("Y")-date_create($minDate)->format("Y"))+1;
+					$curDate = $minDate;
+					
+					for ($i=0;$i<=$maxLen;$i++) {
+						$curDate = date_add(date_create($minDate), date_interval_create_from_date_string($i." month"));
+						$faturasList[$i] = array(
+							"fatura_index" => ($i+1),
+							"fatura_data" => date_format($curDate,"Y-m-1"),
+							"fatura_valor" => 0,
+							"fatura_valor_pago" => 0,
+							"conta_id" => $cartao_id
+						);
+					}
+					foreach ($faturas as $key => $value) {
+						if ($value["fatura_data"] == null) {
+							$faturasList[0] = array(
+								"fatura_index" => 0,
+								"fatura_data" => null,
+								"fatura_valor" => $value["fatura_valor"],
+								"fatura_valor_pago" => null,
+								"conta_id" => $cartao_id
+							);
+						} else {
+							$curDate = $value["fatura_data"];
+							$curIndex = date_create($curDate)->format("m")-date_create($minDate)->format("m")+12*(date_create($curDate)->format("Y")-date_create($minDate)->format("Y"))+1;
+
+							$faturasList[$curIndex] = array(
+								"fatura_index" => $curIndex,
+								"fatura_data" => $value["fatura_data"],
+								"fatura_valor" => $value["fatura_valor"],
+								"fatura_valor_pago" => $value["fatura_valor_pago"],
+								"conta_id" => $cartao_id
+							);
+						}
+					}
+					return new Response(json_encode($faturasList),200);
+				}
 				else
 					return new Response('{"mensagem":"Não encontrado"}',404);
 			}
