@@ -710,7 +710,7 @@ $app->get('/cartoes/fatura', function (Request $request) use ($app, $db) {
 							$faturasList[0] = array(
 								"fatura_index" => 0,
 								"fatura_data" => null,
-								"fatura_valor" => $value["fatura_valor"],
+								"fatura_valor" => (-1)*$value["fatura_valor"],
 								"fatura_valor_pago" => null,
 								"conta_id" => $cartao_id,
 								"conta_nome" => $diarios[0]['conta_nome']
@@ -722,8 +722,8 @@ $app->get('/cartoes/fatura', function (Request $request) use ($app, $db) {
 							$faturasList[$curIndex] = array(
 								"fatura_index" => $curIndex,
 								"fatura_data" => $value["fatura_data"],
-								"fatura_valor" => $value["fatura_valor"],
-								"fatura_valor_pago" => -$value["fatura_valor_pago"],
+								"fatura_valor" => (-1)*$value["fatura_valor"],
+								"fatura_valor_pago" => $value["fatura_valor_pago"],
 								"conta_id" => $cartao_id,
 								"conta_nome" => $diarios[0]['conta_nome']
 							);
