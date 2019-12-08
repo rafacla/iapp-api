@@ -672,7 +672,7 @@ $app->get('/cartoes/fatura', function (Request $request) use ($app, $db) {
 
 	$cartao_id = $db->escape_string($request->headers->get("cartaoid"));
 	if ($request->headers->get("cartaoid")!=null) {
-		$sql_s = "SELECT `register_diarios`.`user_id`, `register_diarios`.`id` FROM `register_contas` JOIN `register_diarios` ON `register_contas`.`diario_id` = `register_diarios`.`id` WHERE `register_contas`.`conta_id` = '".$cartao_id."'";
+		$sql_s = "SELECT `register_diarios`.`user_id`, `register_diarios`.`id`, `register_contas`.`conta_nome` FROM `register_contas` JOIN `register_diarios` ON `register_contas`.`diario_id` = `register_diarios`.`id` WHERE `register_contas`.`conta_id` = '".$cartao_id."'";
 		$diarios = $db ->select($sql_s);
 		if ($diarios) {
 			if ($diarios[0]['user_id'] == $user['id']) {//eba, usuario está tentando recuperar o que é seu:
@@ -701,7 +701,8 @@ $app->get('/cartoes/fatura', function (Request $request) use ($app, $db) {
 							"fatura_data" => date_format($curDate,"Y-m-1"),
 							"fatura_valor" => 0,
 							"fatura_valor_pago" => 0,
-							"conta_id" => $cartao_id
+							"conta_id" => $cartao_id,
+							"conta_nome" => $diarios[0]['conta_nome']
 						);
 					}
 					foreach ($faturas as $key => $value) {
@@ -711,7 +712,8 @@ $app->get('/cartoes/fatura', function (Request $request) use ($app, $db) {
 								"fatura_data" => null,
 								"fatura_valor" => $value["fatura_valor"],
 								"fatura_valor_pago" => null,
-								"conta_id" => $cartao_id
+								"conta_id" => $cartao_id,
+								"conta_nome" => $diarios[0]['conta_nome']
 							);
 						} else {
 							$curDate = $value["fatura_data"];
@@ -722,7 +724,8 @@ $app->get('/cartoes/fatura', function (Request $request) use ($app, $db) {
 								"fatura_data" => $value["fatura_data"],
 								"fatura_valor" => $value["fatura_valor"],
 								"fatura_valor_pago" => $value["fatura_valor_pago"],
-								"conta_id" => $cartao_id
+								"conta_id" => $cartao_id,
+								"conta_nome" => $diarios[0]['conta_nome']
 							);
 						}
 					}
