@@ -2667,8 +2667,7 @@ $app->get('/orcamento',function (Request $request) use ($app, $db) {
 	INNER JOIN `register_contas` ON `register_transacoes`.`conta_id` = `register_contas`.`conta_id`
 	INNER JOIN `register_diarios` ON `register_contas`.`diario_id` = `register_diarios`.`id`
 	WHERE `register_diarios`.`uid` = '$diario_uid'
-		  AND (`register_transacoes`.`transacao_data` <= LAST_DAY('$anoAtual-$mesAtual-01')
-		  		OR IFNULL(`register_transacoes`.`transacao_fatura_data`,`register_transacoes`.`transacao_data`) <= LAST_DAY('$anoAtual-$mesAtual-01'))
+		  AND (IFNULL(`register_transacoes`.`transacao_fatura_data`,`register_transacoes`.`transacao_data`) <= LAST_DAY('$anoAtual-$mesAtual-01'))
 	GROUP BY `register_subcategorias`.`subcategoria_id`, MONTH(IFNULL(`register_transacoes`.`transacao_fatura_data`,`register_transacoes`.`transacao_data`)), YEAR(IFNULL(`register_transacoes`.`transacao_fatura_data`,`register_transacoes`.`transacao_data`));";
 
 	$transacoes = $db->select($sql_transacoes);
