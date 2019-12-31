@@ -2869,7 +2869,7 @@ $app->get('/orcamento',function (Request $request) use ($app, $db) {
 	if ($orcado_acum_m_1 > $receita_acum_m_1) {
 		$sobreorcado = $orcado_acum_m_1 - $receita_acum_m_1;
 	}
-	$sobregasto_m_1 = $receita_acum_m_1-$transacoes_m_1-$transacoes_sem_classificacao_m_1;
+	$sobregasto_m_1 = -$receita_acum_m_1-$transacoes_m_1-$transacoes_sem_classificacao_m_1;
 	$resposta = array("lista_orcamentos" => $lista_orcamentos, 
 					"receita_acum" 	=> $receitas, 
 					"receita_mes" 	=> ($receitas-$receita_acum_m_1), 
