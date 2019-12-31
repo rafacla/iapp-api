@@ -2656,8 +2656,9 @@ $app->get('/orcamento',function (Request $request) use ($app, $db) {
 	
 	$sql_transacoes =
 	"SELECT 
-		`register_subcategorias`.`subcategoria_id`, MONTH(`register_transacoes`.`transacao_data`) AS `transacoes_mes`, 
-		YEAR(`register_transacoes`.`transacao_data`) AS `transacoes_ano`, 
+		`register_subcategorias`.`subcategoria_id`, 
+		MONTH(IFNULL(`register_transacoes`.`transacao_fatura_data`,`register_transacoes`.`transacao_data`)) AS `transacoes_mes`, 
+		YEAR(IFNULL(`register_transacoes`.`transacao_fatura_data`,`register_transacoes`.`transacao_data`)) AS `transacoes_ano`, 
 		SUM(`register_transacoes_itens`.`transacoes_item_valor`) AS `transacoes_valor`
 	FROM `register_transacoes_itens`
 	INNER JOIN `register_transacoes` ON `register_transacoes_itens`.`transacao_id` = `register_transacoes`.`transacao_id`
@@ -2666,8 +2667,9 @@ $app->get('/orcamento',function (Request $request) use ($app, $db) {
 	INNER JOIN `register_contas` ON `register_transacoes`.`conta_id` = `register_contas`.`conta_id`
 	INNER JOIN `register_diarios` ON `register_contas`.`diario_id` = `register_diarios`.`id`
 	WHERE `register_diarios`.`uid` = '$diario_uid'
-		  AND `register_transacoes`.`transacao_data` <= LAST_DAY('$anoAtual-$mesAtual-01')
-	GROUP BY `register_subcategorias`.`subcategoria_id`, MONTH(`register_transacoes`.`transacao_data`), YEAR(`register_transacoes`.`transacao_data`);";
+		  AND (`register_transacoes`.`transacao_data` <= LAST_DAY('$anoAtual-$mesAtual-01')
+		  		OR IFNULL(`register_transacoes`.`transacao_fatura_data`,`register_transacoes`.`transacao_data`) <= LAST_DAY('$anoAtual-$mesAtual-01'))
+	GROUP BY `register_subcategorias`.`subcategoria_id`, MONTH(IFNULL(`register_transacoes`.`transacao_fatura_data`,`register_transacoes`.`transacao_data`)), YEAR(IFNULL(`register_transacoes`.`transacao_fatura_data`,`register_transacoes`.`transacao_data`));";
 
 	$transacoes = $db->select($sql_transacoes);
 
