@@ -2674,6 +2674,8 @@ $app->get('/orcamento',function (Request $request) use ($app, $db) {
 
 	$receitas = 0;
 	$receita_acum_m_1 = 0;
+	$transacoes_m = 0;
+	$transacoes_m_1 = 0;
 	foreach ($transacoes as $transacao) {
 		//subcategoria_id:
 			//1 = Fundos para este mês M
@@ -2751,22 +2753,13 @@ $app->get('/orcamento',function (Request $request) use ($app, $db) {
 					}
 					$acumulado_wo_carry[(int)$orcamento["orcamento_mes"]+$orcamento["orcamento_ano"]*100] += $orcamento["orcamento_valor"];
 				}
-				/*
-				if ($acumulado_wo_carry < 0) {
-					if ($categoria["subcategoria_carry"]=="0" &&
-					(int)$orcamento["orcamento_mes"]+$orcamento["orcamento_ano"]*100 < (int)$mesAtual + 100*(int)$anoAtual) {
-						$carry_neg += $acumulado_wo_carry;
-					}
-					if ((int)$orcamento["orcamento_mes"]+$orcamento["orcamento_ano"]*100 < (int)$mesAtual + 100*(int)$anoAtual) {
-						$acumulado_wo_carry = 0;
-					}
-				}
-				*/
 			}
 		}
 
 		$transacoes_valor = 0;
 		//Aqui calculamos o valor acumulado das transações classificadas:
+		//Mas também, vamos calcular o valor gasto em transações de M (mês atual) e M-1 (mês anterior)
+		//Não entram nessa conta transações sem categoria ou em transferências
 		foreach ($transacoes as $transacao) {
 			if ($transacao["subcategoria_id"] == $categoria["subcategoria_id"]
 			&& (int)$transacao["transacoes_mes"] == (int)$mesAtual && (int)$transacao["transacoes_ano"] == (int)$anoAtual) {
@@ -2776,21 +2769,17 @@ $app->get('/orcamento',function (Request $request) use ($app, $db) {
 				if ($categoria['subcategoria_carry']=="1") {
 					$acumulado_w_carry += $transacao["transacoes_valor"];
 				} else {
+					if ((int)$transacao["transacoes_mes"]+100*(int)$transacao["transacoes_ano"]<$mesAtual*1+$anoAtual*100) {
+						//Se o mes e ano da transacao é menor que o mes e ano atual, então é acumulado m-1
+						$transacoes_m_1 += $transacao["transacoes_valor"];
+					}
+					//caso contrário é m:
+					$transacoes_m += $transacao["transacoes_valor"];
 					if (!isset($acumulado_wo_carry[(int)$transacao["transacoes_mes"]+$transacao["transacoes_ano"]*100])) {
 						$acumulado_wo_carry[(int)$transacao["transacoes_mes"]+$transacao["transacoes_ano"]*100] = 0;
 					}
 					$acumulado_wo_carry[(int)$transacao["transacoes_mes"]+$transacao["transacoes_ano"]*100] += $transacao["transacoes_valor"];
 				}
-				/*
-				if ($acumulado_wo_carry < 0) {
-					if ($categoria["subcategoria_carry"]=="0" &&
-					(int)$orcamento["orcamento_mes"]+$orcamento["orcamento_ano"]*100 < (int)$mesAtual + 100*(int)$anoAtual) {
-						$carry_neg += $acumulado_wo_carry;
-					}
-					if ((int)$transacao["transacoes_mes"]+$transacao["transacoes_ano"]*100 < (int)$mesAtual + 100*(int)$anoAtual) {
-						$acumulado_wo_carry = 0;
-					}
-				}*/
 			}
 		}
 		$acumulado_wo_carry_val = 0;
@@ -2840,6 +2829,42 @@ $app->get('/orcamento',function (Request $request) use ($app, $db) {
 		);
 		array_push($lista_orcamentos,$objeto);
 	}
+
+	//agora vamos somar todas as transacoes nao classificadas que nao sejam transferencias, idealmente seria ZERO, mas o usuario pode
+	//nao ter classificado elas ainda:
+
+	$sql_transacoes_sem_classificacoes =
+	"SELECT 
+		IFNULL(`register_transacoes`.`transacao_fatura_data`,`register_transacoes`.`transacao_data`) AS `transacao_data`,
+		MONTH(IFNULL(`register_transacoes`.`transacao_fatura_data`,`register_transacoes`.`transacao_data`)) AS `transacao_mes`,
+		YEAR(IFNULL(`register_transacoes`.`transacao_fatura_data`,`register_transacoes`.`transacao_data`)) AS `transacao_ano`,
+		`transacao_valor`
+	FROM 
+		`register_transacoes` 
+	INNER JOIN `register_contas` ON `register_transacoes`.`conta_id` = `register_contas`.`conta_id`
+	INNER JOIN `register_diarios` ON `register_contas`.`diario_id` = `register_diarios`.`id`
+	LEFT JOIN `register_transacoes_itens` ON `register_transacoes`.`transacao_id` = `register_transacoes_itens`.`transacao_id`
+	WHERE 
+		`register_transacoes`.`transacao_merged_to_id` IS NULL
+		AND
+		`register_transacoes_itens`.`transacoes_item_id` IS NULL
+		AND
+		`register_diarios`.`uid` = '$diario_uid'
+		AND
+			(MONTH(IFNULL(`register_transacoes`.`transacao_fatura_data`,`register_transacoes`.`transacao_data`))*1
+			 +100*YEAR(IFNULL(`register_transacoes`.`transacao_fatura_data`,`register_transacoes`.`transacao_data`)) <= $mesAtual*1+100*$anoAtual);";
+	
+	$transacoes_s_c = $db->select($sql_transacoes_sem_classificacoes);
+	
+	$transacoes_sem_classificacao_m = 0;
+	$transacoes_sem_classificacao_m_1 = 0;
+	foreach ($transacoes_s_c as $transacao) {
+		if ((int)$transacao["transacao_mes"]+100*(int)$transacao["transacao_ano"]<$mesAtual*1+$anoAtual*100) {
+			//Se o mes e ano da transacao é menor que o mes e ano atual, então é acumulado m-1
+			$transacoes_sem_classificacao_m_1 += $transacao["transacao_valor"];
+		}
+		$transacoes_sem_classificacao_m += $transacao["transacao_valor"];
+	}
 	$sobreorcado = 0;
 	if ($orcado_acum_m_1 > $receita_acum_m_1) {
 		$sobreorcado = $orcado_acum_m_1 - $receita_acum_m_1;
@@ -2849,8 +2874,11 @@ $app->get('/orcamento',function (Request $request) use ($app, $db) {
 					"receita_mes" 	=> ($receitas-$receita_acum_m_1), 
 					"orcado_acum" 	=> $orcado_acum,
 					"orcado_mes"	=> ($orcado_acum-$orcado_acum_m_1),
-					"sobregasto" 	=> (-1)*$carry_neg, 
-					"sobreorcado" 	=> $sobreorcado);
+					"sobregasto" 	=> ($receita_acum_m_1-$transacoes_m_1-$transacoes_sem_classificacao_m_1), 
+					"sobreorcado" 	=> $sobreorcado,
+					"gastos_classificados_m-1" => $transacoes_m_1*(-1),
+					"gastos_classificado_m" => $transacoes_m*(-1),
+					"transacoes_sem_classificacao" => $transacoes_sem_classificacao_m*(-1));
 	return new Response(json_encode($resposta),200);
 
 });
