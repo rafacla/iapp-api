@@ -2673,7 +2673,8 @@ $app->get('/orcamento',function (Request $request) use ($app, $db) {
 	INNER JOIN `register_diarios` ON `register_contas`.`diario_id` = `register_diarios`.`id`
 	WHERE `register_diarios`.`uid` = '$diario_uid'
 		  AND (IFNULL(`register_transacoes`.`transacao_fatura_data`,`register_transacoes`.`transacao_data`) <= LAST_DAY('$anoAtual-$mesAtual-01'))
-	GROUP BY `register_subcategorias`.`subcategoria_id`, MONTH(IFNULL(`register_transacoes`.`transacao_fatura_data`,`register_transacoes`.`transacao_data`)), YEAR(IFNULL(`register_transacoes`.`transacao_fatura_data`,`register_transacoes`.`transacao_data`));";
+	GROUP BY `register_subcategorias`.`subcategoria_id`, MONTH(IFNULL(`register_transacoes`.`transacao_fatura_data`,`register_transacoes`.`transacao_data`)), YEAR(IFNULL(`register_transacoes`.`transacao_fatura_data`,`register_transacoes`.`transacao_data`))
+	ORDER BY YEAR(IFNULL(`register_transacoes`.`transacao_fatura_data`,`register_transacoes`.`transacao_data`)), MONTH(IFNULL(`register_transacoes`.`transacao_fatura_data`,`register_transacoes`.`transacao_data`));";
 
 	$transacoes = $db->select($sql_transacoes);
 
@@ -2799,6 +2800,7 @@ $app->get('/orcamento',function (Request $request) use ($app, $db) {
 			}
 		}
 		$acumulado_wo_carry_val = 0;
+		ksort($acumulado_wo_carry);
 		foreach($acumulado_wo_carry as $data => $acumulado_wo_carry_mes) {
 			if ($data < $mesAtual+$anoAtual*100) {
 				if ($acumulado_wo_carry_mes >= 0) {
