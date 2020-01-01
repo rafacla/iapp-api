@@ -2612,8 +2612,13 @@ $app->get('/orcamento',function (Request $request) use ($app, $db) {
 	
 	$diario_uid 	= $db->escape_string($request->headers->get("diariouid"));
 	$anoAtual	 	= $db->escape_string($request->headers->get("ano"));
-	$mesAtual 			= $db->escape_string($request->headers->get("mes"));
-
+	$mesAtual 		= $db->escape_string($request->headers->get("mes"));
+	$mesAtual_m_2	= $mesAtual-2;
+	$anoAtual_m_2 	= $anoAtual;
+	if ($mesAtual_m_2 <= 0) {
+		$mesAtual_m_2 = 12 + $mesAtual_m_2;
+		$anoAtual_m_2 -= 1;
+	}
 	$foreignColumns[0] = new ForeignRelationship('register_diarios',"id",null);
 
 	if (!$request->headers->get("diariouid") || !$request->headers->get("mes") || !$request->headers->get("ano")) {
@@ -2674,6 +2679,7 @@ $app->get('/orcamento',function (Request $request) use ($app, $db) {
 
 	$receitas = 0;
 	$receita_acum_m_1 = 0;
+	$receita_acum_m_2 = 0;
 	$transacoes_m = 0;
 	$transacoes_m_1 = 0;
 	foreach ($transacoes as $transacao) {
@@ -2703,6 +2709,9 @@ $app->get('/orcamento',function (Request $request) use ($app, $db) {
 			if ($mes + $ano*100 < $mesAtual+$anoAtual*100) {
 				$receita_acum_m_1 += $transacao["transacoes_valor"];
 			}
+			if ($mes + $ano*100 <= $mesAtual_m_2+$anoAtual_m_2*100) {
+				$receita_acum_m_2 += $transacao["transacoes_valor"];
+			}
 		}
 	}
 
@@ -2712,7 +2721,10 @@ $app->get('/orcamento',function (Request $request) use ($app, $db) {
 	$categoria_antiga = 0;
 	$carry_neg = 0;
 	$orcado_acum_m_1 = 0; 
+	$orcado_acum_m_2 = 0;
 	$orcado_acum = 0;
+	$sobregasto_acum_m_1 = 0;
+	$sobregasto_acum_m = 0;
 	foreach ($categorias as $categoria) {
 		$objeto =	[];
 		if ($categoria_antiga <> $categoria["categoria_id"]) {
@@ -2739,6 +2751,10 @@ $app->get('/orcamento',function (Request $request) use ($app, $db) {
 			if ($orcamento["subcategoria_id"] == $categoria["subcategoria_id"] 
 			&& (int)$orcamento["orcamento_mes"]+$orcamento["orcamento_ano"]*100 < (int)$mesAtual + 100*(int)$anoAtual) { 
 				$orcado_acum_m_1 += $orcamento["orcamento_valor"];
+			}
+			if ($orcamento["subcategoria_id"] == $categoria["subcategoria_id"] 
+			&& (int)$orcamento["orcamento_mes"]+$orcamento["orcamento_ano"]*100 < (int)$mesAtual_m_2 + 100*(int)$anoAtual_m_2) { 
+				$orcado_acum_m_2 += $orcamento["orcamento_valor"];
 			}
 			if ($orcamento["subcategoria_id"] == $categoria["subcategoria_id"] 
 			&& (int)$orcamento["orcamento_mes"]+$orcamento["orcamento_ano"]*100 <= (int)$mesAtual + 100*(int)$anoAtual) { 
@@ -2804,6 +2820,16 @@ $app->get('/orcamento',function (Request $request) use ($app, $db) {
 			} else {
 				$acumulado_wo_carry_val += $acumulado_wo_carry_mes;
 			}
+			//Aqui vamos somar os valores de sobregasto (valor gasto em uma cadeira acima do orçado) acumuladamente para todas as categorias:
+			if ($data <= $mesAtual+$anoAtual*100) {
+				if ($acumulado_wo_carry_mes < 0) {
+					$sobregasto_acum_m += $acumulado_wo_carry_mes;
+					if ($data < $mesAtual+$anoAtual*100) {
+						//e aqui apenas até o mes anterior (<)
+						$sobregasto_acum_m_1 += $acumulado_wo_carry_mes;
+					}
+				}
+			}
 		}
 		$disponivel = 0;
 		if ($categoria["subcategoria_carry"]=="1") {
@@ -2865,21 +2891,24 @@ $app->get('/orcamento',function (Request $request) use ($app, $db) {
 		}
 		$transacoes_sem_classificacao_m += $transacao["transacao_valor"];
 	}
-	$sobreorcado = 0;
+	$sobreorcado_acum_m_1 = 0;
 	if ($orcado_acum_m_1 > $receita_acum_m_1) {
-		$sobreorcado = $orcado_acum_m_1 - $receita_acum_m_1;
+		$sobreorcado_acum_m_1 = $orcado_acum_m_1 - $receita_acum_m_1;
 	}
-	$sobregasto_m_1 = -$receita_acum_m_1-$transacoes_m_1-$transacoes_sem_classificacao_m_1;
-	$resposta = array("lista_orcamentos" => $lista_orcamentos, 
-					"receita_acum" 	=> $receitas, 
-					"receita_mes" 	=> ($receitas-$receita_acum_m_1), 
-					"orcado_acum" 	=> $orcado_acum,
-					"orcado_mes"	=> ($orcado_acum-$orcado_acum_m_1),
-					"sobregasto" 	=> ($sobregasto_m_1 <= 0 ? 0 : $sobregasto_m_1), 
-					"sobreorcado" 	=> $sobreorcado,
-					"gastos_classificados_m-1" => $transacoes_m_1*(-1),
-					"gastos_classificado_m" => $transacoes_m*(-1),
-					"transacoes_sem_classificacao" => $transacoes_sem_classificacao_m*(-1));
+	$orcamento_mes_m_1 = $orcado_acum_m_1 - $orcado_acum_m_2;
+	$receita_mes_m_1 = $receita_acum_m_1 - $receita_acum_m_2;
+	$resposta = array("lista_orcamentos" 			=> $lista_orcamentos, 
+					"receita_acum" 					=> $receitas, 
+					"receita_mes" 					=> ($receitas-$receita_acum_m_1), 
+					"orcado_acum" 					=> $orcado_acum,
+					"orcado_mes"					=> ($orcado_acum-$orcado_acum_m_1),
+					"sobregasto_mes_m_1"	 		=> $carry_neg*(-1), 
+					"sobregasto_acum_m_1"	 		=> $sobregasto_acum_m_1*(-1), 
+					"sobregasto_acum"				=> $sobregasto_acum_m*(-1),
+					"sobreorcado_acum_m_1"			=> $sobreorcado_acum_m_1,
+					"gastos_classificados_mes" 		=> $transacoes_m*(-1)-$transacoes_m_1*(-1),
+					"gastos_classificado_acum" 		=> $transacoes_m*(-1),
+					"transacoes_sem_classificacao" 	=> $transacoes_sem_classificacao_m*(-1));
 	return new Response(json_encode($resposta),200);
 
 });
