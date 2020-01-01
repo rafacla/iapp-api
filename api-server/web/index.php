@@ -2887,16 +2887,14 @@ $app->get('/orcamento',function (Request $request) use ($app, $db) {
 	foreach ($transacoes_s_c as $transacao) {
 		if ((int)$transacao["transacao_mes"]+100*(int)$transacao["transacao_ano"]<$mesAtual*1+$anoAtual*100) {
 			//Se o mes e ano da transacao é menor que o mes e ano atual, então é acumulado m-1
-			$transacoes_sem_classificacao_m_1 += $transacao["transacao_valor"];
+			$transacoes_sem_classificacao_m_1 ++;
 		}
-		$transacoes_sem_classificacao_m += $transacao["transacao_valor"];
+		$transacoes_sem_classificacao_m ++;
 	}
 	$sobreorcado_acum_m_1 = 0;
 	if ($orcado_acum_m_1 > $receita_acum_m_1) {
 		$sobreorcado_acum_m_1 = $orcado_acum_m_1 - $receita_acum_m_1;
 	}
-	$orcamento_mes_m_1 = $orcado_acum_m_1 - $orcado_acum_m_2;
-	$receita_mes_m_1 = $receita_acum_m_1 - $receita_acum_m_2;
 	$resposta = array("lista_orcamentos" 			=> $lista_orcamentos, 
 					"receita_acum" 					=> $receitas, 
 					"receita_mes" 					=> ($receitas-$receita_acum_m_1), 
@@ -2908,7 +2906,7 @@ $app->get('/orcamento',function (Request $request) use ($app, $db) {
 					"sobreorcado_acum_m_1"			=> $sobreorcado_acum_m_1,
 					"gastos_classificados_mes" 		=> $transacoes_m*(-1)-$transacoes_m_1*(-1),
 					"gastos_classificado_acum" 		=> $transacoes_m*(-1),
-					"transacoes_sem_classificacao" 	=> $transacoes_sem_classificacao_m*(-1));
+					"transacoes_sem_classificacao" 	=> $transacoes_sem_classificacao_m);
 	return new Response(json_encode($resposta),200);
 
 });
