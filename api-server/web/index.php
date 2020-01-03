@@ -648,8 +648,13 @@ $app->get('/cartoes/fatura/{fatura_data}', function (Request $request, $fatura_d
 					`register_contas`.`conta_id` = '".$cartao_id."' 
 					AND 
 					`register_contas`.`conta_cartao` = '1'
-					AND
-					DATE_FORMAT(`register_transacoes`.`transacao_fatura_data`,'%Y-%m-01') = '".$fatura_data."'";
+					AND";
+				if ($fatura_data == 'null') {
+					$sql_s .= " `register_transacoes`.`transacao_fatura_data` IS NULL";
+				} else {
+					$sql_s .= " DATE_FORMAT(`register_transacoes`.`transacao_fatura_data`,'%Y-%m-01') = '".$fatura_data."'";
+				}
+				
 				$fatura_itens = $db->select($sql_s);
 				if ($fatura_itens)
 					return new Response(json_encode($fatura_itens),200);
