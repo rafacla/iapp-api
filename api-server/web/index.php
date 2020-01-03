@@ -635,6 +635,8 @@ $app->get('/cartoes/fatura/{fatura_data}', function (Request $request, $fatura_d
 				$sql_s = 
 				"SELECT 
 					DATE_FORMAT(`register_transacoes`.`transacao_fatura_data`,'%Y-%m-01') AS `fatura_data`, 
+					`register_transacoes`.`transacao_id`,
+					`register_contas`.`conta_id`,
 					`register_transacoes`.`transacao_data`, 
 					`register_transacoes`.`transacao_sacado`,
 					`register_transacoes`.`transacao_descricao`,
@@ -699,7 +701,7 @@ $app->get('/cartoes/fatura', function (Request $request) use ($app, $db) {
 					$maxLen = date_create($maxDate)->format("m")-date_create($minDate)->format("m")+12*(date_create($maxDate)->format("Y")-date_create($minDate)->format("Y"))+1;
 					$curDate = $minDate;
 					
-					for ($i=0;$i<=$maxLen;$i++) {
+					for ($i=0;$i<$maxLen;$i++) {
 						$curDate = date_add(date_create($minDate), date_interval_create_from_date_string($i." month"));
 						$faturasList[$i] = array(
 							"fatura_index" => ($i+1),
@@ -712,9 +714,9 @@ $app->get('/cartoes/fatura', function (Request $request) use ($app, $db) {
 							"conta_vencimento" => $diarios[0]['conta_cartao_data_vencimento']
 						);
 					}
-					foreach ($faturas as $key => $value) {
+					foreach ($faturasList as $value) {
 						if ($value["fatura_data"] == null) {
-							$faturasList[0] = array(
+							$faturasList_[0] = array(
 								"fatura_index" => 0,
 								"fatura_data" => null,
 								"fatura_valor" => (-1)*$value["fatura_valor"],
@@ -728,7 +730,7 @@ $app->get('/cartoes/fatura', function (Request $request) use ($app, $db) {
 							$curDate = $value["fatura_data"];
 							$curIndex = date_create($curDate)->format("m")-date_create($minDate)->format("m")+12*(date_create($curDate)->format("Y")-date_create($minDate)->format("Y"))+1;
 
-							$faturasList[$curIndex] = array(
+							$faturasList_[$curIndex] = array(
 								"fatura_index" => $curIndex,
 								"fatura_data" => $value["fatura_data"],
 								"fatura_valor" => (-1)*$value["fatura_valor"],
@@ -740,7 +742,7 @@ $app->get('/cartoes/fatura', function (Request $request) use ($app, $db) {
 							);
 						}
 					}
-					return new Response(json_encode($faturasList),200);
+					return new Response(json_encode($faturasList_),200);
 				}
 				else
 					return new Response('{"mensagem":"Não encontrado"}',404);
