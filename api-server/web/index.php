@@ -703,7 +703,7 @@ $app->get('/cartoes/fatura', function (Request $request) use ($app, $db) {
 					
 					for ($i=0;$i<$maxLen;$i++) {
 						$curDate = date_add(date_create($minDate), date_interval_create_from_date_string($i." month"));
-						$faturasList[$i] = array(
+						$faturasList[$i+1] = array(
 							"fatura_index" => ($i+1),
 							"fatura_data" => date_format($curDate,"Y-m-01"),
 							"fatura_valor" => 0,
@@ -714,9 +714,9 @@ $app->get('/cartoes/fatura', function (Request $request) use ($app, $db) {
 							"conta_vencimento" => $diarios[0]['conta_cartao_data_vencimento']
 						);
 					}
-					foreach ($faturasList as $value) {
+					foreach ($faturas as $value) {
 						if ($value["fatura_data"] == null) {
-							$faturasList_[0] = array(
+							$faturasList[0] = array(
 								"fatura_index" => 0,
 								"fatura_data" => null,
 								"fatura_valor" => (-1)*$value["fatura_valor"],
@@ -730,7 +730,7 @@ $app->get('/cartoes/fatura', function (Request $request) use ($app, $db) {
 							$curDate = $value["fatura_data"];
 							$curIndex = date_create($curDate)->format("m")-date_create($minDate)->format("m")+12*(date_create($curDate)->format("Y")-date_create($minDate)->format("Y"))+1;
 
-							$faturasList_[$curIndex] = array(
+							$faturasList[$curIndex] = array(
 								"fatura_index" => $curIndex,
 								"fatura_data" => $value["fatura_data"],
 								"fatura_valor" => (-1)*$value["fatura_valor"],
@@ -742,7 +742,7 @@ $app->get('/cartoes/fatura', function (Request $request) use ($app, $db) {
 							);
 						}
 					}
-					return new Response(json_encode($faturasList_),200);
+					return new Response(json_encode(array_values($faturasList)),200);
 				}
 				else
 					return new Response('{"mensagem":"Não encontrado"}',404);
