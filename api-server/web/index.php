@@ -2837,7 +2837,7 @@ $app->get('/orcamento',function (Request $request) use ($app, $db) {
 						} else {
 							//eita, vamos zerar o saldo da categoria, e vai faltar (sobregasto):
 							if ($data == $anoMesAnterior) {
-								$carry_neg = $acumulado_wo_carry_val + $acumulado_wo_carry_mes;
+								$carry_neg += $acumulado_wo_carry_val + $acumulado_wo_carry_mes;
 							}
 							$acumulado_wo_carry_val = 0;
 						}
