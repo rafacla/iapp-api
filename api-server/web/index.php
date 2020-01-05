@@ -2814,38 +2814,51 @@ $app->get('/orcamento',function (Request $request) use ($app, $db) {
 		}
 		$acumulado_wo_carry_val = 0;
 		ksort($acumulado_wo_carry);
+		$sobregasto_acum_m_categoria = 0;
+		$sobregasto_acum_m_1_categoria = 0;
 		foreach($acumulado_wo_carry as $data => $acumulado_wo_carry_mes) {
 			if ($data < $mesAtual+$anoAtual*100) {
 				if ($acumulado_wo_carry_mes >= 0) {
+					//aqui, se o valor na categoria é positivo, isto é, as entradas superam a saída, somamos, e seguimos a vida
 					$acumulado_wo_carry_val += $acumulado_wo_carry_mes;
 				} else {
-					$acumulado_wo_carry_val = 0;
+					//caso contrário, isto é, saídas na categoria superiores a entrada, vamos calcular
+					//antes calculamos qual mês é o anterior
 					if ($mesAtual*1 == 1) {
 						$anoMesAnterior = 12+($anoAtual-1)*100;
-						if ($data == $anoMesAnterior) {
-							$carry_neg += $acumulado_wo_carry_mes;
-						}
 					} else {
 						$anoMesAnterior = ($mesAtual-1)+($anoAtual)*100;
-						if ($data == $anoMesAnterior) {
-							$carry_neg += $acumulado_wo_carry_mes;
+					}
+					if ($data <= $anoMesAnterior) {
+						if (($acumulado_wo_carry_val + $acumulado_wo_carry_mes) > 0) {
+							//neste caso, o valor acumulado na categoria é maior do que a saída, desta forma, não temos sobregasto,
+							//mas sim um desconto nesta 'poupança':
+							$acumulado_wo_carry_val = $acumulado_wo_carry_val + $acumulado_wo_carry_mes;
+						} else {
+							//eita, vamos zerar o saldo da categoria, e vai faltar (sobregasto):
+							if ($data == $anoMesAnterior) {
+								$carry_neg = $acumulado_wo_carry_val + $acumulado_wo_carry_mes;
+							}
+							$acumulado_wo_carry_val = 0;
 						}
 					}
 				}
 			} else {
 				$acumulado_wo_carry_val += $acumulado_wo_carry_mes;
 			}
-			//Aqui vamos somar os valores de sobregasto (valor gasto em uma cadeira acima do orçado) acumuladamente para todas as categorias:
+			//Aqui vamos somar os valores de sobregasto (valor gasto em uma categoria acima do orçado) acumuladamente para todas as categorias:
 			if ($data <= $mesAtual+$anoAtual*100) {
-				if ($acumulado_wo_carry_mes < 0) {
-					$sobregasto_acum_m += $acumulado_wo_carry_mes;
-					if ($data < $mesAtual+$anoAtual*100) {
-						//e aqui apenas até o mes anterior (<)
-						$sobregasto_acum_m_1 += $acumulado_wo_carry_mes;
-					}
+				$sobregasto_acum_m_categoria += $acumulado_wo_carry_mes;
+				if ($data < $mesAtual+$anoAtual*100) {
+					//e aqui apenas até o mes anterior (<)
+					$sobregasto_acum_m_1_categoria += $acumulado_wo_carry_mes;
 				}
 			}
 		}
+		if ($sobregasto_acum_m_categoria < 0)
+			$sobregasto_acum_m += $sobregasto_acum_m_categoria;
+		if ($sobregasto_acum_m_1_categoria < 0)
+			$sobregasto_acum_m_1 += $sobregasto_acum_m_1_categoria;
 		$disponivel = 0;
 		if ($categoria["subcategoria_carry"]=="1") {
 			$disponivel = $acumulado_w_carry;
