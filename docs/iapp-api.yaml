@@ -836,16 +836,14 @@ paths:
           in: header
           required: false
           schema:
-            type: array
-            items:
-              type: object
-              properties:
-                column_name:
-                  type: string
-                value:
-                  type: string
-                kindOfCompare:
-                  type: string
+            type: object
+            properties:
+              column_name:
+                type: string
+              value:
+                type: string
+              kindOfCompare:
+                type: string
                   enum: ['=','<>','>','>=','<','<=','like','between','in']
       responses:
         '200':

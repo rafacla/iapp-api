@@ -640,6 +640,7 @@ $app->get('/cartoes/fatura/{fatura_data}', function (Request $request, $fatura_d
 					`register_transacoes`.`transacao_data`, 
 					`register_transacoes`.`transacao_sacado`,
 					`register_transacoes`.`transacao_descricao`,
+					`register_transacoes`.`transacao_numero`,
 					(-`register_transacoes`.`transacao_valor`) AS `transacao_valor`
 				FROM 
 					`register_transacoes` 
@@ -658,8 +659,17 @@ $app->get('/cartoes/fatura/{fatura_data}', function (Request $request, $fatura_d
 				}
 				
 				$fatura_itens = $db->select($sql_s);
-				if ($fatura_itens)
+				if ($fatura_itens) {
+					foreach($fatura_itens as $key => $fatura_item) {
+						$sql_s_s = "SELECT transacoes_item_id,(-`transacoes_item_valor`) AS `transacoes_item_valor`,transacoes_item_descricao,subcategoria_id,transf_para_conta_id FROM `register_transacoes_itens` WHERE `transacao_id` = '".$fatura_item['transacao_id']."'";
+						$fatura_itens_itens = $db->select($sql_s_s);
+						if ($fatura_itens_itens)
+							$fatura_itens[$key]["subtransacoes"] = $fatura_itens_itens;
+						else
+							$fatura_itens[$key]["subtransacoes"] = null;
+					}
 					return new Response(json_encode($fatura_itens),200);
+				}					
 				else
 					return new Response('{"mensagem":"Não encontrado"}',404);
 			}
@@ -2250,7 +2260,7 @@ $app->get('/subtransacao',function (Request $request) use ($app, $db) {
 	
 	$diario_uid 		= $db->escape_string($request->headers->get("diariouid"));
 	$filtros_header 	= $request->headers->get("filtros");
-	$filtros 			= json_decode($filtros_header);
+	$filtros 			= json_decode(utf8_encode($filtros_header));
 
 	$foreignColumns[0] = new ForeignRelationship('register_diarios',"id",null);
 
