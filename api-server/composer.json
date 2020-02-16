@@ -1,5 +1,10 @@
 {
+    "require-dev": {
+        "google/cloud-tools": "^0.6"
+    },
     "require": {
-        "silex/silex": "2.0"
+        "silex/silex": "2.0",
+        "google/cloud": "^0.72.0",
+        "google/cloud-storage": "^1.6"
     }
 }

@@ -22,7 +22,7 @@ class Database
 	}
 
 	public function dsn() {
-		$dsn      = 'mysql:dbname='.self::$database.';host='.self::$servername;
+		$dsn      = 'mysql:dbname='.self::$database.';unix_socket='.self::$servername;
 		return ($dsn);
 	}
 	
@@ -37,7 +37,7 @@ class Database
 	
 	public function connect() {
 		if(!isset($connection)) {
-			self::$connection = new mysqli(self::$servername,self::$username,self::$password,self::$database);
+			self::$connection = new mysqli(null,self::$username,self::$password,self::$database,null,self::$servername);
 		}
 		
 		// If connection was not successful, handle the error

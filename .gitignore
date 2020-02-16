@@ -1,3 +1,5 @@
 *.ini
 router.php
 server.bat
+app.yaml
+.gcloudignore

@@ -266,6 +266,9 @@ $app->get("/", function (Request $request) {
 //Aqui estamos preparando o 'pré-voo' adicionando uma resposta válida para o method 'options'
 $app->options("{anything}", function () {
 		$response = new \Symfony\Component\HttpFoundation\JsonResponse("OK", 204);
+		$response->headers->set('Access-Control-Allow-Origin', '*');
+		$response->headers->set('Access-Control-Allow-Methods', 'GET,POST,PUT');
+		$response->headers->set('Access-Control-Allow-Headers', '*');
 		return new $response;
 })->assert("anything", ".*");
 
@@ -331,7 +334,12 @@ $app->post('/auth', function (Request $request) use ($app, $db, $storage, $serve
 		$userID = getUserIDbyAcessToken($resp['access_token']);
 		atualizaLastLogin($userID,$request->getClientIp());
 	}
-	return new Response($respStr,$status);
+	$response =  new Response($respStr,$status);
+	$response->headers->set('Access-Control-Allow-Origin', '*');
+	$response->headers->set('Access-Control-Allow-Methods', 'GET,POST,PUT');
+	$response->headers->set('Access-Control-Allow-Headers', '*');
+	$response->headers->set('Access-Control-Allow-Credentials', 'true');
+	return $response;
 });
 
 //Rota para ativar o novo usuário
